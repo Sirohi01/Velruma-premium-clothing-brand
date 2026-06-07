@@ -42,7 +42,6 @@ const BlogSchema = new Schema<IBlog>(
 );
 
 BlogSchema.index({ status: 1, publishedAt: -1 });
-BlogSchema.index({ slug: 1 });
 
 const Blog: Model<IBlog> = mongoose.models.Blog || mongoose.model<IBlog>('Blog', BlogSchema);
 

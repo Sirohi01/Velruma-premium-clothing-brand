@@ -112,13 +112,13 @@ function LoginForm() {
       </p>
 
       {/* Demo credentials */}
-      <div className="mt-6 rounded-xl border border-zinc-200 bg-zinc-50 p-4 dark:border-white/[0.06] dark:bg-white/[0.02]">
+      {/* <div className="mt-6 rounded-xl border border-zinc-200 bg-zinc-50 p-4 dark:border-white/[0.06] dark:bg-white/[0.02]">
         <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-zinc-500">Demo Credentials</p>
         <div className="space-y-1 text-xs text-zinc-500">
           <p>Admin: <code className="rounded bg-zinc-200 px-1.5 py-0.5 font-mono text-zinc-700 dark:bg-white/10 dark:text-zinc-300">admin@velruma.com</code></p>
           <p>Password: <code className="rounded bg-zinc-200 px-1.5 py-0.5 font-mono text-zinc-700 dark:bg-white/10 dark:text-zinc-300">admin123</code></p>
         </div>
-      </div>
+      </div> */}
     </>
   );
 }

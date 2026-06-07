@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
 import User from '@/models/User';
-import Role from '@/models/Role';
+import '@/models/Role';
 import { comparePassword, signToken, setAuthCookie } from '@/lib/auth';
 import { checkRateLimit, rateLimitHeaders } from '@/lib/rate-limit';
 import { logActivity } from '@/lib/activity';
@@ -58,6 +58,13 @@ export async function POST(request: NextRequest) {
     }
 
     const role = user.role as unknown as { name: string; slug: string; _id: string };
+    
+    if (!role || !role.name || !role.slug) {
+      return NextResponse.json(
+        { success: false, error: 'User role configuration error' },
+        { status: 500 }
+      );
+    }
 
     // Generate token
     const token = await signToken({
