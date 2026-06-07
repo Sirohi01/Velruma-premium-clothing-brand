@@ -8,7 +8,7 @@ import DataTable from '@/components/shared/DataTable';
 export type Phase9Field = {
   key: string;
   label: string;
-  type?: 'text' | 'textarea' | 'number' | 'date' | 'select' | 'checkbox';
+  type?: 'text' | 'textarea' | 'number' | 'date' | 'select' | 'checkbox' | 'json';
   options?: string[];
   required?: boolean;
 };
@@ -193,9 +193,13 @@ export default function Phase9ModulePage({
             </div>
             <form onSubmit={saveRecord} className="mt-6 grid gap-4 md:grid-cols-2">
               {fields.map((field) => (
-                <label key={field.key} className={field.type === 'textarea' ? 'md:col-span-2' : ''}>
+                <label key={field.key} className={field.type === 'textarea' || field.type === 'json' ? 'md:col-span-2' : ''}>
                   <span className="mb-1 block text-xs font-medium uppercase text-zinc-500">{field.label}</span>
-                  {field.type === 'textarea' ? (
+                  {field.type === 'json' ? (
+                    <pre className="w-full max-h-64 overflow-auto rounded-lg border border-zinc-200 bg-zinc-50 p-2.5 text-xs dark:border-white/10 dark:bg-white/5 dark:text-zinc-300">
+                      {JSON.stringify(form[field.key] || {}, null, 2)}
+                    </pre>
+                  ) : field.type === 'textarea' ? (
                     <textarea required={field.required} value={form[field.key] || ''} onChange={(e) => setForm({ ...form, [field.key]: e.target.value })} rows={4} className="w-full rounded-lg border border-zinc-200 bg-zinc-50 p-2.5 text-sm dark:border-white/10 dark:bg-white/5 dark:text-white" />
                   ) : field.type === 'select' ? (
                     <select value={form[field.key] || ''} onChange={(e) => setForm({ ...form, [field.key]: e.target.value })} className="w-full rounded-lg border border-zinc-200 bg-zinc-50 p-2.5 text-sm dark:border-white/10 dark:bg-white/5 dark:text-white">
