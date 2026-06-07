@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Mail, Phone, MapPin } from 'lucide-react';
 import { useWebsiteSettings } from '@/contexts/SettingsContext';
@@ -58,6 +58,7 @@ const socialLinks = [
 ];
 
 export default function WebsiteFooter() {
+  const [mounted, setMounted] = useState(false);
   const { getSetting } = useWebsiteSettings();
   const brandName = getSetting('brand_name', 'VELRUMA');
   const brandLogo = getSetting('brand_logo', '');
@@ -66,8 +67,16 @@ export default function WebsiteFooter() {
   const phone = getSetting('brand_phone', '+91 9999999999');
   const address = getSetting('brand_address', 'Mumbai, Maharashtra, India');
 
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return <footer className="border-t border-zinc-200 bg-zinc-50" suppressHydrationWarning />;
+  }
+
   return (
-    <footer className="border-t border-zinc-200 bg-zinc-50 dark:border-white/[0.06] dark:bg-[#07070C]">
+    <footer className="border-t border-zinc-200 bg-zinc-50 dark:border-white/[0.06] dark:bg-[#07070C]" suppressHydrationWarning>
       {/* Newsletter Section */}
       <div className="border-b border-zinc-200 dark:border-white/[0.06]">
         <div className="mx-auto flex max-w-7xl flex-col items-center gap-6 px-4 py-12 text-center lg:flex-row lg:justify-between lg:px-8 lg:text-left">
@@ -99,10 +108,10 @@ export default function WebsiteFooter() {
       </div>
 
       {/* Links */}
-      <div className="mx-auto max-w-7xl px-4 py-12 lg:px-8">
-        <div className="grid grid-cols-2 gap-8 lg:grid-cols-5">
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:py-10 lg:px-8 lg:py-12">
+        <div className="grid grid-cols-1 gap-7 sm:grid-cols-2 sm:gap-8 lg:grid-cols-5">
           {/* Brand */}
-          <div className="col-span-2 lg:col-span-1">
+          <div className="sm:col-span-2 lg:col-span-1">
             {brandLogo ? (
               <img src={brandLogo} alt={brandName} className="h-14 w-auto max-w-[240px] object-contain" />
             ) : (
@@ -138,12 +147,12 @@ export default function WebsiteFooter() {
             <h4 className="mb-4 text-xs font-semibold uppercase tracking-wider text-zinc-900 dark:text-white">
               Shop
             </h4>
-            <ul className="space-y-2.5">
+            <ul className="space-y-2">
               {footerLinks.shop.map((link) => (
                 <li key={link.href}>
                   <Link
                     href={link.href}
-                    className="text-sm text-zinc-500 transition-colors hover:text-zinc-900 dark:hover:text-white"
+                    className="text-sm leading-5 text-zinc-500 transition-colors hover:text-zinc-900 dark:hover:text-white"
                   >
                     {link.title}
                   </Link>
@@ -157,12 +166,12 @@ export default function WebsiteFooter() {
             <h4 className="mb-4 text-xs font-semibold uppercase tracking-wider text-zinc-900 dark:text-white">
               Help
             </h4>
-            <ul className="space-y-2.5">
+            <ul className="space-y-2">
               {footerLinks.support.map((link) => (
                 <li key={link.href}>
                   <Link
                     href={link.href}
-                    className="text-sm text-zinc-500 transition-colors hover:text-zinc-900 dark:hover:text-white"
+                    className="text-sm leading-5 text-zinc-500 transition-colors hover:text-zinc-900 dark:hover:text-white"
                   >
                     {link.title}
                   </Link>
@@ -176,12 +185,12 @@ export default function WebsiteFooter() {
             <h4 className="mb-4 text-xs font-semibold uppercase tracking-wider text-zinc-900 dark:text-white">
               Policies
             </h4>
-            <ul className="space-y-2.5">
+            <ul className="space-y-2">
               {footerLinks.policies.map((link) => (
                 <li key={link.href}>
                   <Link
                     href={link.href}
-                    className="text-sm text-zinc-500 transition-colors hover:text-zinc-900 dark:hover:text-white"
+                    className="text-sm leading-5 text-zinc-500 transition-colors hover:text-zinc-900 dark:hover:text-white"
                   >
                     {link.title}
                   </Link>
@@ -196,17 +205,17 @@ export default function WebsiteFooter() {
               Contact
             </h4>
             <div className="space-y-3">
-              <a href={`mailto:${email}`} className="flex items-center gap-2 text-sm text-zinc-500 transition-colors hover:text-zinc-900 dark:hover:text-white">
+              <a href={`mailto:${email}`} className="flex min-w-0 items-start gap-2 text-sm leading-5 text-zinc-500 transition-colors hover:text-zinc-900 dark:hover:text-white">
                 <Mail className="h-4 w-4 shrink-0" />
-                {email}
+                <span className="min-w-0 break-all">{email}</span>
               </a>
-              <a href={`tel:${phone.replace(/\s+/g, '')}`} className="flex items-center gap-2 text-sm text-zinc-500 transition-colors hover:text-zinc-900 dark:hover:text-white">
+              <a href={`tel:${phone.replace(/\s+/g, '')}`} className="flex min-w-0 items-start gap-2 text-sm leading-5 text-zinc-500 transition-colors hover:text-zinc-900 dark:hover:text-white">
                 <Phone className="h-4 w-4 shrink-0" />
-                {phone}
+                <span className="min-w-0 break-words">{phone}</span>
               </a>
-              <p className="flex items-start gap-2 text-sm text-zinc-500">
+              <p className="flex min-w-0 items-start gap-2 text-sm leading-5 text-zinc-500">
                 <MapPin className="mt-0.5 h-4 w-4 shrink-0" />
-                {address}
+                <span className="min-w-0 break-words">{address}</span>
               </p>
             </div>
           </div>
