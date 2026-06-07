@@ -304,7 +304,7 @@ export default async function ProductDetailPage({
         </div>
 
         {relatedProducts.length > 0 && (
-          <div className="mt-24 border-t border-zinc-200 pt-16">
+          <div className="mt-12 border-t border-zinc-200 pt-8">
             <h2 className="text-2xl font-bold tracking-tight text-zinc-900" style={{ fontFamily: "'Playfair Display', serif" }}>
               You May Also Like
             </h2>
