@@ -79,7 +79,7 @@ export default function WebsiteFooter() {
     <footer className="border-t border-zinc-200 bg-zinc-50 dark:border-white/[0.06] dark:bg-[#07070C]" suppressHydrationWarning>
       {/* Newsletter Section */}
       <div className="border-b border-zinc-200 dark:border-white/[0.06]">
-        <div className="mx-auto flex max-w-7xl flex-col items-center gap-6 px-4 py-12 text-center lg:flex-row lg:justify-between lg:px-8 lg:text-left">
+        <div className="mx-auto flex max-w-7xl flex-col items-center gap-6 px-4 py-4 lg:py-5 text-center lg:flex-row lg:justify-between lg:px-8 lg:text-left">
           <div>
             <h3
               className="text-xl font-semibold text-zinc-900 dark:text-white lg:text-2xl"

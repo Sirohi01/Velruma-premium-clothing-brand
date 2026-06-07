@@ -202,7 +202,7 @@ export default function WebsiteHeader() {
             </Link>
 
             <Link
-              href={user ? '/my-account' : '/login'}
+              href={user ? (user.role?.slug === 'admin' || user.role?.slug === 'super_admin' ? '/admin/dashboard' : '/my-account') : '/login'}
               className="rounded-full p-2.5 text-zinc-600 transition-colors hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-white/5"
             >
               <User className="h-[18px] w-[18px]" />

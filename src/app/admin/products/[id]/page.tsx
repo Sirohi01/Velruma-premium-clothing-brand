@@ -185,12 +185,22 @@ export default function EditProductPage() {
 
           <Panel title="Variants">
             {formData.variants.map((variant: any, index: number) => (
-              <div key={variant._id || index} className="grid gap-3 border-b border-white/5 pb-4 last:border-0 md:grid-cols-5">
-                <Input label="Size" value={variant.size || ''} onChange={(value) => updateVariant(index, 'size', value)} />
-                <Input label="Color" value={variant.color || ''} onChange={(value) => updateVariant(index, 'color', value)} />
-                <Input label="SKU" value={variant.sku || ''} onChange={(value) => updateVariant(index, 'sku', value)} />
-                <Input label="Stock" type="number" value={variant.stock || 0} onChange={(value) => updateVariant(index, 'stock', Number(value))} />
-                <Input label="+ Price" type="number" value={variant.extraPrice || 0} onChange={(value) => updateVariant(index, 'extraPrice', Number(value))} />
+              <div key={variant._id || index} className="flex flex-col gap-3 border-b border-white/5 pb-4 last:border-0 sm:flex-row sm:items-end">
+                <div className="grid flex-1 gap-3 md:grid-cols-5">
+                  <Input label="Size" value={variant.size || ''} onChange={(value) => updateVariant(index, 'size', value)} />
+                  <Input label="Color" value={variant.color || ''} onChange={(value) => updateVariant(index, 'color', value)} />
+                  <Input label="SKU" value={variant.sku || ''} onChange={(value) => updateVariant(index, 'sku', value)} />
+                  <Input label="Stock" type="number" value={variant.stock || 0} onChange={(value) => updateVariant(index, 'stock', Number(value))} />
+                  <Input label="+ Price" type="number" value={variant.extraPrice || 0} onChange={(value) => updateVariant(index, 'extraPrice', Number(value))} />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, variants: formData.variants.filter((_: any, i: number) => i !== index) })}
+                  className="mb-0.5 rounded-lg p-2 text-red-400 transition-colors hover:bg-red-500/10 sm:self-end"
+                  title="Delete Variant"
+                >
+                  <Trash2 className="h-5 w-5" />
+                </button>
               </div>
             ))}
             <button onClick={() => setFormData({ ...formData, variants: [...formData.variants, { size: '', color: '', stock: 0, extraPrice: 0, sku: '' }] })} className="flex items-center gap-2 text-sm font-medium text-amber-400">
