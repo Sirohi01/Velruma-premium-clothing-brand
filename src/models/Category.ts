@@ -6,6 +6,11 @@ export interface ICategory extends Document {
   slug: string;
   description?: string;
   image?: string;
+  sizeChartImage?: string;
+  sizeChart?: {
+    sizes: string[];
+    measurements: { name: string; values: string[] }[];
+  };
   parentCategory?: mongoose.Types.ObjectId;
   isActive: boolean;
   isFeatured: boolean;
@@ -23,6 +28,16 @@ const CategorySchema = new Schema<ICategory>(
     slug: { type: String, required: true, unique: true, lowercase: true, trim: true },
     description: { type: String, trim: true },
     image: { type: String },
+    sizeChartImage: { type: String },
+    sizeChart: {
+      sizes: [{ type: String }],
+      measurements: [
+        {
+          name: { type: String },
+          values: [{ type: String }],
+        },
+      ],
+    },
     parentCategory: { type: Schema.Types.ObjectId, ref: 'Category', default: null },
     isActive: { type: Boolean, default: true },
     isFeatured: { type: Boolean, default: false },

@@ -22,10 +22,14 @@ export default function AddToCartButton({
   product,
   sizes,
   colors,
+  sizeChartImage,
+  sizeChart,
 }: {
   product: any;
   sizes: string[];
   colors: string[];
+  sizeChartImage?: string;
+  sizeChart?: { columns: string[]; rows: { label: string; values: string[] }[] };
 }) {
   const { addItem } = useCart();
   const [selectedSize, setSelectedSize] = useState<string>(sizes[0] || '');
@@ -126,23 +130,49 @@ export default function AddToCartButton({
             </div>
 
             {/* Size Chart Dialog */}
-            <Dialog>
-              <DialogTrigger render={<button className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-zinc-900 hover:underline" />}>
-                Size Chart <Ruler className="h-3 w-3" />
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[500px]">
-                <DialogHeader>
-                  <DialogTitle>Size Guide</DialogTitle>
-                </DialogHeader>
-                <div className="mt-4">
-                  <div className="aspect-[4/3] w-full rounded-lg bg-zinc-100 flex items-center justify-center text-zinc-500 border border-zinc-200">
-                    {/* Placeholder for size chart image */}
-                    Size Chart Graphic (Placeholder)
+            {(sizeChartImage || (sizeChart && sizeChart.columns?.length > 0)) && (
+              <Dialog>
+                <DialogTrigger render={<button className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-zinc-900 hover:underline" />}>
+                  Size Chart <Ruler className="h-3 w-3" />
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[600px] p-1 border-none bg-transparent shadow-none">
+                  <div className="relative w-full rounded-2xl overflow-hidden bg-white shadow-2xl">
+                    <DialogHeader className="px-6 py-4 border-b border-zinc-100 bg-white sticky top-0 z-10">
+                      <DialogTitle>Size Guide</DialogTitle>
+                    </DialogHeader>
+                    <div className="p-6 bg-zinc-50 max-h-[80vh] overflow-y-auto">
+                      {sizeChartImage ? (
+                        <img src={sizeChartImage} alt="Size Guide" className="w-full h-auto rounded-lg" />
+                      ) : (
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-center text-sm text-zinc-600 bg-white border border-zinc-300">
+                            <thead>
+                              <tr className="bg-zinc-800 text-white">
+                                <th className="px-4 py-2 font-semibold border-b border-r border-zinc-600">In inches</th>
+                                {sizeChart?.rows?.map((row: any, idx: number) => (
+                                  <th key={idx} className="px-4 py-2 font-semibold border-b border-zinc-600">{row.label}</th>
+                                ))}
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {sizeChart?.columns?.map((col: string, colIdx: number) => (
+                                <tr key={colIdx} className="hover:bg-zinc-50 transition-colors">
+                                  <td className="px-4 py-2 font-medium text-zinc-900 border-r border-b border-zinc-200">{col}</td>
+                                  {sizeChart?.rows?.map((row: any, rowIdx: number) => (
+                                    <td key={rowIdx} className="px-4 py-2 border-r border-b border-zinc-200">{row.values?.[colIdx]}</td>
+                                  ))}
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                          <p className="mt-4 text-xs text-zinc-500 text-center">Measurements are in inches/cm. Allow 0.5" tolerance.</p>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  <p className="mt-4 text-xs text-zinc-500 text-center">Measurements are in inches. Allow 0.5" tolerance.</p>
-                </div>
-              </DialogContent>
-            </Dialog>
+                </DialogContent>
+              </Dialog>
+            )}
           </div>
 
           <div className="flex flex-wrap items-center gap-2">

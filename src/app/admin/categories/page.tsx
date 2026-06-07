@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Plus, Edit2, Trash2, FolderPlus, AlertTriangle, X } from 'lucide-react';
+import { Plus, Edit2, Trash2, FolderPlus, AlertTriangle, X, Check } from 'lucide-react';
 import { toast } from 'sonner';
 import ImageUpload from '@/components/shared/ImageUpload';
 
@@ -12,13 +12,28 @@ export default function CategoriesPage() {
   const [editTarget, setEditTarget] = useState<any | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<any | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [newColumnName, setNewColumnName] = useState('');
+  const [isAddingColumn, setIsAddingColumn] = useState(false);
   
+  const DEFAULT_SIZE_CHART = {
+    sizes: ['S', 'M', 'L', 'XL', '2XL', '3XL'],
+    measurements: [
+      { name: 'Length', values: ['', '', '', '', '', ''] },
+      { name: 'Chest', values: ['', '', '', '', '', ''] },
+      { name: 'Brand Size', values: ['', '', '', '', '', ''] },
+      { name: 'Shoulder', values: ['', '', '', '', '', ''] },
+      { name: 'Sleeve Length', values: ['', '', '', '', '', ''] },
+    ]
+  };
+
   // Form State
   const [formData, setFormData] = useState({
     name: '',
     slug: '',
     description: '',
     image: '',
+    sizeChartImage: '',
+    sizeChart: DEFAULT_SIZE_CHART,
     isActive: true,
     isFeatured: false,
   });
@@ -63,7 +78,7 @@ export default function CategoriesPage() {
         toast.success(editTarget ? 'Category updated successfully' : 'Category created successfully');
         setIsModalOpen(false);
         setEditTarget(null);
-        setFormData({ name: '', slug: '', description: '', image: '', isActive: true, isFeatured: false });
+        setFormData({ name: '', slug: '', description: '', image: '', sizeChartImage: '', sizeChart: DEFAULT_SIZE_CHART, isActive: true, isFeatured: false });
         fetchCategories();
       } else {
         toast.error(data.error || 'Failed to create category');
@@ -75,7 +90,7 @@ export default function CategoriesPage() {
 
   const openCreateModal = () => {
     setEditTarget(null);
-    setFormData({ name: '', slug: '', description: '', image: '', isActive: true, isFeatured: false });
+    setFormData({ name: '', slug: '', description: '', image: '', sizeChartImage: '', sizeChart: DEFAULT_SIZE_CHART, isActive: true, isFeatured: false });
     setIsModalOpen(true);
   };
 
@@ -86,6 +101,10 @@ export default function CategoriesPage() {
       slug: category.slug || '',
       description: category.description || '',
       image: category.image || '',
+      sizeChartImage: category.sizeChartImage || '',
+      sizeChart: (category.sizeChart && category.sizeChart.sizes && category.sizeChart.sizes.length > 0) 
+        ? category.sizeChart 
+        : DEFAULT_SIZE_CHART,
       isActive: category.isActive ?? true,
       isFeatured: category.isFeatured ?? false,
     });
@@ -200,11 +219,17 @@ export default function CategoriesPage() {
 
       {/* Create Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl dark:bg-zinc-900">
-            <h2 className="text-xl font-bold text-zinc-900 dark:text-white" style={{ fontFamily: "'Playfair Display', serif" }}>{editTarget ? 'Edit Category' : 'Add Category'}</h2>
-            <form onSubmit={handleSubmit} className="mt-6 space-y-4">
-              <div>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-2xl max-h-[90vh] flex flex-col rounded-2xl bg-white shadow-xl dark:bg-zinc-900">
+            <div className="p-6 border-b border-zinc-100 dark:border-white/10 shrink-0 flex items-center justify-between">
+              <h2 className="text-xl font-bold text-zinc-900 dark:text-white" style={{ fontFamily: "'Playfair Display', serif" }}>{editTarget ? 'Edit Category' : 'Add Category'}</h2>
+              <button onClick={() => setIsModalOpen(false)} className="text-zinc-400 hover:text-zinc-900 dark:hover:text-white">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="p-6 overflow-y-auto">
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div>
                 <label className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Name</label>
                 <input
                   type="text"
@@ -229,6 +254,194 @@ export default function CategoriesPage() {
                 <ImageUpload label="Category image" value={formData.image} folder="categories" onChange={(image) => setFormData({ ...formData, image })} />
               </div>
               <div className="flex items-center justify-between py-2">
+                <ImageUpload label="Size chart image" value={formData.sizeChartImage} folder="categories/size-charts" onChange={(image) => setFormData({ ...formData, sizeChartImage: image })} />
+              </div>
+              
+              <div className="space-y-3 pt-2 border-t border-zinc-100 dark:border-white/10">
+                <div className="flex items-center justify-between">
+                  <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">Manual Size Chart</label>
+                </div>
+                <p className="text-xs text-zinc-500">Add columns (e.g., Chest, Length) and sizes (e.g., S, M, L) if you don't have an image.</p>
+                
+                <div className="space-y-4 rounded-xl border border-zinc-200 bg-zinc-50/50 p-4 dark:border-white/10 dark:bg-zinc-900/50">
+                  {/* Sizes (Columns) */}
+                  <div>
+                    <label className="mb-2 block text-xs font-medium text-zinc-600 dark:text-zinc-400">Sizes (e.g., S, M, L)</label>
+                    <div className="flex flex-wrap gap-2">
+                      {formData.sizeChart.sizes.map((size, idx) => (
+                        <div key={idx} className="flex items-center gap-1 rounded-md bg-white border border-zinc-200 px-2 py-1 text-xs dark:bg-zinc-800 dark:border-white/10">
+                          <span>{size}</span>
+                          <button 
+                            type="button" 
+                            onClick={() => {
+                              const newSizes = [...formData.sizeChart.sizes];
+                              newSizes.splice(idx, 1);
+                              const newMeasurements = formData.sizeChart.measurements.map(m => {
+                                const vals = [...m.values];
+                                vals.splice(idx, 1);
+                                return { ...m, values: vals };
+                              });
+                              setFormData({ ...formData, sizeChart: { sizes: newSizes, measurements: newMeasurements } });
+                            }}
+                            className="text-zinc-400 hover:text-red-500"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </div>
+                      ))}
+                      {isAddingColumn ? (
+                        <div className="flex items-center gap-1">
+                          <input
+                            type="text"
+                            value={newColumnName}
+                            onChange={(e) => setNewColumnName(e.target.value)}
+                            placeholder="e.g. XL"
+                            className="w-16 rounded border border-zinc-200 px-2 py-1 text-xs bg-white dark:border-white/10 dark:bg-zinc-900 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                            autoFocus
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                e.preventDefault();
+                                if (newColumnName.trim()) {
+                                  setFormData({
+                                    ...formData,
+                                    sizeChart: {
+                                      sizes: [...formData.sizeChart.sizes, newColumnName.trim()],
+                                      measurements: formData.sizeChart.measurements.map(m => ({ ...m, values: [...m.values, ''] }))
+                                    }
+                                  });
+                                }
+                                setNewColumnName('');
+                                setIsAddingColumn(false);
+                              } else if (e.key === 'Escape') {
+                                setNewColumnName('');
+                                setIsAddingColumn(false);
+                              }
+                            }}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                                if (newColumnName.trim()) {
+                                  setFormData({
+                                    ...formData,
+                                    sizeChart: {
+                                      sizes: [...formData.sizeChart.sizes, newColumnName.trim()],
+                                      measurements: formData.sizeChart.measurements.map(m => ({ ...m, values: [...m.values, ''] }))
+                                    }
+                                  });
+                                }
+                                setNewColumnName('');
+                                setIsAddingColumn(false);
+                            }}
+                            className="flex items-center justify-center rounded bg-zinc-900 p-1 text-white hover:bg-zinc-800"
+                          >
+                            <Check className="h-3 w-3" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                                setNewColumnName('');
+                                setIsAddingColumn(false);
+                            }}
+                            className="flex items-center justify-center rounded bg-zinc-100 p-1 text-zinc-500 hover:bg-zinc-200"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => setIsAddingColumn(true)}
+                          className="flex items-center gap-1 rounded-md border border-dashed border-zinc-300 px-2 py-1 text-xs text-zinc-500 hover:border-zinc-400 hover:text-zinc-700 dark:border-zinc-700 dark:text-zinc-400 dark:hover:border-zinc-500 dark:hover:text-zinc-300"
+                        >
+                          <Plus className="h-3 w-3" /> Add Size
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Measurements (Rows) */}
+                  {formData.sizeChart.sizes.length > 0 && (
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left text-xs">
+                        <thead>
+                          <tr>
+                            <th className="pb-2 font-medium text-zinc-500">Measurement</th>
+                            {formData.sizeChart.sizes.map((size, idx) => (
+                              <th key={idx} className="pb-2 font-medium text-zinc-500">{size}</th>
+                            ))}
+                            <th className="pb-2"></th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-zinc-200 dark:divide-white/10">
+                          {formData.sizeChart.measurements.map((m, mIdx) => (
+                            <tr key={mIdx}>
+                              <td className="py-2 pr-2">
+                                <input
+                                  type="text"
+                                  value={m.name}
+                                  placeholder="e.g. Chest"
+                                  onChange={(e) => {
+                                    const newMeasurements = [...formData.sizeChart.measurements];
+                                    newMeasurements[mIdx].name = e.target.value;
+                                    setFormData({ ...formData, sizeChart: { ...formData.sizeChart, measurements: newMeasurements } });
+                                  }}
+                                  className="w-24 rounded border border-zinc-200 px-2 py-1 bg-white dark:border-white/10 dark:bg-zinc-900 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                                />
+                              </td>
+                              {m.values.map((val, sIdx) => (
+                                <td key={sIdx} className="py-2 pr-2">
+                                  <input
+                                    type="text"
+                                    value={val}
+                                    placeholder="in cm/in"
+                                    onChange={(e) => {
+                                      const newMeasurements = [...formData.sizeChart.measurements];
+                                      newMeasurements[mIdx].values[sIdx] = e.target.value;
+                                      setFormData({ ...formData, sizeChart: { ...formData.sizeChart, measurements: newMeasurements } });
+                                    }}
+                                    className="w-20 rounded border border-zinc-200 px-2 py-1 bg-white dark:border-white/10 dark:bg-zinc-900 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                                  />
+                                </td>
+                              ))}
+                              <td className="py-2 text-right">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const newMeasurements = [...formData.sizeChart.measurements];
+                                    newMeasurements.splice(mIdx, 1);
+                                    setFormData({ ...formData, sizeChart: { ...formData.sizeChart, measurements: newMeasurements } });
+                                  }}
+                                  className="text-zinc-400 hover:text-red-500 p-1"
+                                >
+                                  <Trash2 className="h-3 w-3" />
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFormData({
+                            ...formData,
+                            sizeChart: {
+                              ...formData.sizeChart,
+                              measurements: [...formData.sizeChart.measurements, { name: '', values: Array(formData.sizeChart.sizes.length).fill('') }]
+                            }
+                          });
+                        }}
+                        className="mt-2 flex items-center gap-1 text-xs font-medium text-amber-600 hover:text-amber-700 dark:text-amber-500"
+                      >
+                        <Plus className="h-3 w-3" /> Add Measurement Row
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between py-2 border-t border-zinc-100 dark:border-white/10 pt-4 mt-2">
                 <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Active</label>
                 <input
                   type="checkbox"
@@ -247,7 +460,7 @@ export default function CategoriesPage() {
                 />
               </div>
               
-              <div className="mt-6 flex justify-end gap-3">
+              <div className="mt-6 flex justify-end gap-3 sticky bottom-0 bg-white dark:bg-zinc-900 pt-4 border-t border-zinc-100 dark:border-white/10">
                 <button
                   type="button"
                   onClick={() => {
@@ -266,6 +479,7 @@ export default function CategoriesPage() {
                 </button>
               </div>
             </form>
+            </div>
           </div>
         </div>
       )}

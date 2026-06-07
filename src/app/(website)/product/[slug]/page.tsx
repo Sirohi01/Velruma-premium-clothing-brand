@@ -56,13 +56,13 @@ export default async function ProductDetailPage({
   const { slug } = await params;
 
   const product: any = await Product.findOne({ slug, status: 'active' })
-    .populate('category', 'name')
+    .populate('category', 'name sizeChartImage sizeChart')
     .lean();
 
   if (!product) notFound();
 
   const relatedProducts = await Product.find({
-    category: product.category,
+    category: product.category?._id || product.category,
     _id: { $ne: product._id },
     status: 'active',
   }).limit(4).lean();
@@ -73,6 +73,14 @@ export default async function ProductDetailPage({
   const totalStock = (product.variants || []).reduce((sum: number, variant: any) => sum + Number(variant.stock || 0), 0);
   const primaryImage = product.images?.find((item: any) => item.isPrimary)?.url || product.images?.[0]?.url;
   const baseUrl = getAppUrl();
+  const sizeChartImage = product.category?.sizeChartImage;
+  const sizeChart = product.category?.sizeChart ? {
+    columns: product.category.sizeChart.sizes || [],
+    rows: (product.category.sizeChart.measurements || []).map((m: any) => ({
+      label: m.name,
+      values: m.values,
+    }))
+  } : undefined;
 
   const serializedProduct = {
     _id: product._id.toString(),
@@ -181,7 +189,7 @@ export default async function ProductDetailPage({
             </div>
 
             <div className="mt-8">
-              <AddToCartButton product={serializedProduct} sizes={sizes as string[]} colors={colors as string[]} />
+              <AddToCartButton product={serializedProduct} sizes={sizes as string[]} colors={colors as string[]} sizeChartImage={sizeChartImage} sizeChart={sizeChart} />
             </div>
           </div>
         </div>
