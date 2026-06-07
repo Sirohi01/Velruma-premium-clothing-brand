@@ -55,6 +55,18 @@ export default function ProductsPage() {
     p.variants?.some((v: any) => v.sku?.toLowerCase().includes(search.toLowerCase()))
   );
 
+  const calculateFinalPrice = (product: any) => {
+    const sellingBeforeDiscount = Number(product.salePrice || product.basePrice || 0);
+    const discountType = product.discountType || 'none';
+    const discountValue = Number(product.discountValue || 0);
+    const extraDiscount = discountType === 'percentage'
+      ? Math.round((sellingBeforeDiscount * discountValue) / 100)
+      : discountType === 'fixed'
+        ? discountValue
+        : 0;
+    return Math.max(0, sellingBeforeDiscount - extraDiscount);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -95,7 +107,7 @@ export default function ProductsPage() {
             <tr>
               <th className="px-6 py-4 font-medium">Product</th>
               <th className="px-6 py-4 font-medium">Category</th>
-              <th className="px-6 py-4 font-medium">Price</th>
+              <th className="px-6 py-4 font-medium">Price (Sale / MRP)</th>
               <th className="px-6 py-4 font-medium">Status</th>
               <th className="px-6 py-4 text-right font-medium">Actions</th>
             </tr>
@@ -137,8 +149,17 @@ export default function ProductsPage() {
                       {product.category?.name || 'Uncategorized'}
                     </span>
                   </td>
-                  <td className="px-6 py-4 font-medium text-zinc-900 dark:text-white">
-                    ₹{product.basePrice?.toLocaleString()}
+                  <td className="px-6 py-4">
+                    <div className="flex flex-col">
+                      <span className="font-medium text-zinc-900 dark:text-white">
+                        ₹{calculateFinalPrice(product).toLocaleString()}
+                      </span>
+                      {calculateFinalPrice(product) < (product.basePrice || 0) && (
+                        <span className="text-xs text-zinc-500 line-through">
+                          ₹{product.basePrice?.toLocaleString()}
+                        </span>
+                      )}
+                    </div>
                   </td>
                   <td className="px-6 py-4">
                     <span className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
