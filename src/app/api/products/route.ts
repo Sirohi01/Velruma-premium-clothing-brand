@@ -1,0 +1,94 @@
+import { NextRequest, NextResponse } from 'next/server';
+import dbConnect from '@/lib/db';
+import Product from '@/models/Product';
+import '@/models/Category';
+import '@/models/Collection';
+import '@/models/Phase9';
+import { generateSKU } from '@/lib/utils';
+
+function normalizeProductPayload(body: any) {
+  const images = Array.isArray(body.images)
+    ? body.images.filter((image: any) => image?.url).map((image: any, index: number) => ({
+      url: image.url,
+      alt: image.alt || body.title || '',
+      isPrimary: index === 0 ? true : Boolean(image.isPrimary),
+    }))
+    : [];
+  const videos = Array.isArray(body.videos)
+    ? body.videos.filter((video: any) => video?.url).map((video: any, index: number) => ({
+      url: video.url,
+      title: video.title || '',
+      isPrimary: index === 0 ? true : Boolean(video.isPrimary),
+    }))
+    : [];
+
+  return {
+    ...body,
+    basePrice: Number(body.basePrice || 0),
+    salePrice: Number(body.salePrice || body.basePrice || 0),
+    costPrice: Number(body.costPrice || 0),
+    brand: body.brand || 'VELRUMA',
+    brandSlug: body.brandSlug || String(body.brand || 'velruma').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
+    discountType: body.discountType || 'none',
+    discountValue: Number(body.discountValue || 0),
+    images,
+    videos,
+  };
+}
+
+export async function GET(request: NextRequest) {
+  try {
+    await dbConnect();
+    const { searchParams } = new URL(request.url);
+    const category = searchParams.get('category');
+    const status = searchParams.get('status');
+    const search = searchParams.get('search');
+
+    const query: any = {};
+    if (category) query.category = category;
+    if (status) query.status = status;
+    if (search) {
+      query.$or = [
+        { title: { $regex: search, $options: 'i' } },
+        { 'variants.sku': { $regex: search, $options: 'i' } },
+      ];
+    }
+
+    const products = await Product.find(query)
+      .populate('category', 'name slug')
+      .populate('collections', 'name slug')
+      .sort({ createdAt: -1 });
+
+    return NextResponse.json({ success: true, data: products });
+  } catch (error) {
+    console.error('Products GET error:', error);
+    return NextResponse.json({ success: false, error: 'Internal Server Error' }, { status: 500 });
+  }
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    await dbConnect();
+    const body = await request.json();
+    const payload = normalizeProductPayload(body);
+    
+    // Auto-generate SKUs for variants if not provided
+    if (payload.variants && Array.isArray(payload.variants)) {
+      payload.variants = payload.variants.map((variant: any) => {
+        if (!variant.sku) {
+          variant.sku = generateSKU(payload.category?.toString() || 'GEN', payload.title, variant.size, variant.color);
+        }
+        return variant;
+      });
+    }
+
+    const product = await Product.create(payload);
+    return NextResponse.json({ success: true, data: product }, { status: 201 });
+  } catch (error: any) {
+    console.error('Products POST error:', error);
+    if (error.code === 11000) {
+      return NextResponse.json({ success: false, error: 'Slug or SKU already exists' }, { status: 400 });
+    }
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+  }
+}
