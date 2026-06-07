@@ -75,7 +75,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-4 py-10 lg:px-8">
+      <section className="mx-auto max-w-7xl px-4 py-4 lg:py-5 lg:px-8">
         <div className="mb-5 flex items-end justify-between">
           <div>
             <h2 className="text-3xl font-semibold tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }}>Shop by Category</h2>
@@ -98,7 +98,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="bg-white py-10">
+      <section className="bg-white py-4 lg:py-5">
         <div className="mx-auto max-w-7xl px-4 lg:px-8">
           <div className="mb-5 flex items-end justify-between">
             <div>
@@ -126,15 +126,15 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-4 py-10 lg:px-8">
-        <div className="grid gap-3 md:grid-cols-3">
+      <section className="mx-auto max-w-7xl px-4 py-4 lg:py-5 lg:px-8">
+        <div className="flex flex-wrap gap-6">
           {collections.map((collection: any) => (
-            <Link key={collection._id.toString()} href={`/collection/${collection.slug}`} className="relative min-h-72 overflow-hidden rounded-lg bg-zinc-900 shadow-sm">
-              {collection.bannerImage && <img src={collection.bannerImage} alt={collection.name} className="absolute inset-0 h-full w-full object-cover opacity-80" />}
-              <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/80 to-transparent" />
-              <div className="absolute bottom-0 p-5 text-white">
-                <p className="text-2xl font-semibold" style={{ fontFamily: "'Playfair Display', serif" }}>{collection.name}</p>
-                <p className="mt-1 text-sm text-white/75">{collection.description || 'Curated collection'}</p>
+            <Link key={collection._id.toString()} href={`/collection/${collection.slug}`} className="relative flex aspect-[4/5] h-[380px] sm:h-[450px] overflow-hidden rounded-lg bg-zinc-900 shadow-sm group">
+              {collection.bannerImage && <img src={collection.bannerImage} alt={collection.name} className="absolute inset-0 h-full w-full object-cover object-top opacity-80 transition duration-700 group-hover:scale-105" />}
+              <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/80 via-zinc-950/20 to-transparent" />
+              <div className="absolute bottom-0 w-full p-4 text-white">
+                <p className="text-xl sm:text-2xl font-semibold" style={{ fontFamily: "'Playfair Display', serif" }}>{collection.name}</p>
+                <p className="mt-1 text-xs sm:text-sm text-white/80">{collection.description || 'Curated collection'}</p>
               </div>
             </Link>
           ))}
