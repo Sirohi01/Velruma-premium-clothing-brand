@@ -82,15 +82,15 @@ export default function WebsiteFooter() {
               Subscribe for exclusive drops, styling tips & 10% off your first order.
             </p>
           </div>
-          <form className="flex w-full max-w-md gap-2">
+          <form className="grid w-full max-w-md gap-2 sm:flex">
             <input
               type="email"
               placeholder="Enter your email"
-              className="h-12 flex-1 rounded-xl border border-zinc-200 bg-white px-4 text-sm outline-none transition-colors focus:border-zinc-400 dark:border-white/10 dark:bg-white/5 dark:text-white dark:focus:border-amber-500/30"
+              className="h-12 min-w-0 rounded-xl border border-zinc-200 bg-white px-4 text-sm outline-none transition-colors focus:border-zinc-400 sm:flex-1 dark:border-white/10 dark:bg-white/5 dark:text-white dark:focus:border-amber-500/30"
             />
             <button
               type="submit"
-              className="h-12 shrink-0 rounded-xl bg-zinc-900 px-6 text-sm font-medium text-white transition-all hover:bg-zinc-800 dark:bg-amber-500 dark:text-black dark:hover:bg-amber-400"
+              className="h-12 w-full rounded-xl bg-zinc-900 px-6 text-sm font-medium text-white transition-all hover:bg-zinc-800 sm:w-auto sm:shrink-0 dark:bg-amber-500 dark:text-black dark:hover:bg-amber-400"
             >
               Subscribe
             </button>
@@ -219,7 +219,7 @@ export default function WebsiteFooter() {
           <p className="text-xs text-zinc-400">
             © {new Date().getFullYear()} {brandName}. All rights reserved.
           </p>
-          <div className="flex items-center gap-4 text-xs text-zinc-400">
+          <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-xs text-zinc-400 sm:justify-end">
             <span>🇮🇳 Made in India</span>
             <span>·</span>
             <span>COD Available</span>
