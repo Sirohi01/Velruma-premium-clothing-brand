@@ -124,6 +124,7 @@ export async function POST(request: NextRequest) {
       { group: 'brand', key: 'brand_email', value: 'hello@velruma.com', label: 'Contact Email', type: 'string', isPublic: true },
       { group: 'brand', key: 'brand_phone', value: '+91 9999999999', label: 'Contact Phone', type: 'string', isPublic: true },
       { group: 'brand', key: 'brand_address', value: 'Mumbai, Maharashtra, India', label: 'Business Address', type: 'string', isPublic: true },
+      { group: 'brand', key: 'contact_page_image', value: '', label: 'Contact Page Image', type: 'image', isPublic: true },
 
       // Theme
       { group: 'theme', key: 'primary_color', value: '#0F172A', label: 'Primary Color', type: 'color', isPublic: true },

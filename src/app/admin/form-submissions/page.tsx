@@ -9,11 +9,14 @@ export default function FormSubmissionsPage() {
       defaults={{ status: 'new' }}
       fields={[
         { key: 'formName', label: 'Form Name', required: true },
+        { key: 'data', label: 'Submission Data', type: 'json' },
         { key: 'status', label: 'Status', type: 'select', options: ['new', 'reviewed', 'converted', 'rejected'] },
         { key: 'notes', label: 'Notes', type: 'textarea' },
       ]}
       columns={[
         { key: 'formName', label: 'Form' },
+        { key: 'data.name', label: 'Sender Name' },
+        { key: 'data.email', label: 'Email' },
         { key: 'status', label: 'Status', type: 'status' },
         { key: 'notes', label: 'Notes' },
         { key: 'createdAt', label: 'Received', type: 'date' },

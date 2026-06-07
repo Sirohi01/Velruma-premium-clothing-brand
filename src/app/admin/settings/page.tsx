@@ -75,18 +75,32 @@ export default function SettingsPage() {
         <section key={group} className="rounded-xl border border-white/10 bg-zinc-900 p-5">
           <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-amber-400">{group}</h2>
           <div className="grid gap-4 md:grid-cols-2">
-            {items.map((setting) => (
-              setting.type === 'image' ? (
-                <ImageUpload
-                  key={setting.key}
-                  label={setting.label}
-                  value={String(setting.value ?? '')}
-                  folder="settings"
-                  onChange={(value) => updateValue(setting.key, value)}
-                />
+            {items.map((setting) => {
+              const labelWithDesc = (
+                <span className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                  {setting.label}
+                  {setting.description && (
+                    <span className="ml-2 font-normal text-zinc-500">({setting.description})</span>
+                  )}
+                </span>
+              );
+
+              return setting.type === 'image' ? (
+                <div key={setting.key}>
+                  {labelWithDesc}
+                  <ImageUpload
+                    label=""
+                    value={String(setting.value ?? '')}
+                    folder="settings"
+                    onChange={(value) => updateValue(setting.key, value)}
+                  />
+                </div>
               ) : setting.type === 'boolean' ? (
                 <label key={setting.key} className="flex items-center justify-between rounded-lg border border-white/10 bg-white/5 p-3">
-                  <span className="text-sm font-medium text-zinc-300">{setting.label}</span>
+                  <div className="flex flex-col">
+                    <span className="text-sm font-medium text-zinc-300">{setting.label}</span>
+                    {setting.description && <span className="text-xs text-zinc-500">{setting.description}</span>}
+                  </div>
                   <input
                     type="checkbox"
                     checked={Boolean(setting.value)}
@@ -96,26 +110,26 @@ export default function SettingsPage() {
                 </label>
               ) : setting.type === 'textarea' ? (
                 <label key={setting.key} className="block md:col-span-2">
-                  <span className="mb-1 block text-sm font-medium text-zinc-700">{setting.label}</span>
+                  {labelWithDesc}
                   <textarea
                     value={String(setting.value ?? '')}
                     onChange={(event) => updateValue(setting.key, event.target.value)}
                     rows={6}
-                    className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 outline-none focus:border-amber-500"
+                    className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 outline-none focus:border-amber-500 dark:border-white/10 dark:bg-white/5 dark:text-white"
                   />
                 </label>
               ) : (
                 <label key={setting.key} className="block">
-                  <span className="mb-1 block text-sm font-medium text-zinc-700">{setting.label}</span>
+                  {labelWithDesc}
                   <input
                     type={setting.type === 'number' ? 'number' : setting.type === 'color' ? 'color' : 'text'}
                     value={String(setting.value ?? '')}
                     onChange={(event) => updateValue(setting.key, setting.type === 'number' ? Number(event.target.value) : event.target.value)}
-                    className="h-10 w-full rounded-lg border border-zinc-200 bg-white px-3 text-sm text-zinc-900 outline-none focus:border-amber-500"
+                    className="h-10 w-full rounded-lg border border-zinc-200 bg-white px-3 text-sm text-zinc-900 outline-none focus:border-amber-500 dark:border-white/10 dark:bg-white/5 dark:text-white"
                   />
                 </label>
-              )
-            ))}
+              );
+            })}
           </div>
         </section>
       ))}
