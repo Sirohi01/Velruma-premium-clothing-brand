@@ -5,6 +5,23 @@ import { toast } from 'sonner';
 import LoadingState from '@/components/shared/LoadingState';
 import ImageUpload from '@/components/shared/ImageUpload';
 
+const socialPlatformOptions = ['instagram', 'facebook', 'youtube', 'twitter', 'linkedin', 'pinterest', 'whatsapp'];
+
+function parseJsonList(value: unknown) {
+  if (Array.isArray(value)) return value;
+  if (typeof value !== 'string' || !value.trim()) return [];
+  try {
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function stringifyRows(rows: unknown[]) {
+  return JSON.stringify(rows, null, 2);
+}
+
 export default function SettingsPage() {
   const [settings, setSettings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -29,6 +46,23 @@ export default function SettingsPage() {
 
   const updateValue = (key: string, value: unknown) => {
     setSettings((prev) => prev.map((setting) => (setting.key === key ? { ...setting, value } : setting)));
+  };
+
+  const updateJsonRow = (key: string, index: number, patch: Record<string, unknown>) => {
+    const setting = settings.find((item) => item.key === key);
+    const rows = parseJsonList(setting?.value);
+    rows[index] = { ...rows[index], ...patch };
+    updateValue(key, stringifyRows(rows));
+  };
+
+  const addJsonRow = (key: string, row: Record<string, unknown>) => {
+    const setting = settings.find((item) => item.key === key);
+    updateValue(key, stringifyRows([...parseJsonList(setting?.value), row]));
+  };
+
+  const removeJsonRow = (key: string, index: number) => {
+    const setting = settings.find((item) => item.key === key);
+    updateValue(key, stringifyRows(parseJsonList(setting?.value).filter((_, rowIndex) => rowIndex !== index)));
   };
 
   const save = async () => {
@@ -84,6 +118,91 @@ export default function SettingsPage() {
                   )}
                 </span>
               );
+
+              if (setting.key === 'footer_social_links') {
+                const rows = parseJsonList(setting.value);
+                return (
+                  <div key={setting.key} className="md:col-span-2">
+                    {labelWithDesc}
+                    <div className="space-y-3 rounded-xl border border-white/10 bg-white/5 p-3">
+                      {rows.map((row: any, index) => (
+                        <div key={index} className="grid gap-3 rounded-lg border border-white/10 bg-zinc-950/40 p-3 md:grid-cols-[160px_1fr_1fr_auto]">
+                          <select
+                            value={row.platform || 'instagram'}
+                            onChange={(event) => updateJsonRow(setting.key, index, { platform: event.target.value })}
+                            className="h-10 rounded-lg border border-white/10 bg-zinc-950 px-3 text-sm text-white"
+                          >
+                            {socialPlatformOptions.map((platform) => <option key={platform} value={platform}>{platform}</option>)}
+                          </select>
+                          <input
+                            value={row.label || ''}
+                            onChange={(event) => updateJsonRow(setting.key, index, { label: event.target.value })}
+                            placeholder="Label"
+                            className="h-10 rounded-lg border border-white/10 bg-white/5 px-3 text-sm text-white outline-none focus:border-amber-500"
+                          />
+                          <input
+                            value={row.url || ''}
+                            onChange={(event) => updateJsonRow(setting.key, index, { url: event.target.value })}
+                            placeholder="https://..."
+                            className="h-10 rounded-lg border border-white/10 bg-white/5 px-3 text-sm text-white outline-none focus:border-amber-500"
+                          />
+                          <button type="button" onClick={() => removeJsonRow(setting.key, index)} className="rounded-lg px-3 text-sm font-semibold text-red-400 hover:bg-red-500/10">
+                            Remove
+                          </button>
+                        </div>
+                      ))}
+                      <button type="button" onClick={() => addJsonRow(setting.key, { platform: 'instagram', label: '', url: '' })} className="rounded-lg border border-amber-500/30 px-3 py-2 text-sm font-semibold text-amber-400 hover:bg-amber-500/10">
+                        + Add social link
+                      </button>
+                    </div>
+                  </div>
+                );
+              }
+
+              if (setting.key === 'header_supported_links') {
+                const rows = parseJsonList(setting.value);
+                return (
+                  <div key={setting.key} className="md:col-span-2">
+                    {labelWithDesc}
+                    <div className="space-y-3 rounded-xl border border-white/10 bg-white/5 p-3">
+                      {rows.map((row: any, index) => (
+                        <div key={index} className="grid gap-3 rounded-lg border border-white/10 bg-zinc-950/40 p-3 lg:grid-cols-[1fr_1fr_1fr_220px_auto]">
+                          <input
+                            value={row.label || ''}
+                            onChange={(event) => updateJsonRow(setting.key, index, { label: event.target.value })}
+                            placeholder="Top text e.g. SUPPORTED BY"
+                            className="h-10 rounded-lg border border-white/10 bg-white/5 px-3 text-sm text-white outline-none focus:border-amber-500"
+                          />
+                          <input
+                            value={row.url || ''}
+                            onChange={(event) => updateJsonRow(setting.key, index, { url: event.target.value })}
+                            placeholder="https://..."
+                            className="h-10 rounded-lg border border-white/10 bg-white/5 px-3 text-sm text-white outline-none focus:border-amber-500"
+                          />
+                          <input
+                            value={row.badgeText || ''}
+                            onChange={(event) => updateJsonRow(setting.key, index, { badgeText: event.target.value })}
+                            placeholder="Badge text e.g. Flipkart"
+                            className="h-10 rounded-lg border border-white/10 bg-white/5 px-3 text-sm text-white outline-none focus:border-amber-500"
+                          />
+                          <ImageUpload
+                            label="Logo/Icon"
+                            value={row.logo || ''}
+                            folder="settings"
+                            onChange={(value) => updateJsonRow(setting.key, index, { logo: value })}
+                          />
+                          <button type="button" onClick={() => removeJsonRow(setting.key, index)} className="h-10 rounded-lg px-3 text-sm font-semibold text-red-400 hover:bg-red-500/10">
+                            Remove
+                          </button>
+                        </div>
+                      ))}
+                      <button type="button" onClick={() => addJsonRow(setting.key, { label: 'SUPPORTED BY', url: '', logo: '', badgeText: '' })} className="rounded-lg border border-amber-500/30 px-3 py-2 text-sm font-semibold text-amber-400 hover:bg-amber-500/10">
+                        + Add supported link
+                      </button>
+                    </div>
+                  </div>
+                );
+              }
 
               return setting.type === 'image' ? (
                 <div key={setting.key}>

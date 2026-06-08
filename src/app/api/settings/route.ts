@@ -4,7 +4,20 @@ import Setting from '@/models/Setting';
 
 export const dynamic = 'force-dynamic';
 
-const defaultSettings = [
+type SettingType = 'string' | 'number' | 'boolean' | 'json' | 'image' | 'color' | 'select' | 'textarea';
+
+type DefaultSetting = {
+  group: string;
+  key: string;
+  value: unknown;
+  label: string;
+  description?: string;
+  type: SettingType;
+  options?: string[];
+  isPublic: boolean;
+};
+
+const defaultSettings: DefaultSetting[] = [
   { group: 'brand', key: 'brand_name', value: 'VELRUMA', label: 'Brand Name', type: 'string', isPublic: true },
   { group: 'brand', key: 'brand_tagline', value: 'Elevate Your Style', label: 'Brand Tagline', type: 'string', isPublic: true },
   { group: 'brand', key: 'brand_logo', value: '', label: 'Brand Logo', type: 'image', isPublic: true },
@@ -12,6 +25,33 @@ const defaultSettings = [
   { group: 'brand', key: 'brand_email', value: 'hello@velruma.com', label: 'Contact Email', type: 'string', isPublic: true },
   { group: 'brand', key: 'brand_phone', value: '+91 9999999999', label: 'Contact Phone', type: 'string', isPublic: true },
   { group: 'brand', key: 'brand_address', value: 'Mumbai, Maharashtra, India', label: 'Business Address', type: 'string', isPublic: true },
+  {
+    group: 'brand',
+    key: 'footer_social_links',
+    value: JSON.stringify([
+      { platform: 'instagram', label: 'Instagram', url: '' },
+      { platform: 'facebook', label: 'Facebook', url: '' },
+      { platform: 'youtube', label: 'YouTube', url: '' },
+      { platform: 'twitter', label: 'X / Twitter', url: '' },
+    ], null, 2),
+    label: 'Footer Social Links',
+    description: 'Add social profile URLs for footer icons.',
+    type: 'json',
+    isPublic: true,
+  },
+  { group: 'brand', key: 'header_supported_label', value: 'SUPPORTED BY', label: 'Header Supported Label', type: 'string', isPublic: true },
+  {
+    group: 'brand',
+    key: 'header_supported_links',
+    value: JSON.stringify([
+      { label: 'SUPPORTED BY', url: '', logo: '', badgeText: 'Flipkart' },
+      { label: 'SUPPORTED BY', url: '', logo: '', badgeText: 'Amazon' },
+    ], null, 2),
+    label: 'Header Supported Links',
+    description: 'Marketplace links shown in header. Multiple entries rotate automatically.',
+    type: 'json',
+    isPublic: true,
+  },
   { group: 'theme', key: 'primary_color', value: '#0F172A', label: 'Primary Color', type: 'color', isPublic: true },
   { group: 'theme', key: 'accent_color', value: '#C9A84C', label: 'Accent Color', type: 'color', isPublic: true },
   { group: 'theme', key: 'secondary_color', value: '#1E293B', label: 'Secondary Color', type: 'color', isPublic: true },
@@ -36,15 +76,42 @@ const defaultSettings = [
   { group: 'shipping', key: 'shipping_charge', value: 79, label: 'Default Shipping Charge', type: 'number', isPublic: true },
   { group: 'shipping', key: 'cod_charge', value: 49, label: 'COD Extra Charge', type: 'number', isPublic: true },
   { group: 'seo', key: 'default_meta_title', value: 'VELRUMA - Premium Clothing Brand', label: 'Default Meta Title', type: 'string', isPublic: true },
-  { group: 'seo', key: 'default_meta_description', value: 'Discover premium clothing at VELRUMA. Elevate your style with our curated collections of modern, luxury fashion.', label: 'Default Meta Description', type: 'string', isPublic: true },
+  {
+    group: 'seo',
+    key: 'default_meta_description',
+    value: 'Discover premium clothing at VELRUMA. Elevate your style with our curated collections of modern, luxury fashion.',
+    label: 'Default Meta Description',
+    type: 'string',
+    isPublic: true,
+  },
   { group: 'seo', key: 'default_og_image', value: '', label: 'Default OG Image', type: 'image', isPublic: true },
   {
     group: 'homepage',
     key: 'home_hero_slides',
     value: JSON.stringify([
-      { title: 'Premium Streetwear, Softer Than Ever', subtitle: 'Discover VELRUMA essentials made for daily comfort and sharp silhouettes.', image: '', ctaLabel: 'Shop New Arrivals', ctaHref: '/shop', badge: 'New Drop', aspectRatio: '16 / 5', objectPosition: 'center', imageFit: 'cover' },
-      { title: 'Oversized Fits Built For Every Day', subtitle: 'Clean details, versatile colors and premium fabrics for your wardrobe.', image: '', ctaLabel: 'Explore Collections', ctaHref: '/collections', badge: 'VELRUMA 2026', aspectRatio: '16 / 5', objectPosition: 'center', imageFit: 'cover' },
-    ]),
+      {
+        title: 'Premium Streetwear, Softer Than Ever',
+        subtitle: 'Discover VELRUMA essentials made for daily comfort and sharp silhouettes.',
+        image: '',
+        ctaLabel: 'Shop New Arrivals',
+        ctaHref: '/shop',
+        badge: 'New Drop',
+        aspectRatio: '16 / 5',
+        objectPosition: 'center',
+        imageFit: 'cover',
+      },
+      {
+        title: 'Oversized Fits Built For Every Day',
+        subtitle: 'Clean details, versatile colors and premium fabrics for your wardrobe.',
+        image: '',
+        ctaLabel: 'Explore Collections',
+        ctaHref: '/collections',
+        badge: 'VELRUMA 2026',
+        aspectRatio: '16 / 5',
+        objectPosition: 'center',
+        imageFit: 'cover',
+      },
+    ], null, 2),
     label: 'Homepage Hero Slides',
     type: 'textarea',
     isPublic: true,
@@ -52,22 +119,33 @@ const defaultSettings = [
 ];
 
 async function ensureDefaultSettings() {
-  const count = await Setting.countDocuments();
-  if (count > 0) return;
+  const defaultKeys = defaultSettings.map((setting) => setting.key);
+  const existingKeys = await Setting.distinct('key', { key: { $in: defaultKeys } });
+  const missingSettings = defaultSettings.filter((setting) => !existingKeys.includes(setting.key));
 
-  await Setting.insertMany(defaultSettings, { ordered: false });
+  if (missingSettings.length === 0) return;
+
+  try {
+    await Setting.insertMany(missingSettings, { ordered: false });
+  } catch (error: unknown) {
+    if (typeof error === 'object' && error && 'code' in error && error.code === 11000) return;
+    throw error;
+  }
 }
 
 export async function GET(request: NextRequest) {
   try {
     await dbConnect();
     await ensureDefaultSettings();
+
     const { searchParams } = new URL(request.url);
     const group = searchParams.get('group');
     const publicOnly = searchParams.get('public') === 'true';
     const query: Record<string, unknown> = {};
+
     if (group) query.group = group;
     if (publicOnly) query.isPublic = true;
+
     const settings = await Setting.find(query).sort({ group: 1, key: 1 });
     return NextResponse.json({ success: true, data: settings });
   } catch (error) {
@@ -79,18 +157,19 @@ export async function GET(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   try {
     await dbConnect();
+
     const body = await request.json();
-    const entries: any[] = Array.isArray(body.settings) ? body.settings : [body];
-    const settingsToSave = entries.filter((item: any) => item?.key);
+    const entries = Array.isArray(body.settings) ? body.settings : [body];
+    const settingsToSave = entries.filter((item) => item?.key);
+
     if (settingsToSave.length === 0) {
       await ensureDefaultSettings();
       const settings = await Setting.find({}).sort({ group: 1, key: 1 });
       return NextResponse.json({ success: true, data: settings });
     }
-    const results = [];
 
     for (const item of settingsToSave) {
-      const setting = await Setting.findOneAndUpdate(
+      await Setting.findOneAndUpdate(
         { key: item.key },
         {
           $set: {
@@ -106,12 +185,13 @@ export async function PUT(request: NextRequest) {
         },
         { returnDocument: 'after', upsert: true, runValidators: true }
       );
-      results.push(setting);
     }
 
-    return NextResponse.json({ success: true, data: results });
-  } catch (error: any) {
+    const settings = await Setting.find({}).sort({ group: 1, key: 1 });
+    return NextResponse.json({ success: true, data: settings });
+  } catch (error: unknown) {
     console.error('Settings PUT error:', error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    const message = error instanceof Error ? error.message : 'Internal Server Error';
+    return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 }

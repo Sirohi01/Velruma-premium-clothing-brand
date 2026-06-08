@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Mail, Phone, MapPin } from 'lucide-react';
+import { Mail, Phone, MapPin, MessageCircle } from 'lucide-react';
 import { useWebsiteSettings } from '@/contexts/SettingsContext';
 
 // Inline SVG icons for social media (lucide-react removed brand icons)
@@ -26,6 +26,26 @@ const YoutubeIcon = ({ className }: { className?: string }) => (
     <path d="M2.5 17a24.12 24.12 0 0 1 0-10 2 2 0 0 1 1.4-1.4 49.56 49.56 0 0 1 16.2 0A2 2 0 0 1 21.5 7a24.12 24.12 0 0 1 0 10 2 2 0 0 1-1.4 1.4 49.55 49.55 0 0 1-16.2 0A2 2 0 0 1 2.5 17"/><path d="m10 15 5-3-5-3z"/>
   </svg>
 );
+const PinterestIcon = ({ className }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+    <path d="M12.2 2C6.8 2 4 5.5 4 9.4c0 2.4 1.3 5.4 3.3 5.4.5 0 .7-1.3.7-1.6 0-.4-1-1.2-1-3.1 0-3.3 2.5-5.7 5.8-5.7 2.8 0 5 1.6 5 4.6 0 2.2-1.1 6.3-4 6.3-1 0-1.9-.8-1.9-1.9 0-1.6 1.1-3.1 1.1-4.7 0-2.7-3.8-2.2-3.8 1.1 0 .7.1 1.5.4 2.1-.6 2.4-1.7 6-1.7 8.5 0 .8.1 1.6.2 2.4h.1c1.1-1.5 1.5-2.9 1.9-4.7.2-.7.9-3.3.9-3.3.5.9 1.8 1.6 3.2 1.6 4.2 0 7.2-3.9 7.2-8.9C21.4 4.1 17.4 2 12.2 2z"/>
+  </svg>
+);
+const LinkedinIcon = ({ className }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+    <path d="M4.98 3.5C4.98 4.88 3.86 6 2.5 6S0 4.88 0 3.5 1.12 1 2.5 1s2.48 1.12 2.48 2.5zM.3 8.1h4.4V23H.3V8.1zM8.1 8.1h4.2v2h.1c.6-1.1 2-2.3 4.1-2.3 4.4 0 5.2 2.9 5.2 6.7V23h-4.4v-7.6c0-1.8 0-4.1-2.5-4.1s-2.9 2-2.9 4V23H7.5V8.1h.6z"/>
+  </svg>
+);
+
+const socialIconMap: Record<string, React.ElementType> = {
+  instagram: InstagramIcon,
+  twitter: TwitterIcon,
+  facebook: FacebookIcon,
+  youtube: YoutubeIcon,
+  linkedin: LinkedinIcon,
+  pinterest: PinterestIcon,
+  whatsapp: MessageCircle,
+};
 
 const footerLinks = {
   shop: [
@@ -50,12 +70,20 @@ const footerLinks = {
   ],
 };
 
-const socialLinks = [
-  { icon: InstagramIcon, href: '#', label: 'Instagram' },
-  { icon: TwitterIcon, href: '#', label: 'Twitter' },
-  { icon: FacebookIcon, href: '#', label: 'Facebook' },
-  { icon: YoutubeIcon, href: '#', label: 'YouTube' },
-];
+function parseSocialLinks(value: string) {
+  try {
+    const parsed = JSON.parse(value || '[]');
+    return Array.isArray(parsed)
+      ? parsed.filter((item) => item?.url).map((item) => ({
+        platform: String(item.platform || '').toLowerCase(),
+        href: String(item.url || ''),
+        label: String(item.label || item.platform || 'Social'),
+      }))
+      : [];
+  } catch {
+    return [];
+  }
+}
 
 export default function WebsiteFooter() {
   const [mounted, setMounted] = useState(false);
@@ -66,6 +94,7 @@ export default function WebsiteFooter() {
   const email = getSetting('brand_email', 'hello@velruma.com');
   const phone = getSetting('brand_phone', '+91 9999999999');
   const address = getSetting('brand_address', 'Mumbai, Maharashtra, India');
+  const socialLinks = parseSocialLinks(getSetting('footer_social_links', '[]'));
 
   useEffect(() => {
     setMounted(true);
@@ -125,13 +154,15 @@ export default function WebsiteFooter() {
             <p className="mt-3 text-sm leading-relaxed text-zinc-500">
               {tagline}
             </p>
-            <div className="mt-5 flex gap-3">
+            {socialLinks.length > 0 && <div className="mt-5 flex flex-wrap gap-3">
               {socialLinks.map((social) => {
-                const Icon = social.icon;
+                const Icon = socialIconMap[social.platform] || InstagramIcon;
                 return (
                   <a
                     key={social.label}
                     href={social.href}
+                    target="_blank"
+                    rel="noreferrer"
                     aria-label={social.label}
                     className="flex h-9 w-9 items-center justify-center rounded-full border border-zinc-200 text-zinc-500 transition-all hover:border-zinc-400 hover:text-zinc-900 dark:border-white/10 dark:hover:border-amber-500/30 dark:hover:text-amber-400"
                   >
@@ -139,7 +170,7 @@ export default function WebsiteFooter() {
                   </a>
                 );
               })}
-            </div>
+            </div>}
           </div>
 
           {/* Shop */}

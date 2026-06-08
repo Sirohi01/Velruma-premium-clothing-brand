@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
@@ -36,6 +36,22 @@ const mainNav = [
   { title: 'Contact', href: '/contact' },
 ];
 
+function parseSupportedLinks(value: string) {
+  try {
+    const parsed = JSON.parse(value || '[]');
+    return Array.isArray(parsed)
+      ? parsed.filter((item) => item?.url).map((item) => ({
+        label: String(item.label || 'SUPPORTED BY'),
+        url: String(item.url || ''),
+        logo: String(item.logo || ''),
+        badgeText: String(item.badgeText || 'Partner'),
+      }))
+      : [];
+  } catch {
+    return [];
+  }
+}
+
 export default function WebsiteHeader() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -44,6 +60,7 @@ export default function WebsiteHeader() {
   const [announcement, setAnnouncement] = useState<any | null>(null);
   const [popup, setPopup] = useState<any | null>(null);
   const [popupClosed, setPopupClosed] = useState(false);
+  const [supportedIndex, setSupportedIndex] = useState(0);
   const pathname = usePathname();
   const { totalItems, setIsCartOpen } = useCart();
   const { user } = useAuth();
@@ -52,6 +69,10 @@ export default function WebsiteHeader() {
   const brandLogo = getSetting('brand_logo', '');
   const freeShippingThreshold = getSetting('free_shipping_threshold', '999');
   const couponCode = getSetting('welcome_coupon_code', 'VELRUMA10');
+  const supportedLabel = getSetting('header_supported_label', 'SUPPORTED BY');
+  const supportedLinksRaw = getSetting('header_supported_links', '[]');
+  const supportedLinks = useMemo(() => parseSupportedLinks(supportedLinksRaw), [supportedLinksRaw]);
+  const activeSupportedLink = supportedLinks[supportedIndex % Math.max(supportedLinks.length, 1)];
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
@@ -79,6 +100,14 @@ export default function WebsiteHeader() {
       })
       .catch(() => undefined);
   }, []);
+
+  useEffect(() => {
+    if (supportedLinks.length <= 1) return;
+    const timer = window.setInterval(() => {
+      setSupportedIndex((index) => (index + 1) % supportedLinks.length);
+    }, 3500);
+    return () => window.clearInterval(timer);
+  }, [supportedLinks.length]);
 
   return (
     <>
@@ -187,6 +216,29 @@ export default function WebsiteHeader() {
 
           {/* Right: Actions */}
           <div className="flex items-center gap-1.5">
+            {activeSupportedLink && (
+              <a
+                href={activeSupportedLink.url}
+                target="_blank"
+                rel="noreferrer"
+                className="mr-2 hidden h-12 min-w-[118px] items-center justify-center border-l border-zinc-200 pl-4 text-center transition-opacity hover:opacity-75 dark:border-white/10 xl:flex"
+                aria-label={`${activeSupportedLink.label || supportedLabel} ${activeSupportedLink.badgeText}`}
+              >
+                <span className="flex flex-col items-center gap-1">
+                  <span className="text-[9px] font-bold uppercase tracking-[0.22em] text-zinc-500 dark:text-zinc-400">
+                    {activeSupportedLink.label || supportedLabel}
+                  </span>
+                  {activeSupportedLink.logo ? (
+                    <img src={activeSupportedLink.logo} alt={activeSupportedLink.label} className="h-6 max-w-[110px] object-contain" />
+                  ) : (
+                    <span className="max-w-[110px] truncate text-xs font-bold uppercase tracking-wide text-zinc-900 dark:text-white">
+                      {activeSupportedLink.badgeText}
+                    </span>
+                  )}
+                </span>
+              </a>
+            )}
+
             <button
               onClick={() => setSearchOpen(!searchOpen)}
               className="rounded-full p-2.5 text-zinc-600 transition-colors hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-white/5"
