@@ -29,7 +29,13 @@ export default async function BlogDetailPage({ params }: { params: Promise<{ slu
         <h1 className="mt-3 text-4xl font-bold text-zinc-900 dark:text-white lg:text-6xl" style={{ fontFamily: "'Playfair Display', serif" }}>{post.title}</h1>
         {post.excerpt && <p className="mx-auto mt-5 max-w-2xl text-zinc-500">{post.excerpt}</p>}
       </header>
-      {post.coverImage && <div className="mx-auto max-w-5xl px-4 lg:px-8"><img src={post.coverImage} alt="" className="max-h-[560px] w-full rounded-2xl object-cover" /></div>}
+      {post.coverImage && (
+        <div className="mx-auto max-w-5xl px-4 lg:px-8">
+          <div className="aspect-[16/9] overflow-hidden rounded-2xl bg-zinc-100">
+            <img src={post.coverImage} alt="" className="h-full w-full object-cover object-center" />
+          </div>
+        </div>
+      )}
       <div className="prose prose-zinc mx-auto max-w-3xl px-4 py-12 dark:prose-invert lg:px-8">
         {post.content.split('\n').filter(Boolean).map((paragraph: string, index: number) => <p key={index}>{paragraph}</p>)}
       </div>

@@ -129,7 +129,7 @@ export default async function HomePage() {
       <section className="mx-auto max-w-7xl px-4 py-4 lg:py-5 lg:px-8">
         <div className="flex flex-wrap gap-6">
           {collections.map((collection: any) => (
-            <Link key={collection._id.toString()} href={`/collection/${collection.slug}`} className="relative flex aspect-[4/5] h-[380px] sm:h-[450px] overflow-hidden rounded-lg bg-zinc-900 shadow-sm group">
+            <Link key={collection._id.toString()} href={`/collection/${collection.slug}`} className="relative flex aspect-[4/5] overflow-hidden rounded-lg bg-zinc-900 shadow-sm group">
               {collection.bannerImage && <img src={collection.bannerImage} alt={collection.name} className="absolute inset-0 h-full w-full object-cover object-top opacity-80 transition duration-700 group-hover:scale-105" />}
               <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/80 via-zinc-950/20 to-transparent" />
               <div className="absolute bottom-0 w-full p-4 text-white">

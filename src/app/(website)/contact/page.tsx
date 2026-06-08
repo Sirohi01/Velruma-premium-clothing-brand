@@ -35,7 +35,7 @@ export default async function ContactPage() {
   const phone = settings.brand_phone || '+91 9876543210';
   const address = settings.brand_address || 'New Delhi, India';
   const brandName = settings.brand_name || 'VELRUMA';
-  const contactImage = settings.contact_page_image || 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?q=80&w=2070&auto=format&fit=crop';
+  const contactImage = settings.contact_page_image || '';
 
   return (
     <div className="bg-[#F7F4EF] min-h-screen">
@@ -43,12 +43,16 @@ export default async function ContactPage() {
         <div className="overflow-hidden bg-white shadow-sm ring-1 ring-zinc-200">
           <div className="grid grid-cols-1 lg:grid-cols-2">
             {/* Editorial Image Side */}
-            <div className="relative h-64 lg:h-auto bg-zinc-100">
-              <img 
-                src={contactImage} 
-                alt={`${brandName} Fashion Studio`} 
-                className="absolute inset-0 h-full w-full object-cover grayscale-[20%]"
-              />
+            <div className="relative aspect-[4/3] bg-zinc-100 lg:aspect-auto">
+              {contactImage ? (
+                <img
+                  src={contactImage}
+                  alt={`${brandName} Fashion Studio`}
+                  className="absolute inset-0 h-full w-full object-cover grayscale-[20%]"
+                />
+              ) : (
+                <div className="absolute inset-0 bg-[linear-gradient(135deg,#f7f4ef,#efe2cc,#d9e6df)]" />
+              )}
               <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent"></div>
               <div className="absolute bottom-8 left-8 text-white">
                 <h2 className="text-3xl font-bold tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }}>{brandName} Studios</h2>

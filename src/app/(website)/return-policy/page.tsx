@@ -1,7 +1,11 @@
 import { CmsRenderer } from '@/components/website/CmsRenderer';
-import { getPublishedCmsPage } from '@/lib/cms-page';
+import { generateCmsMetadata, getPublishedCmsPage } from '@/lib/cms-page';
 
 export const dynamic = 'force-dynamic';
+
+export async function generateMetadata() {
+  return generateCmsMetadata('return-policy', 'Return Policy', 'Read VELRUMA return policy, return eligibility, and return request process.');
+}
 
 export default async function ReturnPolicyPage() {
   const page = await getPublishedCmsPage('return-policy');

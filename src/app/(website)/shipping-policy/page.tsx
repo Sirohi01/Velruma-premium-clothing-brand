@@ -1,7 +1,11 @@
 import { CmsRenderer } from '@/components/website/CmsRenderer';
-import { getPublishedCmsPage } from '@/lib/cms-page';
+import { generateCmsMetadata, getPublishedCmsPage } from '@/lib/cms-page';
 
 export const dynamic = 'force-dynamic';
+
+export async function generateMetadata() {
+  return generateCmsMetadata('shipping-policy', 'Shipping Policy', 'Read VELRUMA shipping policy, delivery timelines, charges, and order tracking information.');
+}
 
 export default async function ShippingPolicyPage() {
   const page = await getPublishedCmsPage('shipping-policy');

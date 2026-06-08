@@ -1,7 +1,11 @@
 import { CmsRenderer } from '@/components/website/CmsRenderer';
-import { getPublishedCmsPage } from '@/lib/cms-page';
+import { generateCmsMetadata, getPublishedCmsPage } from '@/lib/cms-page';
 
 export const dynamic = 'force-dynamic';
+
+export async function generateMetadata() {
+  return generateCmsMetadata('about', 'About VELRUMA', 'Learn about VELRUMA, a premium clothing brand focused on comfort and modern everyday style.');
+}
 
 export default async function AboutPage() {
   const page = await getPublishedCmsPage('about');

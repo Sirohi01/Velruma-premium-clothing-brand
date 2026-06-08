@@ -1,7 +1,11 @@
 import { CmsRenderer } from '@/components/website/CmsRenderer';
-import { getPublishedCmsPage } from '@/lib/cms-page';
+import { generateCmsMetadata, getPublishedCmsPage } from '@/lib/cms-page';
 
 export const dynamic = 'force-dynamic';
+
+export async function generateMetadata() {
+  return generateCmsMetadata('size-guide', 'Size Guide', 'Find sizing guidance for VELRUMA oversized and regular fit clothing.');
+}
 
 export default async function SizeGuidePage() {
   const page = await getPublishedCmsPage('size-guide');

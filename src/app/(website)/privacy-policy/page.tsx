@@ -1,7 +1,11 @@
 import { CmsRenderer } from '@/components/website/CmsRenderer';
-import { getPublishedCmsPage } from '@/lib/cms-page';
+import { generateCmsMetadata, getPublishedCmsPage } from '@/lib/cms-page';
 
 export const dynamic = 'force-dynamic';
+
+export async function generateMetadata() {
+  return generateCmsMetadata('privacy-policy', 'Privacy Policy', 'Read how VELRUMA handles customer data, order details, support information, and privacy practices.');
+}
 
 export default async function PrivacyPolicyPage() {
   const page = await getPublishedCmsPage('privacy-policy');

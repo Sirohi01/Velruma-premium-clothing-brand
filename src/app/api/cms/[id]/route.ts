@@ -24,8 +24,11 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     await dbConnect();
     const { id } = await params;
     const body = await request.json();
-    const page = await CmsPage.findByIdAndUpdate(
-      id,
+    const objectIdQuery = id.match(/^[a-f\d]{24}$/i) ? { _id: id } : null;
+    const slug = body.slug || (body.title ? slugify(body.title) : undefined);
+    const query = objectIdQuery ? { $or: [objectIdQuery, ...(slug ? [{ slug }] : [])] } : { slug: id };
+    const page = await CmsPage.findOneAndUpdate(
+      query,
       { ...body, slug: body.slug || (body.title ? slugify(body.title) : undefined) },
       { returnDocument: 'after', runValidators: true }
     );

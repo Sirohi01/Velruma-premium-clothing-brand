@@ -1,7 +1,11 @@
 import { CmsRenderer } from '@/components/website/CmsRenderer';
-import { getPublishedCmsPage } from '@/lib/cms-page';
+import { generateCmsMetadata, getPublishedCmsPage } from '@/lib/cms-page';
 
 export const dynamic = 'force-dynamic';
+
+export async function generateMetadata() {
+  return generateCmsMetadata('faq', 'FAQ', 'Answers to common VELRUMA questions about orders, shipping, payment, returns, sizing, and support.');
+}
 
 export default async function FaqPage() {
   const page = await getPublishedCmsPage('faq');
