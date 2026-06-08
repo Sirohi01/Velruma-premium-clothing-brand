@@ -333,11 +333,16 @@ export default function AdminCmsPage() {
                       {(form.heroVideo || form.heroImage) && (
                         <div>
                           <span className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-zinc-500">Hero preview</span>
-                          <div className="overflow-hidden rounded-lg bg-zinc-100" style={{ aspectRatio: form.heroVideo ? form.heroVideoAspectRatio : form.heroImageAspectRatio }}>
-                            {form.heroVideo ? (
-                              <video src={form.heroVideo} className="h-full w-full" style={{ objectFit: 'cover', objectPosition: form.heroVideoPosition || 'center' }} muted controls />
-                            ) : (
-                              <img src={form.heroImage} alt="" className="h-full w-full" style={{ objectFit: 'cover', objectPosition: form.heroImagePosition || 'center' }} />
+                          <div className="grid gap-2">
+                            {form.heroImage && (
+                              <div className="overflow-hidden rounded-lg bg-zinc-100" style={{ aspectRatio: form.heroImageAspectRatio }}>
+                                <img src={form.heroImage} alt="" className="h-full w-full" style={{ objectFit: 'cover', objectPosition: form.heroImagePosition || 'center' }} />
+                              </div>
+                            )}
+                            {form.heroVideo && (
+                              <div className="overflow-hidden rounded-lg bg-zinc-100" style={{ aspectRatio: form.heroVideoAspectRatio }}>
+                                <video src={form.heroVideo} className="h-full w-full" style={{ objectFit: 'cover', objectPosition: form.heroVideoPosition || 'center' }} muted controls />
+                              </div>
                             )}
                           </div>
                         </div>
@@ -395,11 +400,16 @@ export default function AdminCmsPage() {
                         {(section.video || section.image) && (
                           <div className="lg:col-span-2">
                             <span className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-zinc-500">Section preview</span>
-                            <div className="overflow-hidden rounded-lg bg-zinc-100" style={{ aspectRatio: section.video ? section.videoAspectRatio : section.imageAspectRatio }}>
-                              {section.video ? (
-                                <video src={section.video} className="h-full w-full" style={{ objectFit: section.mediaFit || 'cover', objectPosition: section.videoPosition || 'center' }} muted controls />
-                              ) : (
-                                <img src={section.image} alt="" className="h-full w-full" style={{ objectFit: section.mediaFit || 'cover', objectPosition: section.imagePosition || 'center' }} />
+                            <div className="grid gap-2">
+                              {section.image && (
+                                <div className="overflow-hidden rounded-lg bg-zinc-100" style={{ aspectRatio: section.imageAspectRatio || '16 / 9' }}>
+                                  <img src={section.image} alt="" className="h-full w-full" style={{ objectFit: section.mediaFit || 'cover', objectPosition: section.imagePosition || 'center' }} />
+                                </div>
+                              )}
+                              {section.video && (
+                                <div className="overflow-hidden rounded-lg bg-zinc-100" style={{ aspectRatio: section.videoAspectRatio || '16 / 9' }}>
+                                  <video src={section.video} className="h-full w-full" style={{ objectFit: section.mediaFit || 'cover', objectPosition: section.videoPosition || 'center' }} muted controls />
+                                </div>
                               )}
                             </div>
                           </div>

@@ -17,26 +17,35 @@ function sectionLabel(type?: string) {
 function MediaFrame({
   image,
   video,
-  aspectRatio,
-  position = 'center',
+  imageAspectRatio,
+  imagePosition = 'center',
+  videoAspectRatio,
+  videoPosition = 'center',
   fit = 'cover',
   className = '',
 }: {
   image?: string;
   video?: string;
-  aspectRatio?: string;
-  position?: string;
+  imageAspectRatio?: string;
+  imagePosition?: string;
+  videoAspectRatio?: string;
+  videoPosition?: string;
   fit?: 'cover' | 'contain';
   className?: string;
 }) {
   if (!image && !video) return null;
 
   return (
-    <div className={`overflow-hidden bg-zinc-100 ${className}`} style={{ aspectRatio: aspectRatio || '16 / 9' }}>
-      {video ? (
-        <video src={video} className="h-full w-full" style={{ objectFit: fit, objectPosition: position }} controls playsInline preload="metadata" />
-      ) : (
-        <img src={image} alt="" className="h-full w-full" style={{ objectFit: fit, objectPosition: position }} />
+    <div className={`grid gap-3 ${className}`}>
+      {image && (
+        <div className="overflow-hidden bg-zinc-100" style={{ aspectRatio: imageAspectRatio || '16 / 9' }}>
+          <img src={image} alt="" className="h-full w-full" style={{ objectFit: fit, objectPosition: imagePosition || 'center' }} />
+        </div>
+      )}
+      {video && (
+        <div className="overflow-hidden bg-zinc-100" style={{ aspectRatio: videoAspectRatio || '16 / 9' }}>
+          <video src={video} className="h-full w-full" style={{ objectFit: fit, objectPosition: videoPosition || 'center' }} controls playsInline preload="metadata" />
+        </div>
       )}
     </div>
   );
@@ -58,8 +67,8 @@ export function CmsRenderer({ page, fallbackTitle, fallbackContent }: { page?: a
         />
       )}
       <section className="border-b border-zinc-200 bg-white">
-        <div className="mx-auto grid max-w-7xl gap-6 px-4 py-10 sm:px-6 lg:grid-cols-[1fr_420px] lg:px-8 lg:py-14">
-          <div className="flex flex-col justify-center">
+        <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 lg:py-12">
+          <div className="max-w-4xl">
             <p className="text-xs font-bold uppercase tracking-[0.22em] text-amber-700">{page?.type || 'VELRUMA'}</p>
             <h1 className="mt-3 max-w-3xl text-4xl font-semibold leading-[0.95] tracking-tight text-zinc-950 sm:text-5xl lg:text-6xl" style={{ fontFamily: "'Playfair Display', serif" }}>
               {title}
@@ -72,21 +81,27 @@ export function CmsRenderer({ page, fallbackTitle, fallbackContent }: { page?: a
             </div>
           </div>
 
-          <div className="relative overflow-hidden rounded-lg bg-[#EFE2CC]" style={{ aspectRatio: page?.heroVideo ? (page?.heroVideoAspectRatio || '16 / 9') : (page?.heroImageAspectRatio || '16 / 9') }}>
-            {page?.heroVideo ? (
-              <video src={page.heroVideo} className="absolute inset-0 h-full w-full object-cover" style={{ objectPosition: page?.heroVideoPosition || 'center' }} muted loop playsInline autoPlay />
-            ) : page?.heroImage ? (
-              <img src={page.heroImage} alt="" className="absolute inset-0 h-full w-full object-cover" style={{ objectPosition: page?.heroImagePosition || 'center' }} />
-            ) : (
-              <div className="absolute inset-0 bg-[linear-gradient(135deg,#efe2cc,#f7f4ef_45%,#d9e6df)]" />
+          <div className={(page?.heroImage && page?.heroVideo) ? 'mt-8 grid gap-4 lg:grid-cols-2' : 'mt-8'}>
+            {page?.heroImage && (
+              <div className="relative overflow-hidden bg-[#EFE2CC]" style={{ aspectRatio: page?.heroImageAspectRatio || '16 / 9' }}>
+                <img src={page.heroImage} alt="" className="absolute inset-0 h-full w-full object-cover" style={{ objectPosition: page?.heroImagePosition || 'center' }} />
+                <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/35 via-transparent to-white/10" />
+                <div className="absolute bottom-4 left-4 right-4 text-white sm:bottom-5 sm:left-5 sm:right-5">
+                  <p className="text-xs font-bold uppercase tracking-[0.2em] text-white/75">VELRUMA</p>
+                  <p className="mt-1 max-w-xs text-xl font-semibold leading-tight sm:mt-2 sm:text-2xl" style={{ fontFamily: "'Playfair Display', serif" }}>Premium essentials, managed with care.</p>
+                </div>
+              </div>
             )}
-            <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/35 via-transparent to-white/10" />
-            <div className="absolute bottom-4 left-4 right-4 text-white sm:bottom-5 sm:left-5 sm:right-5">
-              <p className="text-xs font-bold uppercase tracking-[0.2em] text-white/75">VELRUMA</p>
-              <p className="mt-1 max-w-xs text-xl font-semibold leading-tight sm:mt-2 sm:text-2xl" style={{ fontFamily: "'Playfair Display', serif" }}>
-                Premium essentials, managed with care.
-              </p>
-            </div>
+            {page?.heroVideo && (
+              <div className="relative overflow-hidden bg-zinc-100" style={{ aspectRatio: page?.heroVideoAspectRatio || '16 / 9' }}>
+                <video src={page.heroVideo} className="absolute inset-0 h-full w-full object-cover" style={{ objectPosition: page?.heroVideoPosition || 'center' }} controls playsInline preload="metadata" />
+              </div>
+            )}
+            {!page?.heroImage && !page?.heroVideo && (
+              <div className="relative overflow-hidden bg-[#EFE2CC]" style={{ aspectRatio: '16 / 9' }}>
+                <div className="absolute inset-0 bg-[linear-gradient(135deg,#efe2cc,#f7f4ef_45%,#d9e6df)]" />
+              </div>
+            )}
           </div>
         </div>
       </section>
@@ -136,8 +151,10 @@ export function CmsRenderer({ page, fallbackTitle, fallbackContent }: { page?: a
               <MediaFrame
                 image={section.image}
                 video={section.video}
-                aspectRatio={section.video ? section.videoAspectRatio : section.imageAspectRatio}
-                position={section.video ? section.videoPosition : section.imagePosition}
+                imageAspectRatio={section.imageAspectRatio}
+                imagePosition={section.imagePosition}
+                videoAspectRatio={section.videoAspectRatio}
+                videoPosition={section.videoPosition}
                 fit={section.mediaFit || 'cover'}
                 className="mb-5 w-full"
               />
