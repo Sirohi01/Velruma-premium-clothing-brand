@@ -38,14 +38,59 @@ function MediaFrame({
   return (
     <div className={`grid gap-3 ${className}`}>
       {image && (
-        <div className="overflow-hidden bg-zinc-100" style={{ aspectRatio: imageAspectRatio || '16 / 9' }}>
+        <div
+          className="mx-auto max-h-[72vh] w-full overflow-hidden bg-zinc-100"
+          style={{
+            aspectRatio: imageAspectRatio || '16 / 9',
+            maxWidth: ['9 / 16', '4 / 5', '1 / 1'].includes(imageAspectRatio || '') ? 'min(100%, 520px)' : undefined,
+          }}
+        >
           <img src={image} alt="" className="h-full w-full" style={{ objectFit: fit, objectPosition: imagePosition || 'center' }} />
         </div>
       )}
       {video && (
-        <div className="overflow-hidden bg-zinc-100" style={{ aspectRatio: videoAspectRatio || '16 / 9' }}>
+        <div
+          className="mx-auto max-h-[72vh] w-full overflow-hidden bg-zinc-100"
+          style={{
+            aspectRatio: videoAspectRatio || '16 / 9',
+            maxWidth: ['9 / 16', '4 / 5', '1 / 1'].includes(videoAspectRatio || '') ? 'min(100%, 520px)' : undefined,
+          }}
+        >
           <video src={video} className="h-full w-full" style={{ objectFit: fit, objectPosition: videoPosition || 'center' }} controls playsInline preload="metadata" />
         </div>
+      )}
+    </div>
+  );
+}
+
+function HeroMedia({
+  type,
+  src,
+  aspectRatio,
+  position = 'center',
+  fit = 'contain',
+}: {
+  type: 'image' | 'video';
+  src: string;
+  aspectRatio?: string;
+  position?: string;
+  fit?: 'cover' | 'contain';
+}) {
+  return (
+    <div
+      className="relative mx-auto max-h-[72vh] w-full overflow-hidden bg-[#EFE2CC] shadow-sm ring-1 ring-zinc-200"
+      style={{
+        aspectRatio: aspectRatio || '16 / 9',
+        maxWidth: ['9 / 16', '4 / 5', '1 / 1'].includes(aspectRatio || '') ? 'min(100%, 520px)' : undefined,
+      }}
+    >
+      {type === 'image' && fit === 'contain' && (
+        <img src={src} alt="" className="absolute inset-0 h-full w-full scale-105 object-cover opacity-25 blur-xl" style={{ objectPosition: position }} />
+      )}
+      {type === 'image' ? (
+        <img src={src} alt="" className="relative h-full w-full" style={{ objectFit: fit, objectPosition: position }} />
+      ) : (
+        <video src={src} className="relative h-full w-full" style={{ objectFit: fit, objectPosition: position }} controls playsInline preload="metadata" />
       )}
     </div>
   );
@@ -68,34 +113,37 @@ export function CmsRenderer({ page, fallbackTitle, fallbackContent }: { page?: a
       )}
       <section className="border-b border-zinc-200 bg-white">
         <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 lg:py-12">
-          <div className="max-w-4xl">
+          <div className="mx-auto max-w-4xl text-center">
             <p className="text-xs font-bold uppercase tracking-[0.22em] text-amber-700">{page?.type || 'VELRUMA'}</p>
-            <h1 className="mt-3 max-w-3xl text-4xl font-semibold leading-[0.95] tracking-tight text-zinc-950 sm:text-5xl lg:text-6xl" style={{ fontFamily: "'Playfair Display', serif" }}>
+            <h1 className="mx-auto mt-3 max-w-3xl text-4xl font-semibold leading-[0.95] tracking-tight text-zinc-950 sm:text-5xl lg:text-6xl" style={{ fontFamily: "'Playfair Display', serif" }}>
               {title}
             </h1>
-            {page?.excerpt && <p className="mt-5 max-w-2xl text-base leading-7 text-zinc-600 sm:text-lg">{page.excerpt}</p>}
-            <div className="mt-6 flex flex-wrap gap-2 text-xs font-semibold uppercase tracking-wide text-zinc-600">
+            {page?.excerpt && <p className="mx-auto mt-5 max-w-2xl text-base leading-7 text-zinc-600 sm:text-lg">{page.excerpt}</p>}
+            <div className="mt-6 flex flex-wrap justify-center gap-2 text-xs font-semibold uppercase tracking-wide text-zinc-600">
               <span className="rounded-full border border-zinc-200 bg-[#F7F4EF] px-3 py-1.5">Updated Content</span>
               <span className="rounded-full border border-zinc-200 bg-[#F7F4EF] px-3 py-1.5">VELRUMA Official</span>
               <span className="rounded-full border border-zinc-200 bg-[#F7F4EF] px-3 py-1.5">Customer Ready</span>
             </div>
           </div>
 
-          <div className={(page?.heroImage && page?.heroVideo) ? 'mt-8 grid gap-4 lg:grid-cols-2' : 'mt-8'}>
+          <div className="mx-auto mt-8 grid max-w-5xl gap-4">
             {page?.heroImage && (
-              <div className="relative overflow-hidden bg-[#EFE2CC]" style={{ aspectRatio: page?.heroImageAspectRatio || '16 / 9' }}>
-                <img src={page.heroImage} alt="" className="absolute inset-0 h-full w-full object-cover" style={{ objectPosition: page?.heroImagePosition || 'center' }} />
-                <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/35 via-transparent to-white/10" />
-                <div className="absolute bottom-4 left-4 right-4 text-white sm:bottom-5 sm:left-5 sm:right-5">
-                  <p className="text-xs font-bold uppercase tracking-[0.2em] text-white/75">VELRUMA</p>
-                  <p className="mt-1 max-w-xs text-xl font-semibold leading-tight sm:mt-2 sm:text-2xl" style={{ fontFamily: "'Playfair Display', serif" }}>Premium essentials, managed with care.</p>
-                </div>
-              </div>
+              <HeroMedia
+                type="image"
+                src={page.heroImage}
+                aspectRatio={page?.heroImageAspectRatio}
+                position={page?.heroImagePosition || 'center'}
+                fit={page?.heroImageFit || 'contain'}
+              />
             )}
             {page?.heroVideo && (
-              <div className="relative overflow-hidden bg-zinc-100" style={{ aspectRatio: page?.heroVideoAspectRatio || '16 / 9' }}>
-                <video src={page.heroVideo} className="absolute inset-0 h-full w-full object-cover" style={{ objectPosition: page?.heroVideoPosition || 'center' }} controls playsInline preload="metadata" />
-              </div>
+              <HeroMedia
+                type="video"
+                src={page.heroVideo}
+                aspectRatio={page?.heroVideoAspectRatio}
+                position={page?.heroVideoPosition || 'center'}
+                fit={page?.heroVideoFit || 'contain'}
+              />
             )}
             {!page?.heroImage && !page?.heroVideo && (
               <div className="relative overflow-hidden bg-[#EFE2CC]" style={{ aspectRatio: '16 / 9' }}>

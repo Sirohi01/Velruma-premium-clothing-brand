@@ -40,9 +40,11 @@ const CmsPageSchema = new mongoose.Schema(
     heroImage: String,
     heroImageAspectRatio: { type: String, default: '16 / 9' },
     heroImagePosition: { type: String, default: 'center' },
+    heroImageFit: { type: String, enum: ['cover', 'contain'], default: 'contain' },
     heroVideo: String,
     heroVideoAspectRatio: { type: String, default: '16 / 9' },
     heroVideoPosition: { type: String, default: 'center' },
+    heroVideoFit: { type: String, enum: ['cover', 'contain'], default: 'contain' },
     excerpt: String,
     content: String,
     sections: [{

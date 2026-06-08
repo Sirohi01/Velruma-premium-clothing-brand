@@ -38,9 +38,11 @@ const blankForm = {
   heroImage: '',
   heroImageAspectRatio: '16 / 9',
   heroImagePosition: 'center',
+  heroImageFit: 'contain',
   heroVideo: '',
   heroVideoAspectRatio: '16 / 9',
   heroVideoPosition: 'center',
+  heroVideoFit: 'contain',
   excerpt: '',
   content: '',
   sections: [blankSection],
@@ -136,9 +138,11 @@ export default function AdminCmsPage() {
       heroImage: page.heroImage || '',
       heroImageAspectRatio: page.heroImageAspectRatio || '16 / 9',
       heroImagePosition: page.heroImagePosition || 'center',
+      heroImageFit: page.heroImageFit || 'contain',
       heroVideo: page.heroVideo || '',
       heroVideoAspectRatio: page.heroVideoAspectRatio || '16 / 9',
       heroVideoPosition: page.heroVideoPosition || 'center',
+      heroVideoFit: page.heroVideoFit || 'contain',
       excerpt: page.excerpt || '',
       content: page.content || '',
       sections: page.sections?.length ? page.sections.map((section: any) => ({
@@ -183,9 +187,11 @@ export default function AdminCmsPage() {
     heroImage: form.heroImage,
     heroImageAspectRatio: form.heroImageAspectRatio,
     heroImagePosition: form.heroImagePosition,
+    heroImageFit: form.heroImageFit,
     heroVideo: form.heroVideo,
     heroVideoAspectRatio: form.heroVideoAspectRatio,
     heroVideoPosition: form.heroVideoPosition,
+    heroVideoFit: form.heroVideoFit,
     excerpt: form.excerpt,
     content: form.content,
     sections: form.sections.map((section: any) => ({
@@ -319,6 +325,12 @@ export default function AdminCmsPage() {
                           {positionOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
                         </select>
                       </Field>
+                      <Field label="Hero image fit">
+                        <select value={form.heroImageFit} onChange={(e) => setForm({ ...form, heroImageFit: e.target.value })} className={inputClass}>
+                          <option value="contain">Contain - full image, no crop</option>
+                          <option value="cover">Cover - fill area, may crop</option>
+                        </select>
+                      </Field>
                       <ImageUpload label="Hero video" value={form.heroVideo} folder="cms/videos" accept="video" onChange={(heroVideo) => setForm({ ...form, heroVideo })} />
                       <Field label="Hero video aspect ratio">
                         <select value={form.heroVideoAspectRatio} onChange={(e) => setForm({ ...form, heroVideoAspectRatio: e.target.value })} className={inputClass}>
@@ -330,18 +342,25 @@ export default function AdminCmsPage() {
                           {positionOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
                         </select>
                       </Field>
+                      <Field label="Hero video fit">
+                        <select value={form.heroVideoFit} onChange={(e) => setForm({ ...form, heroVideoFit: e.target.value })} className={inputClass}>
+                          <option value="contain">Contain - full video, no crop</option>
+                          <option value="cover">Cover - fill area, may crop</option>
+                        </select>
+                      </Field>
                       {(form.heroVideo || form.heroImage) && (
                         <div>
                           <span className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-zinc-500">Hero preview</span>
                           <div className="grid gap-2">
                             {form.heroImage && (
-                              <div className="overflow-hidden rounded-lg bg-zinc-100" style={{ aspectRatio: form.heroImageAspectRatio }}>
-                                <img src={form.heroImage} alt="" className="h-full w-full" style={{ objectFit: 'cover', objectPosition: form.heroImagePosition || 'center' }} />
+                              <div className="relative mx-auto max-h-80 w-full overflow-hidden rounded-lg bg-zinc-100" style={{ aspectRatio: form.heroImageAspectRatio, maxWidth: ['9 / 16', '4 / 5', '1 / 1'].includes(form.heroImageAspectRatio || '') ? 'min(100%, 260px)' : undefined }}>
+                                {form.heroImageFit === 'contain' && <img src={form.heroImage} alt="" className="absolute inset-0 h-full w-full scale-105 object-cover opacity-25 blur-xl" style={{ objectPosition: form.heroImagePosition || 'center' }} />}
+                                <img src={form.heroImage} alt="" className="relative h-full w-full" style={{ objectFit: form.heroImageFit || 'contain', objectPosition: form.heroImagePosition || 'center' }} />
                               </div>
                             )}
                             {form.heroVideo && (
-                              <div className="overflow-hidden rounded-lg bg-zinc-100" style={{ aspectRatio: form.heroVideoAspectRatio }}>
-                                <video src={form.heroVideo} className="h-full w-full" style={{ objectFit: 'cover', objectPosition: form.heroVideoPosition || 'center' }} muted controls />
+                              <div className="mx-auto max-h-80 w-full overflow-hidden rounded-lg bg-zinc-100" style={{ aspectRatio: form.heroVideoAspectRatio, maxWidth: ['9 / 16', '4 / 5', '1 / 1'].includes(form.heroVideoAspectRatio || '') ? 'min(100%, 260px)' : undefined }}>
+                                <video src={form.heroVideo} className="h-full w-full" style={{ objectFit: form.heroVideoFit || 'contain', objectPosition: form.heroVideoPosition || 'center' }} muted controls />
                               </div>
                             )}
                           </div>
@@ -402,12 +421,12 @@ export default function AdminCmsPage() {
                             <span className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-zinc-500">Section preview</span>
                             <div className="grid gap-2">
                               {section.image && (
-                                <div className="overflow-hidden rounded-lg bg-zinc-100" style={{ aspectRatio: section.imageAspectRatio || '16 / 9' }}>
+                                <div className="mx-auto max-h-72 w-full overflow-hidden rounded-lg bg-zinc-100" style={{ aspectRatio: section.imageAspectRatio || '16 / 9', maxWidth: ['9 / 16', '4 / 5', '1 / 1'].includes(section.imageAspectRatio || '') ? 'min(100%, 240px)' : undefined }}>
                                   <img src={section.image} alt="" className="h-full w-full" style={{ objectFit: section.mediaFit || 'cover', objectPosition: section.imagePosition || 'center' }} />
                                 </div>
                               )}
                               {section.video && (
-                                <div className="overflow-hidden rounded-lg bg-zinc-100" style={{ aspectRatio: section.videoAspectRatio || '16 / 9' }}>
+                                <div className="mx-auto max-h-72 w-full overflow-hidden rounded-lg bg-zinc-100" style={{ aspectRatio: section.videoAspectRatio || '16 / 9', maxWidth: ['9 / 16', '4 / 5', '1 / 1'].includes(section.videoAspectRatio || '') ? 'min(100%, 240px)' : undefined }}>
                                   <video src={section.video} className="h-full w-full" style={{ objectFit: section.mediaFit || 'cover', objectPosition: section.videoPosition || 'center' }} muted controls />
                                 </div>
                               )}
