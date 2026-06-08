@@ -9,7 +9,7 @@ export default function InventoryPage() {
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
-  
+
   // Adjustment Modal
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedVariant, setSelectedVariant] = useState<{ productId: string, variantId: string, currentStock: number, name: string } | null>(null);
@@ -36,7 +36,7 @@ export default function InventoryPage() {
   const handleAdjustment = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedVariant) return;
-    
+
     try {
       const res = await fetch('/api/inventory', {
         method: 'POST',
@@ -64,8 +64,8 @@ export default function InventoryPage() {
     }
   };
 
-  const filteredProducts = products.filter(p => 
-    p.title.toLowerCase().includes(search.toLowerCase()) || 
+  const filteredProducts = products.filter(p =>
+    p.title.toLowerCase().includes(search.toLowerCase()) ||
     p.variants?.some((v: any) => v.sku?.toLowerCase().includes(search.toLowerCase()))
   );
 
@@ -116,7 +116,7 @@ export default function InventoryPage() {
                 </td>
               </tr>
             ) : (
-              filteredProducts.flatMap(product => 
+              filteredProducts.flatMap(product =>
                 (product.variants || []).map((variant: any) => (
                   <tr key={`${product._id}-${variant._id}`} className="hover:bg-zinc-50 dark:hover:bg-white/[0.02] transition-colors">
                     <td className="px-6 py-4">
@@ -135,16 +135,15 @@ export default function InventoryPage() {
                       )}
                     </td>
                     <td className="px-6 py-4">
-                      <span className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
-                        variant.stock > 10 ? 'bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-400' :
-                        variant.stock > 0 ? 'bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400' :
-                        'bg-red-100 text-red-700 dark:bg-red-500/10 dark:text-red-400'
-                      }`}>
-                        {variant.stock} in stock
+                      <span className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${variant.stock > 10 ? 'bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-400' :
+                          variant.stock > 0 ? 'bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400' :
+                            'bg-red-100 text-red-700 dark:bg-red-500/10 dark:text-red-400'
+                        }`}>
+                        {variant.stock} is left
                       </span>
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <button 
+                      <button
                         onClick={() => {
                           setSelectedVariant({
                             productId: product._id,
@@ -208,7 +207,7 @@ export default function InventoryPage() {
                   className="w-full rounded-lg border border-zinc-200 bg-zinc-50 p-2.5 text-sm dark:border-white/10 dark:bg-white/5 dark:text-white"
                 />
               </div>
-              
+
               <div className="mt-6 flex justify-end gap-3">
                 <button
                   type="button"
