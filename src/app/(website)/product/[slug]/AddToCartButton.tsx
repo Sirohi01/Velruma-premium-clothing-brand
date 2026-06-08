@@ -108,8 +108,8 @@ export default function AddToCartButton({
                   type="button"
                   onClick={() => setSelectedColor(color)}
                   className={`relative flex h-8 w-8 items-center justify-center rounded-full border-2 transition-all ${selectedColor === color
-                      ? 'border-zinc-900 ring-2 ring-zinc-900 ring-offset-2'
-                      : 'border-zinc-200 hover:border-zinc-400'
+                    ? 'border-zinc-900 ring-2 ring-zinc-900 ring-offset-2'
+                    : 'border-zinc-200 hover:border-zinc-400'
                     } ${bgClass}`}
                   aria-label={`Select ${color}`}
                   title={color}
@@ -182,8 +182,8 @@ export default function AddToCartButton({
                 type="button"
                 onClick={() => setSelectedSize(size)}
                 className={`flex h-10 min-w-[3rem] items-center justify-center rounded border px-3 text-sm font-medium transition-all ${selectedSize === size
-                    ? 'border-zinc-900 bg-zinc-900 text-white'
-                    : 'border-zinc-200 bg-white text-zinc-900 hover:border-zinc-400'
+                  ? 'border-zinc-900 bg-zinc-900 text-white'
+                  : 'border-zinc-200 bg-white text-zinc-900 hover:border-zinc-400'
                   }`}
               >
                 {size}
@@ -198,7 +198,7 @@ export default function AddToCartButton({
         <div className="flex flex-col items-center gap-1.5 text-center">
           <Package className="h-5 w-5 text-zinc-600" />
           <span className="text-xs font-medium text-zinc-900">
-            {isOutOfStock ? 'Out of Stock' : `${currentVariant?.stock || 0} in stock`}
+            {isOutOfStock ? 'Out of Stock' : `${currentVariant?.stock || 0} is left`}
           </span>
         </div>
         <div className="flex flex-col items-center gap-1.5 text-center border-l border-zinc-200">
@@ -222,7 +222,7 @@ export default function AddToCartButton({
             />
             <button
               type="button"
-              onClick={() => toast.success("We'll email you when this is back in stock")}
+              onClick={() => toast.success("We'll email you when this is back is available")}
               className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800"
             >
               Notify
