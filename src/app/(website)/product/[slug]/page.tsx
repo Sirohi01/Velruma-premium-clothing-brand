@@ -1,9 +1,8 @@
 import React from 'react';
 import dbConnect from '@/lib/db';
 import Product from '@/models/Product';
-import Category from '@/models/Category';
 import { notFound } from 'next/navigation';
-import { Shirt, Maximize, Droplet, Users, Share2, Heart, CheckCircle2 } from 'lucide-react';
+import { Shirt, Maximize, Droplet, Users, Share2, Heart, CheckCircle2, Sparkles, ShieldCheck } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import RecentlyViewed from './RecentlyViewed';
 import AddToCartButton from '@/app/(website)/product/[slug]/AddToCartButton';
@@ -29,6 +28,22 @@ function calculatePrice(product: any) {
 function productDescription(product: any) {
   return product.seo?.description || product.shortDescription || product.description?.slice(0, 155) || product.title;
 }
+
+const defaultProductHighlights = [
+  { icon: 'shirt', title: 'PREMIUM COTTON', subtitle: '240 GSM Fabric' },
+  { icon: 'maximize', title: 'OVERSIZED FIT', subtitle: 'Relaxed & Comfortable' },
+  { icon: 'droplet', title: 'MINIMAL DESIGN', subtitle: 'Signature Logo' },
+  { icon: 'users', title: 'UNISEX', subtitle: 'For Everyone' },
+];
+
+const highlightIcons: Record<string, React.ElementType> = {
+  shirt: Shirt,
+  maximize: Maximize,
+  droplet: Droplet,
+  users: Users,
+  sparkles: Sparkles,
+  shield: ShieldCheck,
+};
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   await dbConnect();
@@ -81,6 +96,8 @@ export default async function ProductDetailPage({
       values: m.values,
     }))
   } : undefined;
+  const productHighlights = (product.productHighlights || []).filter((highlight: any) => highlight?.title || highlight?.subtitle);
+  const visibleHighlights = productHighlights.length ? productHighlights : defaultProductHighlights;
 
   const serializedProduct = {
     _id: product._id.toString(),
@@ -197,27 +214,17 @@ export default async function ProductDetailPage({
         {/* Full Width Details Section */}
         <div className="mt-2">
           {/* Features */}
-          <div className="grid grid-cols-2 gap-4 rounded-xl border border-zinc-200 bg-white p-6 sm:grid-cols-4 max-w-5xl mx-auto">
-            <div className="flex flex-col items-center text-center">
-              <Shirt className="mb-2 h-6 w-6 text-zinc-900" />
-              <span className="text-xs font-semibold text-zinc-900">PREMIUM COTTON</span>
-              <span className="text-[10px] text-zinc-500">240 GSM Fabric</span>
-            </div>
-            <div className="flex flex-col items-center text-center">
-              <Maximize className="mb-2 h-6 w-6 text-zinc-900" />
-              <span className="text-xs font-semibold text-zinc-900">OVERSIZED FIT</span>
-              <span className="text-[10px] text-zinc-500">Relaxed & Comfortable</span>
-            </div>
-            <div className="flex flex-col items-center text-center">
-              <Droplet className="mb-2 h-6 w-6 text-zinc-900" />
-              <span className="text-xs font-semibold text-zinc-900">MINIMAL DESIGN</span>
-              <span className="text-[10px] text-zinc-500">Signature Logo</span>
-            </div>
-            <div className="flex flex-col items-center text-center">
-              <Users className="mb-2 h-6 w-6 text-zinc-900" />
-              <span className="text-xs font-semibold text-zinc-900">UNISEX</span>
-              <span className="text-[10px] text-zinc-500">For Everyone</span>
-            </div>
+          <div className="mx-auto grid max-w-5xl grid-cols-2 gap-4 rounded-xl border border-zinc-200 bg-white px-4 py-5 shadow-sm sm:grid-cols-4 sm:px-6">
+            {visibleHighlights.slice(0, 6).map((highlight: any, index: number) => {
+              const Icon = highlightIcons[highlight.icon] || Shirt;
+              return (
+                <div key={`${highlight.title}-${index}`} className="flex min-w-0 flex-col items-center text-center">
+                  <Icon className="mb-2 h-7 w-7 text-zinc-900" strokeWidth={1.8} />
+                  {highlight.title && <span className="max-w-full break-words text-xs font-bold uppercase leading-tight text-zinc-950">{highlight.title}</span>}
+                  {highlight.subtitle && <span className="mt-1 max-w-full break-words text-[11px] leading-tight text-zinc-500">{highlight.subtitle}</span>}
+                </div>
+              );
+            })}
           </div>
 
           {/* Tabs */}

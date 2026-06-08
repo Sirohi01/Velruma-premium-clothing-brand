@@ -2,10 +2,26 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Plus, Trash2, Save } from 'lucide-react';
+import { ArrowLeft, Trash2, Save } from 'lucide-react';
 import { toast } from 'sonner';
 import Link from 'next/link';
 import ImageUpload from '@/components/shared/ImageUpload';
+
+const highlightIconOptions = [
+  { value: 'shirt', label: 'T-shirt' },
+  { value: 'maximize', label: 'Fit' },
+  { value: 'droplet', label: 'Fabric / Drop' },
+  { value: 'users', label: 'Audience' },
+  { value: 'sparkles', label: 'Premium' },
+  { value: 'shield', label: 'Quality' },
+];
+
+const defaultHighlights = [
+  { icon: 'shirt', title: 'PREMIUM COTTON', subtitle: '240 GSM Fabric' },
+  { icon: 'maximize', title: 'OVERSIZED FIT', subtitle: 'Relaxed & Comfortable' },
+  { icon: 'droplet', title: 'MINIMAL DESIGN', subtitle: 'Signature Logo' },
+  { icon: 'users', title: 'UNISEX', subtitle: 'For Everyone' },
+];
 
 export default function CreateProductPage() {
   const router = useRouter();
@@ -30,15 +46,12 @@ export default function CreateProductPage() {
     images: [{ url: '', alt: '', isPrimary: true }],
     videos: [] as { url: string; title: string; isPrimary: boolean }[],
     variants: [{ size: '', color: '', stock: 0, extraPrice: 0, sku: '' }],
+    productHighlights: defaultHighlights,
     productDetailsText: '',
     washCareText: '',
     deliveryReturnsText: '',
     seo: { title: '', description: '' },
   });
-
-  useEffect(() => {
-    fetchData();
-  }, []);
 
   const fetchData = async () => {
     try {
@@ -55,6 +68,10 @@ export default function CreateProductPage() {
       toast.error('Failed to load categories/collections');
     }
   };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
 
   const handleAddImage = () => {
     setFormData({
@@ -75,6 +92,12 @@ export default function CreateProductPage() {
       ...formData,
       variants: [...formData.variants, { size: '', color: '', stock: 0, extraPrice: 0, sku: '' }]
     });
+  };
+
+  const updateHighlight = (index: number, key: string, value: string) => {
+    const productHighlights = [...formData.productHighlights];
+    productHighlights[index] = { ...productHighlights[index], [key]: value };
+    setFormData({ ...formData, productHighlights });
   };
 
   const toggleCollection = (collectionId: string) => {
@@ -354,6 +377,7 @@ export default function CreateProductPage() {
               ))}
             </div>
           </div>
+
         </div>
 
         {/* Sidebar Column */}
@@ -421,6 +445,56 @@ export default function CreateProductPage() {
                 <option value="male">Male</option>
                 <option value="female">Female</option>
               </select>
+            </div>
+          </div>
+
+          <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-zinc-900">
+            <div className="mb-3 flex items-start justify-between gap-3">
+              <div>
+                <h2 className="text-base font-semibold text-zinc-900 dark:text-white">Product Highlight Strip</h2>
+                <p className="mt-1 text-xs text-zinc-500">Product page par icon strip me dikhega.</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setFormData({ ...formData, productHighlights: [...formData.productHighlights, { icon: 'sparkles', title: '', subtitle: '' }] })}
+                className="shrink-0 text-sm font-medium text-amber-600 dark:text-amber-500"
+              >
+                + Add
+              </button>
+            </div>
+            <div className="space-y-3">
+              {formData.productHighlights.map((highlight, index) => (
+                <div key={index} className="space-y-2 rounded-lg border border-zinc-100 bg-zinc-50 p-3 dark:border-white/10 dark:bg-white/5">
+                  <div className="flex gap-2">
+                    <select
+                      value={highlight.icon}
+                      onChange={(e) => updateHighlight(index, 'icon', e.target.value)}
+                      className="h-10 w-32 rounded-lg border border-zinc-200 bg-white px-2 text-sm dark:border-white/10 dark:bg-zinc-950 dark:text-white"
+                    >
+                      {highlightIconOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+                    </select>
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, productHighlights: formData.productHighlights.filter((_, i) => i !== index) })}
+                      className="ml-auto rounded-lg p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                  <input
+                    value={highlight.title}
+                    onChange={(e) => updateHighlight(index, 'title', e.target.value)}
+                    placeholder="PREMIUM COTTON"
+                    className="h-10 w-full rounded-lg border border-zinc-200 bg-white px-3 text-sm dark:border-white/10 dark:bg-zinc-950 dark:text-white"
+                  />
+                  <input
+                    value={highlight.subtitle}
+                    onChange={(e) => updateHighlight(index, 'subtitle', e.target.value)}
+                    placeholder="240 GSM Fabric"
+                    className="h-10 w-full rounded-lg border border-zinc-200 bg-white px-3 text-sm dark:border-white/10 dark:bg-zinc-950 dark:text-white"
+                  />
+                </div>
+              ))}
             </div>
           </div>
 

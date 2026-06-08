@@ -8,6 +8,22 @@ import { toast } from 'sonner';
 import LoadingState from '@/components/shared/LoadingState';
 import ImageUpload from '@/components/shared/ImageUpload';
 
+const highlightIconOptions = [
+  { value: 'shirt', label: 'T-shirt' },
+  { value: 'maximize', label: 'Fit' },
+  { value: 'droplet', label: 'Fabric / Drop' },
+  { value: 'users', label: 'Audience' },
+  { value: 'sparkles', label: 'Premium' },
+  { value: 'shield', label: 'Quality' },
+];
+
+const defaultHighlights = [
+  { icon: 'shirt', title: 'PREMIUM COTTON', subtitle: '240 GSM Fabric' },
+  { icon: 'maximize', title: 'OVERSIZED FIT', subtitle: 'Relaxed & Comfortable' },
+  { icon: 'droplet', title: 'MINIMAL DESIGN', subtitle: 'Signature Logo' },
+  { icon: 'users', title: 'UNISEX', subtitle: 'For Everyone' },
+];
+
 export default function EditProductPage() {
   const router = useRouter();
   const params = useParams<{ id: string }>();
@@ -32,6 +48,7 @@ export default function EditProductPage() {
             images: product.images?.length ? product.images : [{ url: '', alt: '', isPrimary: true }],
             videos: product.videos || [],
             variants: product.variants?.length ? product.variants : [{ size: '', color: '', stock: 0, extraPrice: 0, sku: '' }],
+            productHighlights: product.productHighlights?.length ? product.productHighlights : defaultHighlights,
             productDetailsText: (product.productDetails || []).join('\n'),
             washCareText: (product.washCare || []).join('\n'),
             deliveryReturnsText: (product.deliveryReturns || []).join('\n'),
@@ -61,6 +78,23 @@ export default function EditProductPage() {
     const videos = [...(formData.videos || [])];
     videos[index] = { ...videos[index], [key]: value };
     setFormData({ ...formData, videos });
+  };
+
+  const updateHighlight = (index: number, key: string, value: string) => {
+    const productHighlights = [...(formData.productHighlights || [])];
+    productHighlights[index] = { ...productHighlights[index], [key]: value };
+    setFormData({ ...formData, productHighlights });
+  };
+
+  const toggleCollection = (collectionId: string) => {
+    const selectedCollections = formData.collections || [];
+    const exists = selectedCollections.includes(collectionId);
+    setFormData({
+      ...formData,
+      collections: exists
+        ? selectedCollections.filter((id: string) => id !== collectionId)
+        : [...selectedCollections, collectionId],
+    });
   };
 
   const save = async () => {
@@ -208,6 +242,7 @@ export default function EditProductPage() {
               Add variant
             </button>
           </Panel>
+
         </section>
 
         <section className="space-y-5">
@@ -226,6 +261,26 @@ export default function EditProductPage() {
                 {categories.map((category) => <option key={category._id} value={category._id}>{category.name}</option>)}
               </select>
             </label>
+            <div>
+              <span className="mb-2 block text-sm text-zinc-300">Collections</span>
+              {collections.length === 0 ? (
+                <p className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs text-zinc-500">No collections found.</p>
+              ) : (
+                <div className="max-h-52 space-y-2 overflow-y-auto rounded-lg border border-white/10 bg-white/5 p-2">
+                  {collections.map((collection) => {
+                    const collectionId = collection._id;
+                    const checked = (formData.collections || []).includes(collectionId);
+                    return (
+                      <label key={collectionId} className={`flex cursor-pointer items-center gap-2 rounded-md px-2 py-2 text-sm transition ${checked ? 'bg-amber-500/10 text-amber-300 ring-1 ring-amber-500/20' : 'text-zinc-300 hover:bg-white/10'}`}>
+                        <input type="checkbox" checked={checked} onChange={() => toggleCollection(collectionId)} className="h-4 w-4 accent-amber-500" />
+                        <span className="min-w-0 flex-1 truncate">{collection.name}</span>
+                      </label>
+                    );
+                  })}
+                </div>
+              )}
+              <p className="mt-1 text-xs text-zinc-500">{(formData.collections || []).length} selected</p>
+            </div>
             <label className="block">
               <span className="mb-1 block text-sm text-zinc-300">Audience</span>
               <select value={formData.gender || 'unisex'} onChange={(event) => setFormData({ ...formData, gender: event.target.value })} className="h-10 w-full rounded-lg border border-white/10 bg-zinc-950 px-3 text-sm text-white">
@@ -234,6 +289,39 @@ export default function EditProductPage() {
                 <option value="female">Female</option>
               </select>
             </label>
+          </Panel>
+
+          <Panel title="Product Highlight Strip">
+            <p className="text-xs text-zinc-500">Product page par icon strip me dikhega.</p>
+            {(formData.productHighlights || []).map((highlight: any, index: number) => (
+              <div key={highlight._id || index} className="space-y-2 rounded-lg border border-white/10 bg-white/5 p-3">
+                <div className="flex gap-2">
+                  <select
+                    value={highlight.icon || 'shirt'}
+                    onChange={(event) => updateHighlight(index, 'icon', event.target.value)}
+                    className="h-10 w-32 rounded-lg border border-white/10 bg-zinc-950 px-2 text-sm text-white"
+                  >
+                    {highlightIconOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+                  </select>
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, productHighlights: (formData.productHighlights || []).filter((_: any, i: number) => i !== index) })}
+                    className="ml-auto rounded-lg p-2 text-red-400 hover:bg-red-500/10"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
+                <Input label="Title" value={highlight.title || ''} onChange={(value) => updateHighlight(index, 'title', value)} />
+                <Input label="Subtitle" value={highlight.subtitle || ''} onChange={(value) => updateHighlight(index, 'subtitle', value)} />
+              </div>
+            ))}
+            <button
+              onClick={() => setFormData({ ...formData, productHighlights: [...(formData.productHighlights || []), { icon: 'sparkles', title: '', subtitle: '' }] })}
+              className="flex items-center gap-2 text-sm font-medium text-amber-400"
+            >
+              <Plus className="h-4 w-4" />
+              Add highlight
+            </button>
           </Panel>
 
           <Panel title="Pricing">

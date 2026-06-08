@@ -25,6 +25,13 @@ export interface IProductVideo {
   isPrimary: boolean;
 }
 
+export interface IProductHighlight {
+  _id?: mongoose.Types.ObjectId;
+  icon: string;
+  title: string;
+  subtitle: string;
+}
+
 export interface IProduct extends Document {
   _id: mongoose.Types.ObjectId;
   title: string;
@@ -47,6 +54,7 @@ export interface IProduct extends Document {
   images: IProductImage[];
   videos: IProductVideo[];
   variants: IProductVariant[];
+  productHighlights: IProductHighlight[];
   productDetails: string[];
   washCare: string[];
   deliveryReturns: string[];
@@ -82,6 +90,12 @@ const ProductVideoSchema = new Schema<IProductVideo>({
   isPrimary: { type: Boolean, default: false },
 });
 
+const ProductHighlightSchema = new Schema<IProductHighlight>({
+  icon: { type: String, default: 'shirt' },
+  title: { type: String, default: '', trim: true },
+  subtitle: { type: String, default: '', trim: true },
+});
+
 const ProductSchema = new Schema<IProduct>(
   {
     title: { type: String, required: true, trim: true },
@@ -104,6 +118,7 @@ const ProductSchema = new Schema<IProduct>(
     images: [ProductImageSchema],
     videos: [ProductVideoSchema],
     variants: [ProductVariantSchema],
+    productHighlights: [ProductHighlightSchema],
     productDetails: [{ type: String, trim: true }],
     washCare: [{ type: String, trim: true }],
     deliveryReturns: [{ type: String, trim: true }],

@@ -32,6 +32,15 @@ function normalizeProductPayload(body: any) {
         extraPrice: Number(variant.extraPrice || 0),
       }))
     : [];
+  const productHighlights = Array.isArray(body.productHighlights)
+    ? body.productHighlights
+      .filter((highlight: any) => highlight?.title || highlight?.subtitle)
+      .map((highlight: any) => ({
+        icon: String(highlight.icon || 'shirt'),
+        title: String(highlight.title || '').trim(),
+        subtitle: String(highlight.subtitle || '').trim(),
+      }))
+    : [];
 
   return {
     ...body,
@@ -45,6 +54,7 @@ function normalizeProductPayload(body: any) {
     images,
     videos,
     variants,
+    productHighlights,
   };
 }
 
