@@ -29,7 +29,10 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       slug: body.slug || (body.title ? slugify(body.title) : undefined),
       publishedAt: body.status === 'published' ? body.publishedAt || new Date() : body.publishedAt,
     };
-    const post = await Blog.findByIdAndUpdate(id, update, { returnDocument: 'after', runValidators: true });
+    const objectIdQuery = id.match(/^[a-f\d]{24}$/i) ? { _id: id } : null;
+    const slug = update.slug;
+    const query = objectIdQuery ? { $or: [objectIdQuery, ...(slug ? [{ slug }] : [])] } : { slug: id };
+    const post = await Blog.findOneAndUpdate(query, update, { returnDocument: 'after', runValidators: true });
     if (!post) return NextResponse.json({ success: false, error: 'Blog post not found' }, { status: 404 });
     return NextResponse.json({ success: true, data: post });
   } catch (error: any) {

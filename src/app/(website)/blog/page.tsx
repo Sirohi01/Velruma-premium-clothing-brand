@@ -21,7 +21,7 @@ export default async function BlogPage() {
           <div className="grid gap-6 md:grid-cols-3">
             {posts.map((post: any) => (
               <Link key={String(post._id)} href={`/blog/${post.slug}`} className="group overflow-hidden rounded-2xl border border-zinc-200 bg-white transition hover:-translate-y-1 hover:shadow-lg dark:border-white/10 dark:bg-zinc-900">
-                <div className="aspect-[4/3] bg-zinc-100 dark:bg-white/5">{post.coverImage ? <img src={post.coverImage} alt="" className="h-full w-full object-cover" /> : null}</div>
+                <div className="aspect-square bg-zinc-100 dark:bg-white/5">{post.cardImage || post.coverImage ? <img src={post.cardImage || post.coverImage} alt="" className="h-full w-full object-cover object-center" /> : null}</div>
                 <div className="p-5">
                   <p className="text-xs uppercase tracking-wide text-amber-500">{post.category}</p>
                   <h2 className="mt-2 text-xl font-semibold text-zinc-900 group-hover:text-amber-600 dark:text-white">{post.title}</h2>
