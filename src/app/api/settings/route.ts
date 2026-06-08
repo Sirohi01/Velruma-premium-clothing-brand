@@ -53,6 +53,15 @@ const defaultSettings: DefaultSetting[] = [
   { group: 'brand', key: 'header_supported_label', value: 'SUPPORTED BY', label: 'Header Supported Label', type: 'string', isPublic: true },
   {
     group: 'brand',
+    key: 'topbar_fallback_message',
+    value: 'Premium oversized essentials crafted in India - limited drops, clean fits, everyday comfort.',
+    label: 'Topbar Fallback Message',
+    description: 'Shown when no website announcement or active coupon is available.',
+    type: 'string',
+    isPublic: true,
+  },
+  {
+    group: 'brand',
     key: 'header_supported_links',
     value: JSON.stringify([
       { label: 'SUPPORTED BY', url: '', logo: '', badgeText: 'Flipkart' },

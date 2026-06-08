@@ -52,12 +52,32 @@ function parseSupportedLinks(value: string) {
   }
 }
 
+function isCouponCurrentlyUsable(coupon: any) {
+  if (!coupon?.isActive) return false;
+  const now = Date.now();
+  const starts = coupon.validFrom ? new Date(coupon.validFrom).getTime() : 0;
+  const ends = coupon.validUntil ? new Date(coupon.validUntil).getTime() : Infinity;
+  const usageLimit = Number(coupon.usageLimit || 0);
+  const usedCount = Number(coupon.usedCount || 0);
+  return starts <= now && ends >= now && (usageLimit === 0 || usedCount < usageLimit);
+}
+
+function couponMessage(coupon: any, freeShippingThreshold: string) {
+  const value = Number(coupon.discountValue || 0);
+  const discount = coupon.discountType === 'fixed' ? `Rs.${value}` : `${value}%`;
+  const minOrder = Number(coupon.minOrderValue || 0);
+  const minOrderText = minOrder > 0 ? ` ON ORDERS ABOVE Rs.${minOrder}` : '';
+  const shippingText = freeShippingThreshold ? `FREE SHIPPING ABOVE Rs.${freeShippingThreshold} - ` : '';
+  return `${shippingText}USE CODE ${String(coupon.code || '').toUpperCase()} FOR ${discount} OFF${minOrderText}`;
+}
+
 export default function WebsiteHeader() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [announcement, setAnnouncement] = useState<any | null>(null);
+  const [topCoupon, setTopCoupon] = useState<any | null>(null);
   const [popup, setPopup] = useState<any | null>(null);
   const [popupClosed, setPopupClosed] = useState(false);
   const [supportedIndex, setSupportedIndex] = useState(0);
@@ -68,11 +88,16 @@ export default function WebsiteHeader() {
   const brandName = getSetting('brand_name', 'VELRUMA');
   const brandLogo = getSetting('brand_logo', '');
   const freeShippingThreshold = getSetting('free_shipping_threshold', '999');
-  const couponCode = getSetting('welcome_coupon_code', 'VELRUMA10');
+  const topbarFallbackMessage = getSetting('topbar_fallback_message', 'Premium oversized essentials crafted in India - limited drops, clean fits, everyday comfort.');
   const supportedLabel = getSetting('header_supported_label', 'SUPPORTED BY');
   const supportedLinksRaw = getSetting('header_supported_links', '[]');
   const supportedLinks = useMemo(() => parseSupportedLinks(supportedLinksRaw), [supportedLinksRaw]);
   const activeSupportedLink = supportedLinks[supportedIndex % Math.max(supportedLinks.length, 1)];
+  const topbarText = announcement
+    ? announcement.message
+    : topCoupon
+      ? couponMessage(topCoupon, freeShippingThreshold)
+      : topbarFallbackMessage;
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
@@ -102,6 +127,17 @@ export default function WebsiteHeader() {
   }, []);
 
   useEffect(() => {
+    fetch('/api/coupons?active=true')
+      .then((res) => res.json())
+      .then((data) => {
+        if (!data.success) return;
+        const coupon = (data.data || []).find((item: any) => isCouponCurrentlyUsable(item));
+        setTopCoupon(coupon || null);
+      })
+      .catch(() => undefined);
+  }, []);
+
+  useEffect(() => {
     if (supportedLinks.length <= 1) return;
     const timer = window.setInterval(() => {
       setSupportedIndex((index) => (index + 1) % supportedLinks.length);
@@ -112,13 +148,15 @@ export default function WebsiteHeader() {
   return (
     <>
       {/* Announcement Bar */}
-      <div className="bg-[#EFE2CC] px-4 py-2 text-center text-xs font-semibold tracking-wide text-zinc-800">
-        {announcement ? (
-          announcement.link ? <Link href={announcement.link} className="text-amber-300">{announcement.message}</Link> : announcement.message
-        ) : (
-          <>FREE SHIPPING ON ORDERS ABOVE Rs.{freeShippingThreshold} - USE CODE <span className="text-amber-700">{couponCode}</span> FOR 10% OFF</>
-        )}
-      </div>
+      {topbarText && (
+        <div className="bg-[#EFE2CC] px-4 py-2 text-center text-xs font-semibold tracking-wide text-zinc-800">
+          {announcement?.link ? (
+            <Link href={announcement.link} className="text-amber-700">{topbarText}</Link>
+          ) : (
+            topbarText
+          )}
+        </div>
+      )}
 
       {popup && !popupClosed && (
         <div className="fixed inset-x-4 top-24 z-50 mx-auto max-w-md rounded-xl border border-amber-400/30 bg-zinc-950 p-5 text-white shadow-2xl shadow-black/40">
