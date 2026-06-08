@@ -11,6 +11,7 @@ export default function CreateProductPage() {
   const router = useRouter();
   const [categories, setCategories] = useState<any[]>([]);
   const [collections, setCollections] = useState<any[]>([]);
+  const [saving, setSaving] = useState(false);
   
   const [formData, setFormData] = useState({
     title: '',
@@ -76,8 +77,20 @@ export default function CreateProductPage() {
     });
   };
 
+  const toggleCollection = (collectionId: string) => {
+    const exists = formData.collections.includes(collectionId);
+    setFormData({
+      ...formData,
+      collections: exists
+        ? formData.collections.filter((id) => id !== collectionId)
+        : [...formData.collections, collectionId],
+    });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (saving) return;
+    setSaving(true);
     try {
       const res = await fetch('/api/products', {
         method: 'POST',
@@ -93,13 +106,16 @@ export default function CreateProductPage() {
       const data = await res.json();
       
       if (data.success) {
-        toast.success('Product created successfully');
-        router.push('/admin/products');
+        const firstSku = data.data?.variants?.[0]?.sku;
+        toast.success(firstSku ? `Product created. SKU: ${firstSku}` : 'Product created successfully');
+        router.push(`/admin/products/${data.data._id}`);
       } else {
         toast.error(data.error || 'Failed to create product');
       }
     } catch (error) {
       toast.error('Network error');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -130,10 +146,11 @@ export default function CreateProductPage() {
         </div>
         <button
           onClick={handleSubmit}
+          disabled={saving}
           className="flex items-center gap-2 rounded-lg bg-zinc-900 px-6 py-2.5 text-sm font-medium text-white hover:bg-zinc-800 dark:bg-amber-500 dark:text-black dark:hover:bg-amber-400 shadow-lg shadow-amber-500/20"
         >
           <Save className="h-4 w-4" />
-          Save Product
+          {saving ? 'Saving...' : 'Save Product'}
         </button>
       </div>
 
@@ -368,6 +385,30 @@ export default function CreateProductPage() {
                   <option key={c._id} value={c._id}>{c.name}</option>
                 ))}
               </select>
+            </div>
+            <div>
+              <label className="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Collections</label>
+              {collections.length === 0 ? (
+                <p className="rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 text-xs text-zinc-500 dark:border-white/10 dark:bg-white/5">No collections found. Create collections first.</p>
+              ) : (
+                <div className="max-h-52 space-y-2 overflow-y-auto rounded-lg border border-zinc-200 bg-zinc-50 p-2 dark:border-white/10 dark:bg-white/5">
+                  {collections.map((collection) => {
+                    const checked = formData.collections.includes(collection._id);
+                    return (
+                      <label key={collection._id} className={`flex cursor-pointer items-center gap-2 rounded-md px-2 py-2 text-sm transition ${checked ? 'bg-amber-50 text-amber-800 ring-1 ring-amber-200 dark:bg-amber-500/10 dark:text-amber-300' : 'text-zinc-600 hover:bg-white dark:text-zinc-300 dark:hover:bg-white/10'}`}>
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          onChange={() => toggleCollection(collection._id)}
+                          className="h-4 w-4 accent-amber-600"
+                        />
+                        <span className="min-w-0 flex-1 truncate">{collection.name}</span>
+                      </label>
+                    );
+                  })}
+                </div>
+              )}
+              <p className="mt-1 text-xs text-zinc-500">{formData.collections.length} selected</p>
             </div>
             <div>
               <label className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Audience</label>

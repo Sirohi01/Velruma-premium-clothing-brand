@@ -21,6 +21,17 @@ function normalizeProductPayload(body: any) {
       isPrimary: index === 0 ? true : Boolean(video.isPrimary),
     }))
     : [];
+  const variants = Array.isArray(body.variants)
+    ? body.variants
+      .filter((variant: any) => variant?.size || variant?.color || Number(variant?.stock || 0) > 0 || variant?.sku)
+      .map((variant: any) => ({
+        ...variant,
+        size: String(variant.size || '').trim(),
+        color: String(variant.color || '').trim(),
+        stock: Number(variant.stock || 0),
+        extraPrice: Number(variant.extraPrice || 0),
+      }))
+    : [];
 
   return {
     ...body,
@@ -33,6 +44,7 @@ function normalizeProductPayload(body: any) {
     discountValue: Number(body.discountValue || 0),
     images,
     videos,
+    variants,
   };
 }
 

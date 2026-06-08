@@ -13,6 +13,7 @@ export default function HomepageManagerPage() {
   const [slides, setSlides] = useState<Slide[]>([]);
   const [setting, setSetting] = useState<any | null>(null);
   const [saving, setSaving] = useState(false);
+  const [parseError, setParseError] = useState(false);
 
   useEffect(() => {
     fetch('/api/settings?group=homepage')
@@ -23,8 +24,10 @@ export default function HomepageManagerPage() {
         setSetting(item);
         try {
           setSlides(JSON.parse(item?.value || '[]'));
+          setParseError(false);
         } catch {
-          setSlides([]);
+          setParseError(true);
+          toast.error('Homepage slides data is invalid. Please repair before saving.');
         }
       });
   }, []);
@@ -64,6 +67,10 @@ export default function HomepageManagerPage() {
   };
 
   const save = async () => {
+    if (parseError) {
+      toast.error('Homepage slides data is invalid. Refresh after repair before saving.');
+      return;
+    }
     await persistSlides(slides);
   };
 
@@ -95,6 +102,12 @@ export default function HomepageManagerPage() {
       <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
         Best homepage hero export size: <strong>1920 x 600 px</strong> or <strong>1600 x 500 px</strong>. Select <strong>16:5 Banner</strong> + <strong>Cover</strong> for a clean full-width hero. Use <strong>Contain</strong> only when the full image must show with no crop.
       </div>
+
+      {parseError && (
+        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          Saved homepage slider JSON is invalid. Do not save from this screen until the data is repaired.
+        </div>
+      )}
 
       <div className="grid gap-3">
         {slides.map((slide, index) => (

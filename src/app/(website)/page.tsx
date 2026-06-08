@@ -20,12 +20,15 @@ function price(product: any) {
 
 function parseSlides(value: unknown): HeroSlide[] {
   try {
-    if (typeof value === 'string' && value.trim()) return JSON.parse(value);
-    if (Array.isArray(value)) return value as HeroSlide[];
+    const slides = typeof value === 'string' && value.trim()
+      ? JSON.parse(value)
+      : Array.isArray(value)
+        ? value
+        : [];
+    return (Array.isArray(slides) ? slides : []).filter((slide: HeroSlide) => slide?.image || slide?.title || slide?.subtitle);
   } catch {
     return [];
   }
-  return [];
 }
 
 export default async function HomePage() {
@@ -48,7 +51,7 @@ export default async function HomePage() {
       badge: 'New Drop',
       aspectRatio: '16 / 9',
       objectPosition: 'center',
-      imageFit: 'contain',
+      imageFit: 'cover',
     },
     {
       title: 'Oversized Fits Built For Every Day',
@@ -59,7 +62,7 @@ export default async function HomePage() {
       badge: 'VELRUMA 2026',
       aspectRatio: '16 / 9',
       objectPosition: 'center',
-      imageFit: 'contain',
+      imageFit: 'cover',
     },
   ];
 
