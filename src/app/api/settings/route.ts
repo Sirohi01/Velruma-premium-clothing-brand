@@ -17,6 +17,17 @@ type DefaultSetting = {
   isPublic: boolean;
 };
 
+type SettingPayload = {
+  group?: string;
+  key?: string;
+  value?: unknown;
+  label?: string;
+  description?: string;
+  type?: SettingType;
+  options?: string[];
+  isPublic?: boolean;
+};
+
 const defaultSettings: DefaultSetting[] = [
   { group: 'brand', key: 'brand_name', value: 'VELRUMA', label: 'Brand Name', type: 'string', isPublic: true },
   { group: 'brand', key: 'brand_tagline', value: 'Elevate Your Style', label: 'Brand Tagline', type: 'string', isPublic: true },
@@ -158,9 +169,9 @@ export async function PUT(request: NextRequest) {
   try {
     await dbConnect();
 
-    const body = await request.json();
-    const entries = Array.isArray(body.settings) ? body.settings : [body];
-    const settingsToSave = entries.filter((item) => item?.key);
+    const body = await request.json() as { settings?: SettingPayload[] } & SettingPayload;
+    const entries: SettingPayload[] = Array.isArray(body.settings) ? body.settings : [body];
+    const settingsToSave = entries.filter((item: SettingPayload) => Boolean(item.key));
 
     if (settingsToSave.length === 0) {
       await ensureDefaultSettings();
