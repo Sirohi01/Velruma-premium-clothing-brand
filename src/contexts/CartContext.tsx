@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 
 export interface CartItem {
   productId: string;
@@ -35,9 +35,22 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 
 const CART_STORAGE_KEY = 'velruma-cart';
 
+function calculateProductPrice(product: any, extraPrice = 0) {
+  const sellingBeforeDiscount = Number(product.salePrice || product.basePrice || 0);
+  const discountType = product.discountType || 'none';
+  const discountValue = Number(product.discountValue || 0);
+  const extraDiscount = discountType === 'percentage'
+    ? Math.round((sellingBeforeDiscount * discountValue) / 100)
+    : discountType === 'fixed'
+      ? discountValue
+      : 0;
+  return Math.max(0, sellingBeforeDiscount - extraDiscount) + Number(extraPrice || 0);
+}
+
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const hasRefreshedStoredPrices = useRef(false);
 
   useEffect(() => {
     try {
@@ -55,6 +68,41 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
   }, [items]);
 
+  useEffect(() => {
+    if (hasRefreshedStoredPrices.current || items.length === 0) return;
+    hasRefreshedStoredPrices.current = true;
+
+    const refreshStoredPrices = async () => {
+      try {
+        const refreshed = await Promise.all(items.map(async (item) => {
+          const res = await fetch(`/api/products/${item.slug}`);
+          const data = await res.json();
+          if (!data.success) return item;
+
+          const product = data.data;
+          const variant = (product.variants || []).find((v: any) => v.size === item.size && v.color === item.color);
+          const extraPrice = Number(variant?.extraPrice || 0);
+
+          return {
+            ...item,
+            name: product.title || item.name,
+            image: product.images?.[0]?.url || item.image,
+            price: calculateProductPrice(product, extraPrice),
+            mrp: Number(product.basePrice || 0) + extraPrice,
+            maxQuantity: Number(variant?.stock || item.maxQuantity || 1),
+            sku: variant?.sku || item.sku,
+          };
+        }));
+
+        setItems(refreshed);
+      } catch {
+        // Keep stored cart as-is if refresh fails.
+      }
+    };
+
+    refreshStoredPrices();
+  }, [items]);
+
   const addItem = useCallback((item: CartItem) => {
     setItems((prev) => {
       const existingIndex = prev.findIndex(
@@ -65,7 +113,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         const updated = [...prev];
         const existing = updated[existingIndex];
         const newQty = Math.min(existing.quantity + item.quantity, item.maxQuantity);
-        updated[existingIndex] = { ...existing, quantity: newQty };
+        updated[existingIndex] = {
+          ...existing,
+          ...item,
+          quantity: newQty,
+        };
         return updated;
       }
 

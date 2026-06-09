@@ -225,7 +225,7 @@ export default function EditProductPage() {
                   <Input label="Color" value={variant.color || ''} onChange={(value) => updateVariant(index, 'color', value)} />
                   <Input label="SKU" value={variant.sku || ''} onChange={(value) => updateVariant(index, 'sku', value)} />
                   <Input label="Stock" type="number" value={variant.stock || 0} onChange={(value) => updateVariant(index, 'stock', Number(value))} />
-                  <Input label="+ Price" type="number" value={variant.extraPrice || 0} onChange={(value) => updateVariant(index, 'extraPrice', Number(value))} />
+                  <Input label="Extra add-on" type="number" value={variant.extraPrice || 0} onChange={(value) => updateVariant(index, 'extraPrice', Number(value))} />
                 </div>
                 <button
                   type="button"

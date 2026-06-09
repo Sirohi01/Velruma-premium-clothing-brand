@@ -356,7 +356,7 @@ export default function CreateProductPage() {
                     }} className="w-full rounded-lg border border-zinc-200 bg-zinc-50 p-2 text-sm dark:border-white/10 dark:bg-white/5 dark:text-white" />
                   </div>
                   <div className="col-span-1">
-                    <label className="mb-1 block text-xs text-zinc-500">+ Price</label>
+                    <label className="mb-1 block text-xs text-zinc-500">Extra add-on</label>
                     <input type="number" min="0" value={v.extraPrice} onChange={(e) => {
                       const newVars = [...formData.variants];
                       newVars[index].extraPrice = Number(e.target.value);
