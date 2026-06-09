@@ -1,19 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
 import SeoPage from '@/models/SeoPage';
-
-function scoreSeo(title: string, description: string, keywords: string[]) {
-  let score = 30;
-  if (title.length >= 30 && title.length <= 65) score += 25;
-  if (description.length >= 90 && description.length <= 160) score += 25;
-  if (keywords.length > 0) score += 10;
-  if (title && description) score += 10;
-  return Math.min(100, score);
-}
+import { scoreSeo, syncAllCmsSeoToSeoPages, syncSeoPageToCms } from '@/lib/seo-sync';
 
 export async function GET() {
   try {
     await dbConnect();
+    await syncAllCmsSeoToSeoPages();
     const pages = await SeoPage.find({}).sort({ path: 1 });
     return NextResponse.json({ success: true, data: pages });
   } catch (error) {
@@ -30,8 +23,9 @@ export async function POST(request: NextRequest) {
     const page = await SeoPage.create({
       ...body,
       keywords,
-      score: body.score ?? scoreSeo(body.title || '', body.description || '', keywords),
+      score: body.score ?? scoreSeo(body, keywords),
     });
+    await syncSeoPageToCms(page);
     return NextResponse.json({ success: true, data: page }, { status: 201 });
   } catch (error: any) {
     console.error('SEO POST error:', error);

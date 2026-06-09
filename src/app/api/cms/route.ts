@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
 import CmsPage from '@/models/CmsPage';
+import { syncCmsPageToSeo } from '@/lib/seo-sync';
 
 function slugify(value: string) {
   return value.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
@@ -158,6 +159,7 @@ export async function POST(request: NextRequest) {
     await dbConnect();
     const body = await request.json();
     const page = await CmsPage.create({ ...body, slug: body.slug || slugify(body.title || 'page') });
+    await syncCmsPageToSeo(page);
     return NextResponse.json({ success: true, data: page }, { status: 201 });
   } catch (error: any) {
     console.error('CMS POST error:', error);

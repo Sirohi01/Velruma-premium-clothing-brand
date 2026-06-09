@@ -44,6 +44,16 @@ export interface ICmsPage extends Document {
     ogDescription?: string;
     twitterTitle?: string;
     twitterDescription?: string;
+    ogType?: string;
+    ogUrl?: string;
+    twitterCard?: string;
+    twitterImage?: string;
+    twitterSite?: string;
+    twitterCreator?: string;
+    breadcrumbsJson?: string;
+    sitemapChangefreq?: string;
+    sitemapPriority?: number;
+    hreflang?: { lang: string; url: string }[];
     schemaType?: string;
     schemaJson?: string;
     robots?: string;
@@ -105,6 +115,19 @@ const CmsPageSchema = new Schema<ICmsPage>(
       ogDescription: String,
       twitterTitle: String,
       twitterDescription: String,
+      ogType: String,
+      ogUrl: String,
+      twitterCard: String,
+      twitterImage: String,
+      twitterSite: String,
+      twitterCreator: String,
+      breadcrumbsJson: String,
+      sitemapChangefreq: String,
+      sitemapPriority: Number,
+      hreflang: [{
+        lang: String,
+        url: String,
+      }],
       schemaType: String,
       schemaJson: String,
       robots: String,

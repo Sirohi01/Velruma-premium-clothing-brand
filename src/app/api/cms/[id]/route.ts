@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
 import CmsPage from '@/models/CmsPage';
+import { syncCmsPageToSeo } from '@/lib/seo-sync';
 
 function slugify(value: string) {
   return value.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
@@ -33,6 +34,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       { returnDocument: 'after', runValidators: true }
     );
     if (!page) return NextResponse.json({ success: false, error: 'Page not found' }, { status: 404 });
+    await syncCmsPageToSeo(page);
     return NextResponse.json({ success: true, data: page });
   } catch (error: any) {
     console.error('CMS PUT error:', error);

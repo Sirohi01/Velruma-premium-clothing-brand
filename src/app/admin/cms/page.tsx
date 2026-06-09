@@ -68,10 +68,20 @@ const blankForm = {
   seoCanonicalUrl: '',
   seoOgTitle: '',
   seoOgDescription: '',
+  seoOgType: 'website',
+  seoOgUrl: '',
+  seoTwitterCard: 'summary_large_image',
   seoTwitterTitle: '',
   seoTwitterDescription: '',
+  seoTwitterImage: '',
+  seoTwitterSite: '',
+  seoTwitterCreator: '',
   seoSchemaType: 'WebPage',
   seoSchemaJson: '',
+  seoBreadcrumbsJson: '',
+  seoSitemapChangefreq: 'weekly',
+  seoSitemapPriority: 0.7,
+  seoHreflangText: '',
   seoRobots: 'index,follow',
 };
 
@@ -185,10 +195,20 @@ export default function AdminCmsPage() {
       seoCanonicalUrl: page.seo?.canonicalUrl || '',
       seoOgTitle: page.seo?.ogTitle || '',
       seoOgDescription: page.seo?.ogDescription || '',
+      seoOgType: page.seo?.ogType || 'website',
+      seoOgUrl: page.seo?.ogUrl || '',
+      seoTwitterCard: page.seo?.twitterCard || 'summary_large_image',
       seoTwitterTitle: page.seo?.twitterTitle || '',
       seoTwitterDescription: page.seo?.twitterDescription || '',
+      seoTwitterImage: page.seo?.twitterImage || '',
+      seoTwitterSite: page.seo?.twitterSite || '',
+      seoTwitterCreator: page.seo?.twitterCreator || '',
       seoSchemaType: page.seo?.schemaType || 'WebPage',
       seoSchemaJson: page.seo?.schemaJson || '',
+      seoBreadcrumbsJson: page.seo?.breadcrumbsJson || '',
+      seoSitemapChangefreq: page.seo?.sitemapChangefreq || 'weekly',
+      seoSitemapPriority: page.seo?.sitemapPriority ?? 0.7,
+      seoHreflangText: (page.seo?.hreflang || []).map((item: any) => `${item.lang} | ${item.url}`).join('\n'),
       seoRobots: page.seo?.robots || 'index,follow',
     });
     setActiveTab('content');
@@ -247,10 +267,23 @@ export default function AdminCmsPage() {
       canonicalUrl: form.seoCanonicalUrl,
       ogTitle: form.seoOgTitle,
       ogDescription: form.seoOgDescription,
+      ogType: form.seoOgType,
+      ogUrl: form.seoOgUrl,
+      twitterCard: form.seoTwitterCard,
       twitterTitle: form.seoTwitterTitle,
       twitterDescription: form.seoTwitterDescription,
+      twitterImage: form.seoTwitterImage,
+      twitterSite: form.seoTwitterSite,
+      twitterCreator: form.seoTwitterCreator,
       schemaType: form.seoSchemaType,
       schemaJson: form.seoSchemaJson,
+      breadcrumbsJson: form.seoBreadcrumbsJson,
+      sitemapChangefreq: form.seoSitemapChangefreq,
+      sitemapPriority: Number(form.seoSitemapPriority || 0.7),
+      hreflang: String(form.seoHreflangText || '').split('\n').map((line: string) => {
+        const [lang, url] = line.split('|').map((item) => item?.trim());
+        return lang && url ? { lang, url } : null;
+      }).filter(Boolean),
       robots: form.seoRobots,
     },
   });
@@ -523,11 +556,36 @@ export default function AdminCmsPage() {
                     <Field label="OG description"><textarea value={form.seoOgDescription} onChange={(e) => setForm({ ...form, seoOgDescription: e.target.value })} className={textareaClass} rows={3} /></Field>
                     <Field label="Twitter description"><textarea value={form.seoTwitterDescription} onChange={(e) => setForm({ ...form, seoTwitterDescription: e.target.value })} className={textareaClass} rows={3} /></Field>
                     <ImageUpload label="OG image" value={form.seoOgImage} folder="seo" onChange={(seoOgImage) => setForm({ ...form, seoOgImage })} />
+                    <ImageUpload label="Twitter image" value={form.seoTwitterImage} folder="seo/twitter" onChange={(seoTwitterImage) => setForm({ ...form, seoTwitterImage })} />
+                    <Field label="OG type">
+                      <select value={form.seoOgType} onChange={(e) => setForm({ ...form, seoOgType: e.target.value })} className={inputClass}>
+                        <option value="website">website</option>
+                        <option value="article">article</option>
+                        <option value="product">product</option>
+                      </select>
+                    </Field>
+                    <Field label="OG URL"><input value={form.seoOgUrl} onChange={(e) => setForm({ ...form, seoOgUrl: e.target.value })} className={inputClass} /></Field>
+                    <Field label="Twitter card">
+                      <select value={form.seoTwitterCard} onChange={(e) => setForm({ ...form, seoTwitterCard: e.target.value })} className={inputClass}>
+                        <option value="summary_large_image">summary_large_image</option>
+                        <option value="summary">summary</option>
+                      </select>
+                    </Field>
+                    <Field label="Twitter site"><input value={form.seoTwitterSite} onChange={(e) => setForm({ ...form, seoTwitterSite: e.target.value })} className={inputClass} /></Field>
+                    <Field label="Twitter creator"><input value={form.seoTwitterCreator} onChange={(e) => setForm({ ...form, seoTwitterCreator: e.target.value })} className={inputClass} /></Field>
+                    <Field label="Sitemap changefreq">
+                      <select value={form.seoSitemapChangefreq} onChange={(e) => setForm({ ...form, seoSitemapChangefreq: e.target.value })} className={inputClass}>
+                        {['always', 'hourly', 'daily', 'weekly', 'monthly', 'yearly', 'never'].map((item) => <option key={item} value={item}>{item}</option>)}
+                      </select>
+                    </Field>
+                    <Field label="Sitemap priority"><input type="number" min="0" max="1" step="0.1" value={form.seoSitemapPriority} onChange={(e) => setForm({ ...form, seoSitemapPriority: e.target.value })} className={inputClass} /></Field>
                     <div className="grid gap-3">
                       <Field label="Robots"><input value={form.seoRobots} onChange={(e) => setForm({ ...form, seoRobots: e.target.value })} className={inputClass} /></Field>
                       <Field label="Schema type"><input value={form.seoSchemaType} onChange={(e) => setForm({ ...form, seoSchemaType: e.target.value })} className={inputClass} /></Field>
                     </div>
                     <Field label="Schema JSON"><textarea value={form.seoSchemaJson} onChange={(e) => setForm({ ...form, seoSchemaJson: e.target.value })} className={`${textareaClass} font-mono`} rows={8} /></Field>
+                    <Field label="Breadcrumbs JSON"><textarea value={form.seoBreadcrumbsJson} onChange={(e) => setForm({ ...form, seoBreadcrumbsJson: e.target.value })} className={`${textareaClass} font-mono`} rows={8} /></Field>
+                    <Field label="Hreflang entries"><textarea value={form.seoHreflangText} onChange={(e) => setForm({ ...form, seoHreflangText: e.target.value })} className={`${textareaClass} lg:col-span-2`} rows={3} placeholder="en-IN | https://velruma.com/about" /></Field>
                     <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-3 text-xs leading-5 text-zinc-500 dark:border-white/10 dark:bg-white/5">
                       Schema example: WebPage, FAQPage, AboutPage, CollectionPage. Paste valid JSON-LD object only. Public renderer can use these saved fields later for exact page SEO output.
                     </div>
