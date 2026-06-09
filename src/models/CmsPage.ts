@@ -15,11 +15,16 @@ export interface ICmsPage extends Document {
   heroVideoPosition?: string;
   heroVideoFit?: 'cover' | 'contain';
   excerpt?: string;
+  titleStyle?: Record<string, string>;
+  excerptStyle?: Record<string, string>;
+  contentStyle?: Record<string, string>;
   content?: string;
   sections: {
     type: 'text' | 'image' | 'faq' | 'gallery' | 'banner' | 'testimonial';
     title?: string;
+    titleStyle?: Record<string, string>;
     body?: string;
+    bodyStyle?: Record<string, string>;
     image?: string;
     imageAspectRatio?: string;
     imagePosition?: string;
@@ -66,11 +71,16 @@ const CmsPageSchema = new Schema<ICmsPage>(
     heroVideoPosition: { type: String, default: 'center' },
     heroVideoFit: { type: String, enum: ['cover', 'contain'], default: 'contain' },
     excerpt: String,
+    titleStyle: { type: Schema.Types.Mixed, default: {} },
+    excerptStyle: { type: Schema.Types.Mixed, default: {} },
+    contentStyle: { type: Schema.Types.Mixed, default: {} },
     content: String,
     sections: [{
       type: { type: String, enum: ['text', 'image', 'faq', 'gallery', 'banner', 'testimonial'], default: 'text' },
       title: String,
+      titleStyle: { type: Schema.Types.Mixed, default: {} },
       body: String,
+      bodyStyle: { type: Schema.Types.Mixed, default: {} },
       image: String,
       imageAspectRatio: { type: String, default: '16 / 9' },
       imagePosition: { type: String, default: 'center' },

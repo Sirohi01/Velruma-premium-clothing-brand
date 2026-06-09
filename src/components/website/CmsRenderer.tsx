@@ -14,6 +14,17 @@ function sectionLabel(type?: string) {
   return 'Detail';
 }
 
+function richStyle(style?: Record<string, string>) {
+  if (!style) return undefined;
+  return {
+    fontFamily: style.fontFamily,
+    fontSize: style.fontSize ? `min(${style.fontSize}, 11vw)` : undefined,
+    fontWeight: style.fontWeight,
+    fontStyle: style.fontStyle,
+    color: style.color,
+  };
+}
+
 function MediaFrame({
   image,
   video,
@@ -115,10 +126,10 @@ export function CmsRenderer({ page, fallbackTitle, fallbackContent }: { page?: a
         <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 lg:py-12">
           <div className="mx-auto max-w-4xl text-center">
             <p className="text-xs font-bold uppercase tracking-[0.22em] text-amber-700">{page?.type || 'VELRUMA'}</p>
-            <h1 className="mx-auto mt-3 max-w-3xl text-4xl font-semibold leading-[0.95] tracking-tight text-zinc-950 sm:text-5xl lg:text-6xl" style={{ fontFamily: "'Playfair Display', serif" }}>
+            <h1 className="mx-auto mt-3 max-w-3xl text-4xl font-semibold leading-[0.95] tracking-tight text-zinc-950 sm:text-5xl lg:text-6xl" style={{ ...richStyle(page?.titleStyle), fontFamily: page?.titleStyle?.fontFamily || "'Playfair Display', serif" }}>
               {title}
             </h1>
-            {page?.excerpt && <p className="mx-auto mt-5 max-w-2xl text-base leading-7 text-zinc-600 sm:text-lg">{page.excerpt}</p>}
+            {page?.excerpt && <p className="mx-auto mt-5 max-w-2xl text-base leading-7 text-zinc-600 sm:text-lg" style={richStyle(page?.excerptStyle)}>{page.excerpt}</p>}
             <div className="mt-6 flex flex-wrap justify-center gap-2 text-xs font-semibold uppercase tracking-wide text-zinc-600">
               <span className="rounded-full border border-zinc-200 bg-[#F7F4EF] px-3 py-1.5">Updated Content</span>
               <span className="rounded-full border border-zinc-200 bg-[#F7F4EF] px-3 py-1.5">VELRUMA Official</span>
@@ -170,7 +181,7 @@ export function CmsRenderer({ page, fallbackTitle, fallbackContent }: { page?: a
         <div className="space-y-6">
           <div id="overview" className="bg-white px-4 py-5 shadow-sm ring-1 ring-zinc-200 sm:px-6">
             <div className="grid gap-5 lg:grid-cols-[1fr_220px]">
-              <div className="space-y-4 text-[15px] leading-7 text-zinc-600">
+              <div className="space-y-4 text-[15px] leading-7 text-zinc-600" style={richStyle(page?.contentStyle)}>
                 {paragraphs.map((paragraph, index) => <p key={index}>{paragraph}</p>)}
               </div>
               <div className="grid gap-2 text-sm">
@@ -192,7 +203,7 @@ export function CmsRenderer({ page, fallbackTitle, fallbackContent }: { page?: a
                 </div>
                 <div>
                   <p className="text-xs font-bold uppercase tracking-[0.2em] text-amber-700">{sectionLabel(section.type)}</p>
-                  {section.title && <h2 className="mt-1 text-2xl font-semibold tracking-tight text-zinc-950 sm:text-3xl" style={{ fontFamily: "'Playfair Display', serif" }}>{section.title}</h2>}
+                  {section.title && <h2 className="mt-1 text-2xl font-semibold tracking-tight text-zinc-950 sm:text-3xl" style={{ ...richStyle(section.titleStyle), fontFamily: section.titleStyle?.fontFamily || "'Playfair Display', serif" }}>{section.title}</h2>}
                 </div>
               </div>
 
@@ -206,7 +217,7 @@ export function CmsRenderer({ page, fallbackTitle, fallbackContent }: { page?: a
                 fit={section.mediaFit || 'cover'}
                 className="mb-5 w-full"
               />
-              {section.body && <p className="whitespace-pre-line text-[15px] leading-7 text-zinc-600">{section.body}</p>}
+              {section.body && <p className="whitespace-pre-line text-[15px] leading-7 text-zinc-600" style={richStyle(section.bodyStyle)}>{section.body}</p>}
 
               {section.items?.length > 0 && (
                 <div className={section.type === 'faq' ? 'mt-5 divide-y divide-zinc-200 border-y border-zinc-200' : 'mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3'}>

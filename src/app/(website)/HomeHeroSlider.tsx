@@ -86,7 +86,7 @@ export default function HomeHeroSlider({ slides }: { slides: HeroSlide[] }) {
               {active.badge}
             </span>
           )}
-          <h1 className="mt-2 text-[clamp(1.85rem,9vw,2.35rem)] font-semibold leading-[0.92] tracking-tight text-zinc-950 sm:mt-4 sm:text-6xl" style={{ fontFamily: "'Playfair Display', serif", ...responsiveTextStyle(active.titleStyle) }}>
+          <h1 className="mt-2 text-[clamp(1.85rem,9vw,2.35rem)] font-semibold leading-[0.92] tracking-tight text-zinc-950 sm:mt-4 sm:text-6xl" style={{ ...responsiveTextStyle(active.titleStyle), fontFamily: active.titleStyle?.fontFamily || "'Playfair Display', serif" }}>
             {active.title}
           </h1>
           <p className="mt-2 line-clamp-3 max-w-xl text-xs leading-5 text-zinc-700 sm:mt-4 sm:line-clamp-none sm:text-base sm:leading-7" style={responsiveTextStyle(active.subtitleStyle)}>{active.subtitle}</p>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import type { FormEvent, ReactNode } from 'react';
 import { Edit2, FileText, ImageIcon, PanelLeft, Plus, Search, Trash2, X } from 'lucide-react';
 import { toast } from 'sonner';
@@ -29,7 +29,19 @@ const positionOptions = [
   { label: 'Bottom Right', value: 'bottom right' },
 ];
 
-const blankSection = { type: 'text', title: '', body: '', image: '', imageAspectRatio: '16 / 9', imagePosition: 'center', video: '', videoAspectRatio: '16 / 9', videoPosition: 'center', mediaFit: 'cover', itemsText: '' };
+type TextStyle = { fontFamily?: string; fontSize?: string; fontWeight?: string; fontStyle?: string; color?: string };
+
+const defaultHeadingStyle: TextStyle = { fontFamily: "'Playfair Display', serif", fontSize: '48px', fontWeight: '700', fontStyle: 'normal', color: '#09090b' };
+const defaultBodyStyle: TextStyle = { fontFamily: 'Inter, sans-serif', fontSize: '15px', fontWeight: '400', fontStyle: 'normal', color: '#52525b' };
+const fontOptions = [
+  { label: 'Playfair Display', value: "'Playfair Display', serif" },
+  { label: 'Inter / Sans', value: 'Inter, sans-serif' },
+  { label: 'Serif', value: 'Georgia, serif' },
+  { label: 'Mono', value: "'Courier New', monospace" },
+];
+const sizeOptions = ['12px', '14px', '15px', '16px', '18px', '22px', '28px', '36px', '44px', '48px', '56px', '64px'];
+
+const blankSection = { type: 'text', title: '', titleStyle: defaultHeadingStyle, body: '', bodyStyle: defaultBodyStyle, image: '', imageAspectRatio: '16 / 9', imagePosition: 'center', video: '', videoAspectRatio: '16 / 9', videoPosition: 'center', mediaFit: 'cover', itemsText: '' };
 const blankForm = {
   title: '',
   slug: '',
@@ -44,6 +56,9 @@ const blankForm = {
   heroVideoPosition: 'center',
   heroVideoFit: 'contain',
   excerpt: '',
+  titleStyle: defaultHeadingStyle,
+  excerptStyle: defaultBodyStyle,
+  contentStyle: defaultBodyStyle,
   content: '',
   sections: [blankSection],
   seoTitle: '',
@@ -105,11 +120,7 @@ export default function AdminCmsPage() {
   const [form, setForm] = useState<any>(blankForm);
   const [activeTab, setActiveTab] = useState<'content' | 'sections' | 'seo'>('content');
 
-  useEffect(() => {
-    fetchPages();
-  }, []);
-
-  const fetchPages = async () => {
+  const fetchPages = useCallback(async () => {
     try {
       const res = await fetch('/api/cms');
       const data = await res.json();
@@ -119,7 +130,11 @@ export default function AdminCmsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchPages();
+  }, [fetchPages]);
 
   const openCreate = () => {
     setEditTarget(null);
@@ -144,11 +159,16 @@ export default function AdminCmsPage() {
       heroVideoPosition: page.heroVideoPosition || 'center',
       heroVideoFit: page.heroVideoFit || 'contain',
       excerpt: page.excerpt || '',
+      titleStyle: { ...defaultHeadingStyle, ...(page.titleStyle || {}) },
+      excerptStyle: { ...defaultBodyStyle, ...(page.excerptStyle || {}) },
+      contentStyle: { ...defaultBodyStyle, ...(page.contentStyle || {}) },
       content: page.content || '',
       sections: page.sections?.length ? page.sections.map((section: any) => ({
         type: section.type,
         title: section.title || '',
+        titleStyle: { ...defaultHeadingStyle, ...(section.titleStyle || {}) },
         body: section.body || '',
+        bodyStyle: { ...defaultBodyStyle, ...(section.bodyStyle || {}) },
         image: section.image || '',
         imageAspectRatio: section.imageAspectRatio || '16 / 9',
         imagePosition: section.imagePosition || 'center',
@@ -179,6 +199,13 @@ export default function AdminCmsPage() {
     setForm({ ...form, sections: form.sections.map((section: any, itemIndex: number) => itemIndex === index ? { ...section, ...patch } : section) });
   };
 
+  const updateSectionStyle = (index: number, key: 'titleStyle' | 'bodyStyle', patch: TextStyle) => {
+    setForm({
+      ...form,
+      sections: form.sections.map((section: any, itemIndex: number) => itemIndex === index ? { ...section, [key]: { ...(section[key] || {}), ...patch } } : section),
+    });
+  };
+
   const payload = () => ({
     title: form.title,
     slug: form.slug || slugify(form.title),
@@ -193,11 +220,16 @@ export default function AdminCmsPage() {
     heroVideoPosition: form.heroVideoPosition,
     heroVideoFit: form.heroVideoFit,
     excerpt: form.excerpt,
+    titleStyle: form.titleStyle,
+    excerptStyle: form.excerptStyle,
+    contentStyle: form.contentStyle,
     content: form.content,
     sections: form.sections.map((section: any) => ({
       type: section.type,
       title: section.title,
+      titleStyle: section.titleStyle,
       body: section.body,
+      bodyStyle: section.bodyStyle,
       image: section.image,
       imageAspectRatio: section.imageAspectRatio,
       imagePosition: section.imagePosition,
@@ -371,8 +403,30 @@ export default function AdminCmsPage() {
                       </p>
                     </div>
                     <div className="grid gap-3">
-                      <Field label="Excerpt"><textarea value={form.excerpt} onChange={(e) => setForm({ ...form, excerpt: e.target.value })} className={textareaClass} rows={3} /></Field>
-                      <Field label="Main content"><textarea value={form.content} onChange={(e) => setForm({ ...form, content: e.target.value })} className={textareaClass} rows={9} /></Field>
+                      <RichTextField
+                        label="Page title style"
+                        value={form.title}
+                        styleValue={form.titleStyle || defaultHeadingStyle}
+                        onTextChange={(title) => setForm({ ...form, title, slug: form.slug || slugify(title) })}
+                        onStyleChange={(patch) => setForm({ ...form, titleStyle: { ...(form.titleStyle || {}), ...patch } })}
+                      />
+                      <RichTextField
+                        label="Excerpt"
+                        value={form.excerpt}
+                        multiline
+                        styleValue={form.excerptStyle || defaultBodyStyle}
+                        onTextChange={(excerpt) => setForm({ ...form, excerpt })}
+                        onStyleChange={(patch) => setForm({ ...form, excerptStyle: { ...(form.excerptStyle || {}), ...patch } })}
+                      />
+                      <RichTextField
+                        label="Main content"
+                        value={form.content}
+                        multiline
+                        rows={7}
+                        styleValue={form.contentStyle || defaultBodyStyle}
+                        onTextChange={(content) => setForm({ ...form, content })}
+                        onStyleChange={(patch) => setForm({ ...form, contentStyle: { ...(form.contentStyle || {}), ...patch } })}
+                      />
                     </div>
                   </div>
                 )}
@@ -433,7 +487,25 @@ export default function AdminCmsPage() {
                             </div>
                           </div>
                         )}
-                        <textarea placeholder="Body" value={section.body} onChange={(e) => updateSection(index, { body: e.target.value })} className={`${textareaClass} lg:col-span-2`} rows={3} />
+                        <div className="lg:col-span-2">
+                          <RichTextField
+                            label="Section title style"
+                            value={section.title}
+                            styleValue={section.titleStyle || defaultHeadingStyle}
+                            onTextChange={(title) => updateSection(index, { title })}
+                            onStyleChange={(patch) => updateSectionStyle(index, 'titleStyle', patch)}
+                          />
+                        </div>
+                        <div className="lg:col-span-3">
+                          <RichTextField
+                            label="Body"
+                            value={section.body}
+                            multiline
+                            styleValue={section.bodyStyle || defaultBodyStyle}
+                            onTextChange={(body) => updateSection(index, { body })}
+                            onStyleChange={(patch) => updateSectionStyle(index, 'bodyStyle', patch)}
+                          />
+                        </div>
                         <textarea placeholder="Items: Title | Body, one per line" value={section.itemsText} onChange={(e) => updateSection(index, { itemsText: e.target.value })} className={`${textareaClass} lg:col-span-3`} rows={3} />
                       </div>
                     ))}
@@ -471,6 +543,71 @@ export default function AdminCmsPage() {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+function RichTextField({
+  label,
+  value,
+  styleValue,
+  onTextChange,
+  onStyleChange,
+  multiline = false,
+  rows = 3,
+}: {
+  label: string;
+  value: string;
+  styleValue: TextStyle;
+  onTextChange: (value: string) => void;
+  onStyleChange: (patch: TextStyle) => void;
+  multiline?: boolean;
+  rows?: number;
+}) {
+  return (
+    <div className="rounded-lg border border-zinc-200 bg-white p-3 dark:border-white/10 dark:bg-zinc-950">
+      <span className="mb-2 block text-[11px] font-bold uppercase tracking-wide text-zinc-500">{label}</span>
+      {multiline ? (
+        <textarea value={value || ''} onChange={(event) => onTextChange(event.target.value)} rows={rows} className={textareaClass} />
+      ) : (
+        <input value={value || ''} onChange={(event) => onTextChange(event.target.value)} className={inputClass} />
+      )}
+      <div className="mt-3 grid gap-2 sm:grid-cols-5">
+        <label>
+          <span className="mb-1 block text-[10px] font-bold uppercase text-zinc-500">Font</span>
+          <select value={styleValue.fontFamily || ''} onChange={(event) => onStyleChange({ fontFamily: event.target.value })} className="h-9 w-full rounded-lg border border-zinc-200 bg-white px-2 text-xs dark:border-white/10 dark:bg-zinc-900 dark:text-white">
+            {fontOptions.map((font) => <option key={font.value} value={font.value}>{font.label}</option>)}
+          </select>
+        </label>
+        <label>
+          <span className="mb-1 block text-[10px] font-bold uppercase text-zinc-500">Size</span>
+          <select value={styleValue.fontSize || '16px'} onChange={(event) => onStyleChange({ fontSize: event.target.value })} className="h-9 w-full rounded-lg border border-zinc-200 bg-white px-2 text-xs dark:border-white/10 dark:bg-zinc-900 dark:text-white">
+            {sizeOptions.map((size) => <option key={size} value={size}>{size}</option>)}
+          </select>
+        </label>
+        <label>
+          <span className="mb-1 block text-[10px] font-bold uppercase text-zinc-500">Color</span>
+          <input type="color" value={styleValue.color || '#09090b'} onChange={(event) => onStyleChange({ color: event.target.value })} className="h-9 w-full rounded-lg border border-zinc-200 bg-white p-1 dark:border-white/10 dark:bg-zinc-900" />
+        </label>
+        <button
+          type="button"
+          onClick={() => onStyleChange({ fontWeight: styleValue.fontWeight === '700' ? '400' : '700' })}
+          className={`mt-5 h-9 rounded-lg border px-3 text-xs font-bold ${styleValue.fontWeight === '700' ? 'border-amber-300 bg-amber-50 text-amber-700' : 'border-zinc-200 bg-white text-zinc-700 dark:border-white/10 dark:bg-zinc-900 dark:text-zinc-200'}`}
+        >
+          Bold
+        </button>
+        <button
+          type="button"
+          onClick={() => onStyleChange({ fontStyle: styleValue.fontStyle === 'italic' ? 'normal' : 'italic' })}
+          className={`mt-5 h-9 rounded-lg border px-3 text-xs italic ${styleValue.fontStyle === 'italic' ? 'border-amber-300 bg-amber-50 text-amber-700' : 'border-zinc-200 bg-white text-zinc-700 dark:border-white/10 dark:bg-zinc-900 dark:text-zinc-200'}`}
+        >
+          Italic
+        </button>
+      </div>
+      <div className="mt-3 rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 dark:border-white/10 dark:bg-white/5">
+        <span className="text-xs text-zinc-400">Preview: </span>
+        <span style={styleValue}>{value || label}</span>
+      </div>
     </div>
   );
 }
