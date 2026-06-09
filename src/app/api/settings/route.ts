@@ -77,7 +77,7 @@ const defaultSettings: DefaultSetting[] = [
   { group: 'theme', key: 'secondary_color', value: '#1E293B', label: 'Secondary Color', type: 'color', isPublic: true },
   { group: 'tax', key: 'gst_number', value: '', label: 'GST Number', type: 'string', isPublic: false },
   { group: 'tax', key: 'pan_number', value: '', label: 'PAN Number', type: 'string', isPublic: false },
-  { group: 'tax', key: 'default_gst_rate', value: 12, label: 'Default GST Rate (%)', type: 'number', isPublic: false },
+  { group: 'tax', key: 'default_gst_rate', value: 12, label: 'Default GST Rate (%)', type: 'number', isPublic: true },
   { group: 'invoice', key: 'invoice_prefix', value: 'VEL-INV', label: 'Invoice Prefix', type: 'string', isPublic: false },
   { group: 'invoice', key: 'estimate_prefix', value: 'VEL-EST', label: 'Estimate Prefix', type: 'string', isPublic: false },
   { group: 'invoice', key: 'proforma_prefix', value: 'VEL-PI', label: 'Proforma Invoice Prefix', type: 'string', isPublic: false },
@@ -86,10 +86,11 @@ const defaultSettings: DefaultSetting[] = [
   { group: 'invoice', key: 'debit_note_prefix', value: 'VEL-DN', label: 'Debit Note Prefix', type: 'string', isPublic: false },
   { group: 'invoice', key: 'purchase_prefix', value: 'VEL-PO', label: 'Purchase Order Prefix', type: 'string', isPublic: false },
   { group: 'invoice', key: 'order_prefix', value: 'VEL', label: 'Order Number Prefix', type: 'string', isPublic: false },
-  { group: 'bank', key: 'bank_name', value: '', label: 'Bank Name', type: 'string', isPublic: false },
-  { group: 'bank', key: 'bank_account', value: '', label: 'Account Number', type: 'string', isPublic: false },
-  { group: 'bank', key: 'bank_ifsc', value: '', label: 'IFSC Code', type: 'string', isPublic: false },
+  { group: 'bank', key: 'bank_name', value: '', label: 'Bank Name', type: 'string', isPublic: true },
+  { group: 'bank', key: 'bank_account', value: '', label: 'Account Number', type: 'string', isPublic: true },
+  { group: 'bank', key: 'bank_ifsc', value: '', label: 'IFSC Code', type: 'string', isPublic: true },
   { group: 'bank', key: 'upi_id', value: '', label: 'UPI ID', type: 'string', isPublic: true },
+  { group: 'bank', key: 'upi_qr_image', value: '', label: 'UPI QR Code Image', type: 'image', isPublic: true },
   { group: 'general', key: 'currency', value: 'INR', label: 'Currency', type: 'string', isPublic: true },
   { group: 'general', key: 'currency_symbol', value: 'Rs.', label: 'Currency Symbol', type: 'string', isPublic: true },
   { group: 'shipping', key: 'free_shipping_threshold', value: 999, label: 'Free Shipping Above', type: 'number', isPublic: true },
@@ -164,7 +165,12 @@ export async function GET(request: NextRequest) {
     const query: Record<string, unknown> = {};
 
     if (group) query.group = group;
-    if (publicOnly) query.isPublic = true;
+    if (publicOnly) {
+      query.$or = [
+        { isPublic: true },
+        { key: { $in: ['default_gst_rate', 'upi_id', 'upi_qr_image'] } },
+      ];
+    }
 
     const settings = await Setting.find(query).sort({ group: 1, key: 1 });
     return NextResponse.json({ success: true, data: settings });

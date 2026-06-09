@@ -4,12 +4,19 @@ import Order from '@/models/Order';
 import Product from '@/models/Product';
 import Invoice from '@/models/Invoice';
 import Payment from '@/models/Payment';
+import Setting from '@/models/Setting';
 import { verifyToken } from '@/lib/auth';
 
 function sequence(prefix: string) {
   const stamp = Date.now().toString().slice(-8);
   const random = Math.random().toString(36).slice(2, 5).toUpperCase();
   return `${prefix}-${stamp}-${random}`;
+}
+
+async function getNumberSetting(key: string, fallback: number) {
+  const setting = await Setting.findOne({ key }).select('value').lean();
+  const value = Number(setting?.value ?? fallback);
+  return Number.isFinite(value) ? value : fallback;
 }
 
 export async function GET(request: NextRequest) {
@@ -41,10 +48,15 @@ export async function POST(request: NextRequest) {
     }
 
     const subtotal = Number(body.subtotal || body.items.reduce((sum: number, item: any) => sum + item.price * item.quantity, 0));
-    const shippingFee = subtotal >= 999 ? 0 : 79;
-    const tax = Math.round(subtotal * 0.12);
+    const freeShippingThreshold = await getNumberSetting('free_shipping_threshold', 999);
+    const defaultShippingCharge = await getNumberSetting('shipping_charge', 79);
+    const codCharge = await getNumberSetting('cod_charge', 49);
+    const gstRate = await getNumberSetting('default_gst_rate', 12);
+    const shippingFee = subtotal >= freeShippingThreshold ? 0 : defaultShippingCharge;
+    const codFee = body.paymentMethod === 'COD' ? codCharge : 0;
+    const tax = Math.round((subtotal * gstRate) / 100);
     const discount = Number(body.discount || 0);
-    const total = subtotal + shippingFee + tax - discount;
+    const total = subtotal + shippingFee + codFee + tax - discount;
     const orderId = sequence('VEL-ORD');
 
     for (const item of body.items) {
@@ -80,6 +92,7 @@ export async function POST(request: NextRequest) {
       shippingFee,
       tax,
       discount,
+      codFee,
       total,
       paymentMethod: body.paymentMethod,
       paymentStatus: body.paymentMethod === 'COD' ? 'Pending' : 'Pending',

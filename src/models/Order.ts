@@ -27,12 +27,12 @@ const OrderSchema = new mongoose.Schema(
   {
     orderId: { type: String, required: true, unique: true },
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // Optional, can be guest
-    
+
     // Customer Details
     customerName: { type: String, required: true },
     email: { type: String, required: true },
     phone: { type: String, required: true },
-    
+
     // Shipping Details
     shippingAddress: {
       addressLine1: { type: String, required: true },
@@ -42,33 +42,34 @@ const OrderSchema = new mongoose.Schema(
       pincode: { type: String, required: true },
       country: { type: String, default: 'India' }
     },
-    
+
     // Order Items
     items: [OrderItemSchema],
-    
+
     // Pricing
     subtotal: { type: Number, required: true },
     shippingFee: { type: Number, default: 0 },
+    codFee: { type: Number, default: 0 },
     tax: { type: Number, default: 0 },
     discount: { type: Number, default: 0 },
     total: { type: Number, required: true },
-    
+
     // Payment
     paymentMethod: { type: String, enum: ['COD', 'UPI'], required: true },
     paymentStatus: { type: String, enum: ['Pending', 'Paid', 'Failed', 'Refunded'], default: 'Pending' },
-    upiProofImage: { type: String }, // Cloudinary URL for UPI screenshot
-    
+    upiProofImage: { type: String },
+
     // Order Status
-    orderStatus: { 
-      type: String, 
-      enum: ['Pending', 'Confirmed', 'Processing', 'Shipped', 'Delivered', 'Cancelled', 'Returned'], 
-      default: 'Pending' 
+    orderStatus: {
+      type: String,
+      enum: ['Pending', 'Confirmed', 'Processing', 'Shipped', 'Delivered', 'Cancelled', 'Returned'],
+      default: 'Pending'
     },
-    
+
     // Tracking
     trackingNumber: { type: String },
     courierName: { type: String },
-    
+
     // Admin Notes
     adminNotes: { type: String },
     timeline: [OrderTimelineSchema]

@@ -6,11 +6,18 @@ import Link from 'next/link';
 import { CreditCard, MapPin, PackageCheck, ShieldCheck, ShoppingBag, Truck } from 'lucide-react';
 import { toast } from 'sonner';
 import { useCart } from '@/contexts/CartContext';
+import { useWebsiteSettings } from '@/contexts/SettingsContext';
 import ImageUpload from '@/components/shared/ImageUpload';
+
+function numberSetting(value: string, fallback: number) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : fallback;
+}
 
 export default function CheckoutPage() {
   const router = useRouter();
   const { items, totalAmount, totalItems, totalSavings, clearCart } = useCart();
+  const { getSetting } = useWebsiteSettings();
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({
     customerName: '',
@@ -25,14 +32,22 @@ export default function CheckoutPage() {
     upiProofImage: '',
   });
 
-  const shippingCharge = totalAmount > 0 && totalAmount < 999 ? 79 : 0;
-  const gstEstimate = Math.round(totalAmount * 0.12);
-  const payableAmount = totalAmount + shippingCharge;
+  const freeShippingThreshold = numberSetting(getSetting('free_shipping_threshold', '999'), 999);
+  const defaultShippingCharge = numberSetting(getSetting('shipping_charge', '79'), 79);
+  const codChargeSetting = numberSetting(getSetting('cod_charge', '49'), 49);
+  const gstRate = numberSetting(getSetting('default_gst_rate', '12'), 12);
+  const upiId = getSetting('upi_id', '');
+  const upiQrImage = getSetting('upi_qr_image', '');
+  const shippingCharge = totalAmount > 0 && totalAmount < freeShippingThreshold ? defaultShippingCharge : 0;
+  const codCharge = form.paymentMethod === 'COD' ? codChargeSetting : 0;
+  const gstEstimate = Math.round((totalAmount * gstRate) / 100);
+  const payableAmount = totalAmount + shippingCharge + codCharge + gstEstimate;
 
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!items.length) return toast.error('Your cart is empty');
     if (!/^\d{10}$/.test(form.phone)) return toast.error('Enter a valid 10 digit phone number');
+    if (form.paymentMethod === 'UPI' && !form.upiProofImage) return toast.error('Upload UPI payment screenshot');
     setLoading(true);
     const res = await fetch('/api/orders', {
       method: 'POST',
@@ -40,6 +55,9 @@ export default function CheckoutPage() {
       body: JSON.stringify({
         ...form,
         subtotal: totalAmount,
+        shippingFee: shippingCharge,
+        codFee: codCharge,
+        tax: gstEstimate,
         items,
         shippingAddress: {
           addressLine1: form.addressLine1,
@@ -117,7 +135,22 @@ export default function CheckoutPage() {
               ))}
             </div>
             {form.paymentMethod === 'UPI' && (
-              <div className="mt-3">
+              <div className="mt-3 space-y-3">
+                {(upiId || upiQrImage) && (
+                  <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-zinc-800">
+                    <p className="font-semibold text-zinc-900">Scan and pay</p>
+                    {upiQrImage && (
+                      <div className="mt-3 flex justify-center">
+                        <img src={upiQrImage} alt="UPI QR Code" className="h-44 w-44 rounded-lg border border-amber-200 bg-white object-contain p-2" />
+                      </div>
+                    )}
+                    <div className="mt-3 grid gap-1.5 text-xs">
+                      {upiId && <PaymentDetail label="UPI ID" value={upiId} />}
+                      <PaymentDetail label="Amount" value={`Rs.${payableAmount.toLocaleString('en-IN')}`} />
+                    </div>
+                    <p className="mt-2 text-xs text-zinc-500">Upload the payment screenshot after paying.</p>
+                  </div>
+                )}
                 <ImageUpload label="Upload UPI payment screenshot" value={form.upiProofImage} folder="payments" onChange={(v) => setForm({ ...form, upiProofImage: v })} />
               </div>
             )}
@@ -187,8 +220,9 @@ export default function CheckoutPage() {
           <div className="border-t border-zinc-200 p-4">
             <div className="space-y-2 text-sm">
               <PriceRow label="Subtotal" value={`Rs.${totalAmount.toLocaleString('en-IN')}`} />
-              <PriceRow label="Shipping" value={shippingCharge === 0 ? 'Free' : `Rs.${shippingCharge.toLocaleString('en-IN')}`} />
-              <PriceRow label="GST estimate" value={`Rs.${gstEstimate.toLocaleString('en-IN')}`} muted />
+              <PriceRow label={`Shipping ${freeShippingThreshold > 0 ? `(free above Rs.${freeShippingThreshold.toLocaleString('en-IN')})` : ''}`} value={shippingCharge === 0 ? 'Free' : `Rs.${shippingCharge.toLocaleString('en-IN')}`} />
+              {form.paymentMethod === 'COD' && <PriceRow label="COD charge" value={`Rs.${codCharge.toLocaleString('en-IN')}`} />}
+              <PriceRow label={`GST (${gstRate}%)`} value={`Rs.${gstEstimate.toLocaleString('en-IN')}`} muted />
               {totalSavings > 0 && <PriceRow label="Total savings" value={`Rs.${totalSavings.toLocaleString('en-IN')}`} success />}
             </div>
             <div className="mt-3 flex items-center justify-between border-t border-zinc-200 pt-3">
@@ -256,6 +290,15 @@ function TrustItem({ icon, title, text }: { icon: React.ReactNode; title: string
         <p className="text-sm font-semibold text-zinc-900">{title}</p>
         <p className="text-xs text-zinc-500">{text}</p>
       </div>
+    </div>
+  );
+}
+
+function PaymentDetail({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex justify-between gap-3">
+      <span className="text-zinc-500">{label}</span>
+      <span className="break-all text-right font-semibold text-zinc-900">{value}</span>
     </div>
   );
 }
