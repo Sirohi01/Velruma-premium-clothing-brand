@@ -50,7 +50,11 @@ function calculateProductPrice(product: any, extraPrice = 0) {
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
-  const hasRefreshedStoredPrices = useRef(false);
+  const itemsRef = useRef<CartItem[]>([]);
+
+  useEffect(() => {
+    itemsRef.current = items;
+  }, [items]);
 
   useEffect(() => {
     try {
@@ -68,40 +72,41 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
   }, [items]);
 
+  const refreshCartPrices = useCallback(async () => {
+    const currentItems = itemsRef.current;
+    if (currentItems.length === 0) return;
+
+    try {
+      const refreshed = await Promise.all(currentItems.map(async (item) => {
+        const res = await fetch(`/api/products/${item.slug}`, { cache: 'no-store' });
+        const data = await res.json();
+        if (!data.success) return item;
+
+        const product = data.data;
+        const variant = (product.variants || []).find((v: any) => v.size === item.size && v.color === item.color);
+        const extraPrice = Number(variant?.extraPrice || 0);
+
+        return {
+          ...item,
+          name: product.title || item.name,
+          image: product.images?.[0]?.url || item.image,
+          price: calculateProductPrice(product, extraPrice),
+          mrp: Number(product.basePrice || 0) + extraPrice,
+          maxQuantity: Number(variant?.stock || item.maxQuantity || 1),
+          sku: variant?.sku || item.sku,
+        };
+      }));
+
+      setItems(refreshed);
+    } catch {
+      // Keep stored cart as-is if refresh fails.
+    }
+  }, []);
+
   useEffect(() => {
-    if (hasRefreshedStoredPrices.current || items.length === 0) return;
-    hasRefreshedStoredPrices.current = true;
-
-    const refreshStoredPrices = async () => {
-      try {
-        const refreshed = await Promise.all(items.map(async (item) => {
-          const res = await fetch(`/api/products/${item.slug}`);
-          const data = await res.json();
-          if (!data.success) return item;
-
-          const product = data.data;
-          const variant = (product.variants || []).find((v: any) => v.size === item.size && v.color === item.color);
-          const extraPrice = Number(variant?.extraPrice || 0);
-
-          return {
-            ...item,
-            name: product.title || item.name,
-            image: product.images?.[0]?.url || item.image,
-            price: calculateProductPrice(product, extraPrice),
-            mrp: Number(product.basePrice || 0) + extraPrice,
-            maxQuantity: Number(variant?.stock || item.maxQuantity || 1),
-            sku: variant?.sku || item.sku,
-          };
-        }));
-
-        setItems(refreshed);
-      } catch {
-        // Keep stored cart as-is if refresh fails.
-      }
-    };
-
-    refreshStoredPrices();
-  }, [items]);
+    if (!isCartOpen) return;
+    refreshCartPrices();
+  }, [isCartOpen, refreshCartPrices]);
 
   const addItem = useCallback((item: CartItem) => {
     setItems((prev) => {
