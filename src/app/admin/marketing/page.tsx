@@ -317,8 +317,7 @@ export default function MarketingPage() {
 
   return (
     <div className="space-y-4">
-      <div className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-zinc-900">
-        <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-zinc-900">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-white" style={{ fontFamily: "'Playfair Display', serif" }}>Marketing</h1>
           <p className="text-sm text-zinc-500">SMTP email studio, templates, bulk audiences, newsletter and abandoned cart recovery.</p>
@@ -327,13 +326,13 @@ export default function MarketingPage() {
           <RefreshCcw className="h-4 w-4" />
           Refresh
         </button>
-        </div>
-        <div className="mt-4 grid gap-3 md:grid-cols-4">
-          <Metric label="Email Audience" value={recipientCounts.all.toLocaleString('en-IN')} />
-          <Metric label="Newsletter" value={recipientCounts.newsletter.toLocaleString('en-IN')} />
-          <Metric label="Customers" value={recipientCounts.customers.toLocaleString('en-IN')} />
-          <Metric label="Clients / Leads" value={recipientCounts.clients.toLocaleString('en-IN')} />
-        </div>
+      </div>
+
+      <div className="grid gap-3 md:grid-cols-4">
+        <Metric label="Email Audience" value={recipientCounts.all.toLocaleString('en-IN')} />
+        <Metric label="Newsletter" value={recipientCounts.newsletter.toLocaleString('en-IN')} />
+        <Metric label="Customers" value={recipientCounts.customers.toLocaleString('en-IN')} />
+        <Metric label="Clients / Leads" value={recipientCounts.clients.toLocaleString('en-IN')} />
       </div>
 
       <div className="grid gap-3 md:grid-cols-2">
