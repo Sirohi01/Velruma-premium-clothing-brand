@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
 import Lead from '@/models/Lead';
 import Newsletter from '@/models/Newsletter';
+import Role from '@/models/Role';
 import User from '@/models/User';
 
 export const dynamic = 'force-dynamic';
@@ -19,9 +20,15 @@ function uniqueEmails(items: { email?: string; name?: string; source: string }[]
 export async function GET() {
   try {
     await dbConnect();
+    const customerRoles = await Role.find({ slug: { $in: ['customer', 'customers', 'client', 'user'] } }).select('_id').lean();
+    const customerRoleIds = customerRoles.map((role) => role._id);
+    const customerQuery = customerRoleIds.length > 0
+      ? { isActive: true, role: { $in: customerRoleIds } }
+      : { isActive: true };
+
     const [subscribers, users, leads] = await Promise.all([
       Newsletter.find({ status: 'subscribed' }).select('name email source tags').sort({ createdAt: -1 }).lean(),
-      User.find({ isActive: true }).select('name email phone').sort({ createdAt: -1 }).lean(),
+      User.find(customerQuery).select('name email phone role').sort({ createdAt: -1 }).lean(),
       Lead.find({ email: { $exists: true, $ne: '' } }).select('name email source stage').sort({ createdAt: -1 }).lean(),
     ]);
 

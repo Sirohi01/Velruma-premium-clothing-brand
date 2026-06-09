@@ -66,6 +66,7 @@ export default function MarketingPage() {
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [savingSmtp, setSavingSmtp] = useState(false);
+  const [activePanel, setActivePanel] = useState<'email' | 'templates' | 'lists'>('email');
   const [campaignForm, setCampaignForm] = useState<any>(blankCampaign);
   const [subscriberForm, setSubscriberForm] = useState({ name: '', email: '', tags: '' });
   const [cartForm, setCartForm] = useState({ customerName: '', email: '', phone: '', title: '', quantity: 1, price: 0, followUpNote: '' });
@@ -315,8 +316,9 @@ export default function MarketingPage() {
   };
 
   return (
-    <div className="space-y-5">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+    <div className="space-y-4">
+      <div className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-zinc-900">
+        <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-white" style={{ fontFamily: "'Playfair Display', serif" }}>Marketing</h1>
           <p className="text-sm text-zinc-500">SMTP email studio, templates, bulk audiences, newsletter and abandoned cart recovery.</p>
@@ -325,26 +327,43 @@ export default function MarketingPage() {
           <RefreshCcw className="h-4 w-4" />
           Refresh
         </button>
+        </div>
+        <div className="mt-4 grid gap-3 md:grid-cols-4">
+          <Metric label="Email Audience" value={recipientCounts.all.toLocaleString('en-IN')} />
+          <Metric label="Newsletter" value={recipientCounts.newsletter.toLocaleString('en-IN')} />
+          <Metric label="Customers" value={recipientCounts.customers.toLocaleString('en-IN')} />
+          <Metric label="Clients / Leads" value={recipientCounts.clients.toLocaleString('en-IN')} />
+        </div>
       </div>
 
-      <div className="grid gap-3 md:grid-cols-4">
-        <Metric label="Email Audience" value={recipientCounts.all.toLocaleString('en-IN')} />
-        <Metric label="Subscribers" value={subscribers.length.toLocaleString('en-IN')} />
+      <div className="grid gap-3 md:grid-cols-2">
         <Metric label="Campaign ROI" value={`Rs.${(metrics.revenue - metrics.spend).toLocaleString('en-IN')}`} />
         <Metric label="Abandoned Value" value={`Rs.${metrics.abandoned.toLocaleString('en-IN')}`} />
       </div>
 
-      <section className="rounded-xl border border-zinc-200 bg-white shadow-sm dark:border-white/10 dark:bg-zinc-900">
-        <div className="border-b border-zinc-200 px-4 py-3 dark:border-white/10">
-          <div className="flex items-center gap-2">
-            <Mail className="h-5 w-5 text-amber-500" />
-            <h2 className="font-semibold text-zinc-900 dark:text-white">Email Studio</h2>
+      <div className="flex flex-wrap gap-2 rounded-xl border border-zinc-200 bg-white p-2 shadow-sm dark:border-white/10 dark:bg-zinc-900">
+        <PanelTab label="Email Studio" active={activePanel === 'email'} onClick={() => setActivePanel('email')} />
+        <PanelTab label={`Templates (${templates.length})`} active={activePanel === 'templates'} onClick={() => setActivePanel('templates')} />
+        <PanelTab label="Lists & Recovery" active={activePanel === 'lists'} onClick={() => setActivePanel('lists')} />
+      </div>
+
+      {activePanel === 'email' && (
+      <section className="overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm dark:border-white/10 dark:bg-zinc-900">
+        <div className="border-b border-zinc-200 bg-[#F7F4EF] px-4 py-3 dark:border-white/10 dark:bg-white/5">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <Mail className="h-5 w-5 text-amber-500" />
+              <h2 className="font-semibold text-zinc-900 dark:text-white">Email Studio</h2>
+            </div>
+            <div className="flex flex-wrap gap-2 text-xs font-semibold text-zinc-600">
+              <span className="rounded-full bg-white px-3 py-1 ring-1 ring-zinc-200 dark:bg-zinc-900 dark:ring-white/10">Templates {templates.length}</span>
+              <span className="rounded-full bg-white px-3 py-1 ring-1 ring-zinc-200 dark:bg-zinc-900 dark:ring-white/10">Attachments {attachments.length}</span>
+            </div>
           </div>
-          <p className="mt-1 text-xs text-zinc-500">Create branded templates, select audience, add banner/logo and send bulk emails with attachments.</p>
         </div>
 
         <div className="grid gap-4 p-4 xl:grid-cols-[360px_1fr]">
-          <form onSubmit={saveSmtp} className="space-y-3 rounded-lg border border-zinc-200 bg-zinc-50 p-3 dark:border-white/10 dark:bg-white/5">
+          <form onSubmit={saveSmtp} className="space-y-3 rounded-lg border border-zinc-200 bg-white p-3 shadow-sm dark:border-white/10 dark:bg-zinc-950">
             <div className="flex items-center gap-2">
               <Send className="h-4 w-4 text-amber-500" />
               <h3 className="text-sm font-semibold text-zinc-900 dark:text-white">SMTP Setup</h3>
@@ -394,7 +413,7 @@ export default function MarketingPage() {
             <div className="grid gap-3 lg:grid-cols-2">
               <Field label="Subject"><input required value={emailForm.subject} onChange={(e) => setEmailForm({ ...emailForm, subject: e.target.value })} className={inputClass} /></Field>
               <Field label="Preheader"><input value={emailForm.preheader} onChange={(e) => setEmailForm({ ...emailForm, preheader: e.target.value })} className={inputClass} /></Field>
-              <Field label="Manual emails" hint="Comma, semicolon or line separated. These are added with selected audience."><textarea value={emailForm.manualEmails} onChange={(e) => setEmailForm({ ...emailForm, manualEmails: e.target.value })} rows={3} className={textareaClass} /></Field>
+              <Field label="Manual emails" hint={emailForm.audience === 'manual' ? 'Manual only selected: mail will go only to these emails, one by one.' : 'These emails are added with selected audience.'}><textarea value={emailForm.manualEmails} onChange={(e) => setEmailForm({ ...emailForm, manualEmails: e.target.value })} rows={3} className={textareaClass} /></Field>
               <Field label="Test email" hint="Use Send Test to verify before bulk sending."><input type="email" value={emailForm.testEmail} onChange={(e) => setEmailForm({ ...emailForm, testEmail: e.target.value })} className={inputClass} /></Field>
             </div>
 
@@ -457,7 +476,9 @@ export default function MarketingPage() {
           </form>
         </div>
       </section>
+      )}
 
+      {activePanel === 'lists' && (
       <div className="grid gap-5 xl:grid-cols-3">
         <section className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-zinc-900">
           <div className="mb-4 flex items-center gap-2"><Megaphone className="h-5 w-5 text-amber-500" /><h2 className="font-semibold text-zinc-900 dark:text-white">Campaigns</h2></div>
@@ -509,7 +530,9 @@ export default function MarketingPage() {
           </div>
         </section>
       </div>
+      )}
 
+      {activePanel === 'templates' && (
       <section className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-zinc-900">
         <div className="mb-3 flex items-center gap-2">
           <FileText className="h-5 w-5 text-amber-500" />
@@ -524,7 +547,24 @@ export default function MarketingPage() {
           ))}
         </div>
       </section>
+      )}
     </div>
+  );
+}
+
+function PanelTab({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`h-10 rounded-lg px-4 text-sm font-semibold transition ${
+        active
+          ? 'bg-zinc-950 text-white shadow-sm dark:bg-amber-500 dark:text-black'
+          : 'text-zinc-600 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-white/10'
+      }`}
+    >
+      {label}
+    </button>
   );
 }
 

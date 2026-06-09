@@ -118,8 +118,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Subject, headline and body are required' }, { status: 400 });
     }
 
-    const audienceEmails = testEmail ? [] : await getAudienceEmails(audience);
-    const recipients = unique([...(testEmail ? splitEmails(testEmail) : audienceEmails), ...manualEmails]);
+    const audienceEmails = testEmail || audience === 'manual' ? [] : await getAudienceEmails(audience);
+    const recipients = testEmail
+      ? unique(splitEmails(testEmail))
+      : audience === 'manual'
+        ? unique(manualEmails)
+        : unique([...audienceEmails, ...manualEmails]);
     if (recipients.length === 0) {
       return NextResponse.json({ success: false, error: 'No recipients found for selected audience' }, { status: 400 });
     }
@@ -136,15 +140,17 @@ export async function POST(request: NextRequest) {
     const fromName = valueAsString(settings, 'smtp_from_name', valueAsString(settings, 'brand_name', 'VELRUMA'));
     const replyTo = valueAsString(settings, 'marketing_reply_to', fromEmail);
 
-    await sendSmtpMail(smtp, {
-      fromName,
-      fromEmail,
-      replyTo,
-      to: recipients,
-      subject: emailSubject,
-      html: emailHtml,
-      attachments,
-    });
+    for (const recipient of recipients) {
+      await sendSmtpMail(smtp, {
+        fromName,
+        fromEmail,
+        replyTo,
+        to: [recipient],
+        subject: emailSubject,
+        html: emailHtml,
+        attachments,
+      });
+    }
 
     let savedTemplate = template;
     if (saveTemplate && !templateId) {
