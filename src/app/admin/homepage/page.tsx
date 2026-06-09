@@ -5,9 +5,56 @@ import { Loader2, Plus, Save, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import ImageUpload from '@/components/shared/ImageUpload';
 
-type Slide = { title: string; subtitle: string; image: string; ctaLabel: string; ctaHref: string; badge: string; aspectRatio: string; objectPosition: string; imageFit: 'cover' | 'contain' };
+type TextStyle = {
+  fontFamily?: string;
+  fontSize?: string;
+  fontWeight?: string;
+  fontStyle?: string;
+  color?: string;
+};
 
-const emptySlide: Slide = { title: '', subtitle: '', image: '', ctaLabel: 'Shop Now', ctaHref: '/shop', badge: '', aspectRatio: '16 / 5', objectPosition: 'center', imageFit: 'cover' };
+type Slide = {
+  title: string;
+  subtitle: string;
+  image: string;
+  ctaLabel: string;
+  ctaHref: string;
+  badge: string;
+  aspectRatio: string;
+  objectPosition: string;
+  imageFit: 'cover' | 'contain';
+  badgeStyle?: TextStyle;
+  titleStyle?: TextStyle;
+  subtitleStyle?: TextStyle;
+};
+
+const defaultTitleStyle: TextStyle = { fontFamily: "'Playfair Display', serif", fontSize: '64px', fontWeight: '700', fontStyle: 'normal', color: '#09090b' };
+const defaultSubtitleStyle: TextStyle = { fontFamily: 'Inter, sans-serif', fontSize: '16px', fontWeight: '400', fontStyle: 'normal', color: '#3f3f46' };
+const defaultBadgeStyle: TextStyle = { fontFamily: 'Inter, sans-serif', fontSize: '12px', fontWeight: '700', fontStyle: 'normal', color: '#b45309' };
+
+const emptySlide: Slide = {
+  title: '',
+  subtitle: '',
+  image: '',
+  ctaLabel: 'Shop Now',
+  ctaHref: '/shop',
+  badge: '',
+  aspectRatio: '16 / 5',
+  objectPosition: 'center',
+  imageFit: 'cover',
+  badgeStyle: defaultBadgeStyle,
+  titleStyle: defaultTitleStyle,
+  subtitleStyle: defaultSubtitleStyle,
+};
+
+const fontOptions = [
+  { label: 'Playfair Display', value: "'Playfair Display', serif" },
+  { label: 'Inter / Sans', value: 'Inter, sans-serif' },
+  { label: 'Serif', value: 'Georgia, serif' },
+  { label: 'Mono', value: "'Courier New', monospace" },
+];
+
+const sizeOptions = ['11px', '12px', '14px', '16px', '18px', '22px', '28px', '36px', '48px', '56px', '64px', '72px'];
 
 export default function HomepageManagerPage() {
   const [slides, setSlides] = useState<Slide[]>([]);
@@ -34,6 +81,13 @@ export default function HomepageManagerPage() {
 
   const updateSlide = (index: number, patch: Partial<Slide>) => {
     setSlides((prev) => prev.map((slide, itemIndex) => itemIndex === index ? { ...slide, ...patch } : slide));
+  };
+
+  const updateTextStyle = (index: number, key: 'badgeStyle' | 'titleStyle' | 'subtitleStyle', patch: TextStyle) => {
+    setSlides((prev) => prev.map((slide, itemIndex) => {
+      if (itemIndex !== index) return slide;
+      return { ...slide, [key]: { ...(slide[key] || {}), ...patch } };
+    }));
   };
 
   const persistSlides = async (slidesToSave: Slide[], successMessage = 'Homepage saved successfully') => {
@@ -130,10 +184,22 @@ export default function HomepageManagerPage() {
               <p className="mt-2 text-xs text-zinc-500">Preview ratio: {slide.aspectRatio === '16 / 5' ? '16:5 / 1920x600 recommended' : slide.aspectRatio?.replace(' / ', ':') || '16:5'}</p>
             </div>
             <div className="grid gap-3 md:grid-cols-2">
-              <Input label="Badge" value={slide.badge} onChange={(badge) => updateSlide(index, { badge })} />
               <Input label="CTA Label" value={slide.ctaLabel} onChange={(ctaLabel) => updateSlide(index, { ctaLabel })} />
-              <Input label="Title" value={slide.title} onChange={(title) => updateSlide(index, { title })} />
               <Input label="CTA Link" value={slide.ctaHref} onChange={(ctaHref) => updateSlide(index, { ctaHref })} />
+              <RichTextField
+                label="Badge"
+                value={slide.badge}
+                styleValue={{ ...defaultBadgeStyle, ...(slide.badgeStyle || {}) }}
+                onTextChange={(badge) => updateSlide(index, { badge })}
+                onStyleChange={(patch) => updateTextStyle(index, 'badgeStyle', patch)}
+              />
+              <RichTextField
+                label="Title"
+                value={slide.title}
+                styleValue={{ ...defaultTitleStyle, ...(slide.titleStyle || {}) }}
+                onTextChange={(title) => updateSlide(index, { title })}
+                onStyleChange={(patch) => updateTextStyle(index, 'titleStyle', patch)}
+              />
               <label>
                 <span className="mb-1 block text-xs font-semibold uppercase text-zinc-500">Aspect Ratio</span>
                 <select value={slide.aspectRatio || '16 / 5'} onChange={(event) => updateSlide(index, { aspectRatio: event.target.value })} className="h-10 w-full rounded-lg border border-zinc-200 px-3 text-sm outline-none focus:border-amber-500">
@@ -164,10 +230,14 @@ export default function HomepageManagerPage() {
                   <option value="cover">Cover - fills area, may crop</option>
                 </select>
               </label>
-              <label className="md:col-span-2">
-                <span className="mb-1 block text-xs font-semibold uppercase text-zinc-500">Subtitle</span>
-                <textarea value={slide.subtitle} onChange={(event) => updateSlide(index, { subtitle: event.target.value })} rows={3} className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm outline-none focus:border-amber-500" />
-              </label>
+              <RichTextField
+                label="Subtitle"
+                value={slide.subtitle}
+                multiline
+                styleValue={{ ...defaultSubtitleStyle, ...(slide.subtitleStyle || {}) }}
+                onTextChange={(subtitle) => updateSlide(index, { subtitle })}
+                onStyleChange={(patch) => updateTextStyle(index, 'subtitleStyle', patch)}
+              />
               <div className="flex justify-end md:col-span-2">
                 <button type="button" onClick={() => removeSlide(index)} disabled={saving} className="inline-flex items-center gap-2 rounded-lg bg-red-50 px-3 py-2 text-sm font-semibold text-red-600 disabled:cursor-not-allowed disabled:opacity-60">
                   <Trash2 className="h-4 w-4" />
@@ -177,6 +247,71 @@ export default function HomepageManagerPage() {
             </div>
           </section>
         ))}
+      </div>
+    </div>
+  );
+}
+
+function RichTextField({
+  label,
+  value,
+  styleValue,
+  onTextChange,
+  onStyleChange,
+  multiline = false,
+}: {
+  label: string;
+  value: string;
+  styleValue: TextStyle;
+  onTextChange: (value: string) => void;
+  onStyleChange: (patch: TextStyle) => void;
+  multiline?: boolean;
+}) {
+  return (
+    <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-3 md:col-span-2">
+      <span className="mb-2 block text-xs font-semibold uppercase text-zinc-500">{label}</span>
+      {multiline ? (
+        <textarea value={value} onChange={(event) => onTextChange(event.target.value)} rows={3} className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm outline-none focus:border-amber-500" />
+      ) : (
+        <input value={value} onChange={(event) => onTextChange(event.target.value)} className="h-10 w-full rounded-lg border border-zinc-200 bg-white px-3 text-sm outline-none focus:border-amber-500" />
+      )}
+
+      <div className="mt-3 grid gap-2 sm:grid-cols-5">
+        <label>
+          <span className="mb-1 block text-[11px] font-semibold uppercase text-zinc-500">Font</span>
+          <select value={styleValue.fontFamily || ''} onChange={(event) => onStyleChange({ fontFamily: event.target.value })} className="h-9 w-full rounded-lg border border-zinc-200 bg-white px-2 text-xs outline-none focus:border-amber-500">
+            {fontOptions.map((font) => <option key={font.value} value={font.value}>{font.label}</option>)}
+          </select>
+        </label>
+        <label>
+          <span className="mb-1 block text-[11px] font-semibold uppercase text-zinc-500">Size</span>
+          <select value={styleValue.fontSize || '16px'} onChange={(event) => onStyleChange({ fontSize: event.target.value })} className="h-9 w-full rounded-lg border border-zinc-200 bg-white px-2 text-xs outline-none focus:border-amber-500">
+            {sizeOptions.map((size) => <option key={size} value={size}>{size}</option>)}
+          </select>
+        </label>
+        <label>
+          <span className="mb-1 block text-[11px] font-semibold uppercase text-zinc-500">Color</span>
+          <input type="color" value={styleValue.color || '#09090b'} onChange={(event) => onStyleChange({ color: event.target.value })} className="h-9 w-full rounded-lg border border-zinc-200 bg-white p-1" />
+        </label>
+        <button
+          type="button"
+          onClick={() => onStyleChange({ fontWeight: styleValue.fontWeight === '700' ? '400' : '700' })}
+          className={`mt-5 h-9 rounded-lg border px-3 text-xs font-bold ${styleValue.fontWeight === '700' ? 'border-amber-300 bg-amber-50 text-amber-700' : 'border-zinc-200 bg-white text-zinc-700'}`}
+        >
+          Bold
+        </button>
+        <button
+          type="button"
+          onClick={() => onStyleChange({ fontStyle: styleValue.fontStyle === 'italic' ? 'normal' : 'italic' })}
+          className={`mt-5 h-9 rounded-lg border px-3 text-xs italic ${styleValue.fontStyle === 'italic' ? 'border-amber-300 bg-amber-50 text-amber-700' : 'border-zinc-200 bg-white text-zinc-700'}`}
+        >
+          Italic
+        </button>
+      </div>
+
+      <div className="mt-3 rounded-lg border border-zinc-200 bg-white px-3 py-2">
+        <span className="text-xs text-zinc-400">Preview: </span>
+        <span style={styleValue}>{value || label}</span>
       </div>
     </div>
   );

@@ -4,6 +4,14 @@ import Link from 'next/link';
 import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
+type TextStyle = {
+  fontFamily?: string;
+  fontSize?: string;
+  fontWeight?: string;
+  fontStyle?: string;
+  color?: string;
+};
+
 export type HeroSlide = {
   title: string;
   subtitle: string;
@@ -14,7 +22,20 @@ export type HeroSlide = {
   aspectRatio?: string;
   objectPosition?: string;
   imageFit?: 'cover' | 'contain';
+  badgeStyle?: TextStyle;
+  titleStyle?: TextStyle;
+  subtitleStyle?: TextStyle;
 };
+
+function responsiveTextStyle(style?: TextStyle) {
+  return {
+    fontFamily: style?.fontFamily,
+    fontWeight: style?.fontWeight,
+    fontStyle: style?.fontStyle,
+    color: style?.color,
+    fontSize: style?.fontSize ? `min(${style.fontSize}, 12vw)` : undefined,
+  };
+}
 
 export default function HomeHeroSlider({ slides }: { slides: HeroSlide[] }) {
   const [index, setIndex] = useState(0);
@@ -61,14 +82,14 @@ export default function HomeHeroSlider({ slides }: { slides: HeroSlide[] }) {
       <div className="relative mx-auto hidden h-full max-w-7xl items-center px-4 py-3 sm:flex sm:py-6 lg:px-8">
         <div className="max-w-[16.5rem] sm:max-w-2xl">
           {active.badge && (
-            <span className="inline-flex rounded-full border border-amber-300 bg-white/80 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-amber-700 shadow-sm">
+            <span className="inline-flex rounded-full border border-amber-300 bg-white/80 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-amber-700 shadow-sm" style={responsiveTextStyle(active.badgeStyle)}>
               {active.badge}
             </span>
           )}
-          <h1 className="mt-2 text-[clamp(1.85rem,9vw,2.35rem)] font-semibold leading-[0.92] tracking-tight text-zinc-950 sm:mt-4 sm:text-6xl" style={{ fontFamily: "'Playfair Display', serif" }}>
+          <h1 className="mt-2 text-[clamp(1.85rem,9vw,2.35rem)] font-semibold leading-[0.92] tracking-tight text-zinc-950 sm:mt-4 sm:text-6xl" style={{ fontFamily: "'Playfair Display', serif", ...responsiveTextStyle(active.titleStyle) }}>
             {active.title}
           </h1>
-          <p className="mt-2 line-clamp-3 max-w-xl text-xs leading-5 text-zinc-700 sm:mt-4 sm:line-clamp-none sm:text-base sm:leading-7">{active.subtitle}</p>
+          <p className="mt-2 line-clamp-3 max-w-xl text-xs leading-5 text-zinc-700 sm:mt-4 sm:line-clamp-none sm:text-base sm:leading-7" style={responsiveTextStyle(active.subtitleStyle)}>{active.subtitle}</p>
           <Link href={active.ctaHref || '/shop'} className="mt-3 inline-flex h-9 items-center gap-2 rounded-lg bg-zinc-950 px-4 text-xs font-semibold text-white shadow-lg shadow-zinc-950/15 transition hover:bg-amber-600 sm:mt-6 sm:h-11 sm:px-6 sm:text-sm">
             {active.ctaLabel || 'Shop Now'}
             <ArrowRight className="h-4 w-4" />
