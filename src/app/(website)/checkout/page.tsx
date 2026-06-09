@@ -137,18 +137,28 @@ export default function CheckoutPage() {
             {form.paymentMethod === 'UPI' && (
               <div className="mt-3 space-y-3">
                 {(upiId || upiQrImage) && (
-                  <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-zinc-800">
-                    <p className="font-semibold text-zinc-900">Scan and pay</p>
-                    {upiQrImage && (
-                      <div className="mt-3 flex justify-center">
-                        <img src={upiQrImage} alt="UPI QR Code" className="h-44 w-44 rounded-lg border border-amber-200 bg-white object-contain p-2" />
+                  <div className="rounded-xl border border-amber-200 bg-[#FFF8E8] p-3 text-sm text-zinc-800">
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+                      {upiQrImage && (
+                        <div className="mx-auto shrink-0 rounded-xl border border-amber-200 bg-white p-2 shadow-sm sm:mx-0">
+                          <img src={upiQrImage} alt="UPI QR Code" className="h-36 w-36 object-contain sm:h-40 sm:w-40" />
+                        </div>
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center justify-between gap-3">
+                          <div>
+                            <p className="text-sm font-bold text-zinc-950">Scan and pay</p>
+                            <p className="mt-0.5 text-xs text-zinc-500">Complete payment, then upload screenshot.</p>
+                          </div>
+                          <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-bold uppercase tracking-wide text-amber-800">UPI</span>
+                        </div>
+                        <div className="mt-3 rounded-lg border border-amber-100 bg-white/70 p-3">
+                          <PaymentDetail label="Amount" value={`Rs.${payableAmount.toLocaleString('en-IN')}`} strong />
+                          {upiId && <PaymentDetail label="UPI ID" value={upiId} />}
+                        </div>
+                        <p className="mt-2 text-xs text-zinc-500">Use the exact amount above for faster verification.</p>
                       </div>
-                    )}
-                    <div className="mt-3 grid gap-1.5 text-xs">
-                      {upiId && <PaymentDetail label="UPI ID" value={upiId} />}
-                      <PaymentDetail label="Amount" value={`Rs.${payableAmount.toLocaleString('en-IN')}`} />
                     </div>
-                    <p className="mt-2 text-xs text-zinc-500">Upload the payment screenshot after paying.</p>
                   </div>
                 )}
                 <ImageUpload label="Upload UPI payment screenshot" value={form.upiProofImage} folder="payments" onChange={(v) => setForm({ ...form, upiProofImage: v })} />
@@ -294,11 +304,11 @@ function TrustItem({ icon, title, text }: { icon: React.ReactNode; title: string
   );
 }
 
-function PaymentDetail({ label, value }: { label: string; value: string }) {
+function PaymentDetail({ label, value, strong }: { label: string; value: string; strong?: boolean }) {
   return (
-    <div className="flex justify-between gap-3">
+    <div className="flex items-start justify-between gap-3 border-b border-amber-100 py-1.5 last:border-0">
       <span className="text-zinc-500">{label}</span>
-      <span className="break-all text-right font-semibold text-zinc-900">{value}</span>
+      <span className={`break-all text-right ${strong ? 'text-base font-bold text-zinc-950' : 'font-semibold text-zinc-900'}`}>{value}</span>
     </div>
   );
 }
