@@ -6,6 +6,20 @@ import '@/models/Collection';
 import '@/models/Phase9';
 import { generateSKU } from '@/lib/utils';
 
+function normalizeVariantExtraPrice(value: unknown, body: any) {
+  const extraPrice = Number(value || 0);
+  const basePrice = Number(body.basePrice || 0);
+  const salePrice = Number(body.salePrice || body.basePrice || 0);
+
+  // Admin variant price is only an add-on over the product price. If the product
+  // selling/MRP price was accidentally repeated here, prevent double charging.
+  if (extraPrice > 0 && (extraPrice === salePrice || extraPrice === basePrice)) {
+    return 0;
+  }
+
+  return extraPrice;
+}
+
 function normalizeProductPayload(body: any) {
   const images = Array.isArray(body.images)
     ? body.images.filter((image: any) => image?.url).map((image: any, index: number) => ({
@@ -29,7 +43,7 @@ function normalizeProductPayload(body: any) {
         size: String(variant.size || '').trim(),
         color: String(variant.color || '').trim(),
         stock: Number(variant.stock || 0),
-        extraPrice: Number(variant.extraPrice || 0),
+        extraPrice: normalizeVariantExtraPrice(variant.extraPrice, body),
       }))
     : [];
   const productHighlights = Array.isArray(body.productHighlights)
