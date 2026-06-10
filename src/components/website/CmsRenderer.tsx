@@ -27,7 +27,9 @@ function richStyle(style?: Record<string, string>) {
 
 function MediaFrame({
   image,
+  imageAlt,
   video,
+  videoAlt,
   imageAspectRatio,
   imagePosition = 'center',
   videoAspectRatio,
@@ -36,7 +38,9 @@ function MediaFrame({
   className = '',
 }: {
   image?: string;
+  imageAlt?: string;
   video?: string;
+  videoAlt?: string;
   imageAspectRatio?: string;
   imagePosition?: string;
   videoAspectRatio?: string;
@@ -56,7 +60,7 @@ function MediaFrame({
             maxWidth: ['9 / 16', '4 / 5', '1 / 1'].includes(imageAspectRatio || '') ? 'min(100%, 520px)' : undefined,
           }}
         >
-          <img src={image} alt="" className="h-full w-full" style={{ objectFit: fit, objectPosition: imagePosition || 'center' }} />
+          <img src={image} alt={imageAlt || ''} className="h-full w-full" style={{ objectFit: fit, objectPosition: imagePosition || 'center' }} />
         </div>
       )}
       {video && (
@@ -67,7 +71,7 @@ function MediaFrame({
             maxWidth: ['9 / 16', '4 / 5', '1 / 1'].includes(videoAspectRatio || '') ? 'min(100%, 520px)' : undefined,
           }}
         >
-          <video src={video} className="h-full w-full" style={{ objectFit: fit, objectPosition: videoPosition || 'center' }} controls playsInline preload="metadata" />
+          <video src={video} title={videoAlt || undefined} aria-label={videoAlt || undefined} className="h-full w-full" style={{ objectFit: fit, objectPosition: videoPosition || 'center' }} controls playsInline preload="metadata" />
         </div>
       )}
     </div>
@@ -77,12 +81,14 @@ function MediaFrame({
 function HeroMedia({
   type,
   src,
+  alt = '',
   aspectRatio,
   position = 'center',
   fit = 'contain',
 }: {
   type: 'image' | 'video';
   src: string;
+  alt?: string;
   aspectRatio?: string;
   position?: string;
   fit?: 'cover' | 'contain';
@@ -96,12 +102,12 @@ function HeroMedia({
       }}
     >
       {type === 'image' && fit === 'contain' && (
-        <img src={src} alt="" className="absolute inset-0 h-full w-full scale-105 object-cover opacity-25 blur-xl" style={{ objectPosition: position }} />
+        <img src={src} alt="" aria-hidden="true" className="absolute inset-0 h-full w-full scale-105 object-cover opacity-25 blur-xl" style={{ objectPosition: position }} />
       )}
       {type === 'image' ? (
-        <img src={src} alt="" className="relative h-full w-full" style={{ objectFit: fit, objectPosition: position }} />
+        <img src={src} alt={alt} className="relative h-full w-full" style={{ objectFit: fit, objectPosition: position }} />
       ) : (
-        <video src={src} className="relative h-full w-full" style={{ objectFit: fit, objectPosition: position }} controls playsInline preload="metadata" />
+        <video src={src} title={alt || undefined} aria-label={alt || undefined} className="relative h-full w-full" style={{ objectFit: fit, objectPosition: position }} controls playsInline preload="metadata" />
       )}
     </div>
   );
@@ -142,6 +148,7 @@ export function CmsRenderer({ page, fallbackTitle, fallbackContent }: { page?: a
               <HeroMedia
                 type="image"
                 src={page.heroImage}
+                alt={page?.heroImageAlt || title}
                 aspectRatio={page?.heroImageAspectRatio}
                 position={page?.heroImagePosition || 'center'}
                 fit={page?.heroImageFit || 'contain'}
@@ -151,6 +158,7 @@ export function CmsRenderer({ page, fallbackTitle, fallbackContent }: { page?: a
               <HeroMedia
                 type="video"
                 src={page.heroVideo}
+                alt={page?.heroVideoAlt || title}
                 aspectRatio={page?.heroVideoAspectRatio}
                 position={page?.heroVideoPosition || 'center'}
                 fit={page?.heroVideoFit || 'contain'}
@@ -209,7 +217,9 @@ export function CmsRenderer({ page, fallbackTitle, fallbackContent }: { page?: a
 
               <MediaFrame
                 image={section.image}
+                imageAlt={section.imageAlt || section.title || title}
                 video={section.video}
+                videoAlt={section.videoAlt || section.title || title}
                 imageAspectRatio={section.imageAspectRatio}
                 imagePosition={section.imagePosition}
                 videoAspectRatio={section.videoAspectRatio}
@@ -232,7 +242,7 @@ export function CmsRenderer({ page, fallbackTitle, fallbackContent }: { page?: a
                       </div>
                     ) : (
                       <div key={itemIndex} className="border border-zinc-200 bg-[#F7F4EF] p-4">
-                        {item.image && <img src={item.image} alt="" className="mb-3 aspect-[4/3] w-full object-cover" />}
+                        {item.image && <img src={item.image} alt={item.imageAlt || item.title || ''} className="mb-3 aspect-[4/3] w-full object-cover" />}
                         <h3 className="font-semibold text-zinc-950">{item.title}</h3>
                         {item.body && <p className="mt-2 text-sm leading-6 text-zinc-600">{item.body}</p>}
                         {item.link && (

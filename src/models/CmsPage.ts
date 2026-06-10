@@ -7,10 +7,12 @@ export interface ICmsPage extends Document {
   type: 'page' | 'policy' | 'faq' | 'lookbook' | 'home-banner' | 'popup' | 'testimonial';
   status: 'draft' | 'published' | 'archived';
   heroImage?: string;
+  heroImageAlt?: string;
   heroImageAspectRatio?: string;
   heroImagePosition?: string;
   heroImageFit?: 'cover' | 'contain';
   heroVideo?: string;
+  heroVideoAlt?: string;
   heroVideoAspectRatio?: string;
   heroVideoPosition?: string;
   heroVideoFit?: 'cover' | 'contain';
@@ -26,13 +28,15 @@ export interface ICmsPage extends Document {
     body?: string;
     bodyStyle?: Record<string, string>;
     image?: string;
+    imageAlt?: string;
     imageAspectRatio?: string;
     imagePosition?: string;
     video?: string;
+    videoAlt?: string;
     videoAspectRatio?: string;
     videoPosition?: string;
     mediaFit?: 'cover' | 'contain';
-    items?: { title?: string; body?: string; image?: string; link?: string }[];
+    items?: { title?: string; body?: string; image?: string; link?: string; imageAlt?: string }[];
   }[];
   seo: {
     title?: string;
@@ -73,10 +77,12 @@ const CmsPageSchema = new Schema<ICmsPage>(
     },
     status: { type: String, enum: ['draft', 'published', 'archived'], default: 'draft' },
     heroImage: String,
+    heroImageAlt: String,
     heroImageAspectRatio: { type: String, default: '16 / 9' },
     heroImagePosition: { type: String, default: 'center' },
     heroImageFit: { type: String, enum: ['cover', 'contain'], default: 'contain' },
     heroVideo: String,
+    heroVideoAlt: String,
     heroVideoAspectRatio: { type: String, default: '16 / 9' },
     heroVideoPosition: { type: String, default: 'center' },
     heroVideoFit: { type: String, enum: ['cover', 'contain'], default: 'contain' },
@@ -92,9 +98,11 @@ const CmsPageSchema = new Schema<ICmsPage>(
       body: String,
       bodyStyle: { type: Schema.Types.Mixed, default: {} },
       image: String,
+      imageAlt: String,
       imageAspectRatio: { type: String, default: '16 / 9' },
       imagePosition: { type: String, default: 'center' },
       video: String,
+      videoAlt: String,
       videoAspectRatio: { type: String, default: '16 / 9' },
       videoPosition: { type: String, default: 'center' },
       mediaFit: { type: String, enum: ['cover', 'contain'], default: 'cover' },
@@ -103,6 +111,7 @@ const CmsPageSchema = new Schema<ICmsPage>(
         body: String,
         image: String,
         link: String,
+        imageAlt: String,
       }],
     }],
     seo: {

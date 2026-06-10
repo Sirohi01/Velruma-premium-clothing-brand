@@ -41,17 +41,19 @@ const fontOptions = [
 ];
 const sizeOptions = ['12px', '14px', '15px', '16px', '18px', '22px', '28px', '36px', '44px', '48px', '56px', '64px'];
 
-const blankSection = { type: 'text', title: '', titleStyle: defaultHeadingStyle, body: '', bodyStyle: defaultBodyStyle, image: '', imageAspectRatio: '16 / 9', imagePosition: 'center', video: '', videoAspectRatio: '16 / 9', videoPosition: 'center', mediaFit: 'cover', itemsText: '' };
+const blankSection = { type: 'text', title: '', titleStyle: defaultHeadingStyle, body: '', bodyStyle: defaultBodyStyle, image: '', imageAlt: '', imageAspectRatio: '16 / 9', imagePosition: 'center', video: '', videoAlt: '', videoAspectRatio: '16 / 9', videoPosition: 'center', mediaFit: 'cover', itemsText: '' };
 const blankForm = {
   title: '',
   slug: '',
   type: 'page',
   status: 'draft',
   heroImage: '',
+  heroImageAlt: '',
   heroImageAspectRatio: '16 / 9',
   heroImagePosition: 'center',
   heroImageFit: 'contain',
   heroVideo: '',
+  heroVideoAlt: '',
   heroVideoAspectRatio: '16 / 9',
   heroVideoPosition: 'center',
   heroVideoFit: 'contain',
@@ -91,8 +93,8 @@ function slugify(value: string) {
 
 function parseItems(text: string) {
   return text.split('\n').map((line) => {
-    const [title, body, image, link] = line.split('|').map((item) => item?.trim());
-    return title ? { title, body, image, link } : null;
+    const [title, body, image, link, imageAlt] = line.split('|').map((item) => item?.trim());
+    return title ? { title, body, image, link, imageAlt } : null;
   }).filter(Boolean);
 }
 
@@ -161,10 +163,12 @@ export default function AdminCmsPage() {
       type: page.type || 'page',
       status: page.status || 'draft',
       heroImage: page.heroImage || '',
+      heroImageAlt: page.heroImageAlt || '',
       heroImageAspectRatio: page.heroImageAspectRatio || '16 / 9',
       heroImagePosition: page.heroImagePosition || 'center',
       heroImageFit: page.heroImageFit || 'contain',
       heroVideo: page.heroVideo || '',
+      heroVideoAlt: page.heroVideoAlt || '',
       heroVideoAspectRatio: page.heroVideoAspectRatio || '16 / 9',
       heroVideoPosition: page.heroVideoPosition || 'center',
       heroVideoFit: page.heroVideoFit || 'contain',
@@ -180,13 +184,15 @@ export default function AdminCmsPage() {
         body: section.body || '',
         bodyStyle: { ...defaultBodyStyle, ...(section.bodyStyle || {}) },
         image: section.image || '',
+        imageAlt: section.imageAlt || '',
         imageAspectRatio: section.imageAspectRatio || '16 / 9',
         imagePosition: section.imagePosition || 'center',
         video: section.video || '',
+        videoAlt: section.videoAlt || '',
         videoAspectRatio: section.videoAspectRatio || '16 / 9',
         videoPosition: section.videoPosition || 'center',
         mediaFit: section.mediaFit || 'cover',
-        itemsText: (section.items || []).map((item: any) => [item.title, item.body, item.image, item.link].filter(Boolean).join(' | ')).join('\n'),
+        itemsText: (section.items || []).map((item: any) => [item.title, item.body, item.image, item.link, item.imageAlt].filter(Boolean).join(' | ')).join('\n'),
       })) : [blankSection],
       seoTitle: page.seo?.title || '',
       seoDescription: page.seo?.description || '',
@@ -232,10 +238,12 @@ export default function AdminCmsPage() {
     type: form.type,
     status: form.status,
     heroImage: form.heroImage,
+    heroImageAlt: form.heroImageAlt,
     heroImageAspectRatio: form.heroImageAspectRatio,
     heroImagePosition: form.heroImagePosition,
     heroImageFit: form.heroImageFit,
     heroVideo: form.heroVideo,
+    heroVideoAlt: form.heroVideoAlt,
     heroVideoAspectRatio: form.heroVideoAspectRatio,
     heroVideoPosition: form.heroVideoPosition,
     heroVideoFit: form.heroVideoFit,
@@ -251,9 +259,11 @@ export default function AdminCmsPage() {
       body: section.body,
       bodyStyle: section.bodyStyle,
       image: section.image,
+      imageAlt: section.imageAlt,
       imageAspectRatio: section.imageAspectRatio,
       imagePosition: section.imagePosition,
       video: section.video,
+      videoAlt: section.videoAlt,
       videoAspectRatio: section.videoAspectRatio,
       videoPosition: section.videoPosition,
       mediaFit: section.mediaFit,
@@ -380,6 +390,9 @@ export default function AdminCmsPage() {
                   <div className="grid gap-3 lg:grid-cols-[340px_1fr]">
                     <div className="space-y-3">
                       <ImageUpload label="Hero image" value={form.heroImage} folder="cms" onChange={(heroImage) => setForm({ ...form, heroImage })} />
+                      <Field label="Hero image alt text">
+                        <input value={form.heroImageAlt} onChange={(e) => setForm({ ...form, heroImageAlt: e.target.value })} className={inputClass} placeholder="Describe the hero image for SEO and accessibility" />
+                      </Field>
                       <Field label="Hero image aspect ratio">
                         <select value={form.heroImageAspectRatio} onChange={(e) => setForm({ ...form, heroImageAspectRatio: e.target.value })} className={inputClass}>
                           {aspectOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
@@ -397,6 +410,9 @@ export default function AdminCmsPage() {
                         </select>
                       </Field>
                       <ImageUpload label="Hero video" value={form.heroVideo} folder="cms/videos" accept="video" onChange={(heroVideo) => setForm({ ...form, heroVideo })} />
+                      <Field label="Hero video title / label">
+                        <input value={form.heroVideoAlt} onChange={(e) => setForm({ ...form, heroVideoAlt: e.target.value })} className={inputClass} placeholder="Describe the hero video" />
+                      </Field>
                       <Field label="Hero video aspect ratio">
                         <select value={form.heroVideoAspectRatio} onChange={(e) => setForm({ ...form, heroVideoAspectRatio: e.target.value })} className={inputClass}>
                           {aspectOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
@@ -477,6 +493,12 @@ export default function AdminCmsPage() {
                         <ImageUpload label="Image" value={section.image} folder="cms/sections" onChange={(image) => updateSection(index, { image })} />
                         <ImageUpload label="Video" value={section.video} folder="cms/section-videos" accept="video" onChange={(video) => updateSection(index, { video })} />
                         <button type="button" onClick={() => setForm({ ...form, sections: form.sections.filter((_s: any, i: number) => i !== index) })} className="h-10 rounded-lg bg-red-50 px-3 text-xs font-semibold text-red-600">Remove</button>
+                        <Field label="Image alt text">
+                          <input value={section.imageAlt || ''} onChange={(e) => updateSection(index, { imageAlt: e.target.value })} className={inputClass} />
+                        </Field>
+                        <Field label="Video title / label">
+                          <input value={section.videoAlt || ''} onChange={(e) => updateSection(index, { videoAlt: e.target.value })} className={inputClass} />
+                        </Field>
                         <Field label="Image ratio">
                           <select value={section.imageAspectRatio || '16 / 9'} onChange={(e) => updateSection(index, { imageAspectRatio: e.target.value })} className={inputClass}>
                             {aspectOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
@@ -539,7 +561,7 @@ export default function AdminCmsPage() {
                             onStyleChange={(patch) => updateSectionStyle(index, 'bodyStyle', patch)}
                           />
                         </div>
-                        <textarea placeholder="Items: Title | Body, one per line" value={section.itemsText} onChange={(e) => updateSection(index, { itemsText: e.target.value })} className={`${textareaClass} lg:col-span-3`} rows={3} />
+                        <textarea placeholder="Items: Title | Body | Image URL | Link | Image Alt, one per line" value={section.itemsText} onChange={(e) => updateSection(index, { itemsText: e.target.value })} className={`${textareaClass} lg:col-span-3`} rows={3} />
                       </div>
                     ))}
                   </div>
