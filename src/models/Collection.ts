@@ -6,6 +6,7 @@ export interface ICollection extends Document {
   slug: string;
   description?: string;
   bannerImage?: string;
+  bannerImageAlt?: string;
   products: mongoose.Types.ObjectId[];
   isActive: boolean;
   seo: {
@@ -22,6 +23,7 @@ const CollectionSchema = new Schema<ICollection>(
     slug: { type: String, required: true, unique: true, lowercase: true, trim: true },
     description: { type: String, trim: true },
     bannerImage: { type: String },
+    bannerImageAlt: { type: String, trim: true },
     products: [{ type: Schema.Types.ObjectId, ref: 'Product' }],
     isActive: { type: Boolean, default: true },
     seo: {

@@ -41,7 +41,7 @@ function ProductGrid({ products }: { products: any[] }) {
       {products.map((product) => (
         <Link key={product._id.toString()} href={`/product/${product.slug}`} className="overflow-hidden rounded-xl bg-white shadow-sm transition hover:shadow-md">
           <div className="aspect-[3/4] bg-zinc-100">
-            {product.images?.[0]?.url ? <img src={product.images[0].url} alt={product.title} className="h-full w-full object-cover" /> : <div className="flex h-full items-center justify-center text-zinc-400">No Image</div>}
+            {product.images?.[0]?.url ? <img src={product.images[0].url} alt={product.images[0].alt || product.title} className="h-full w-full object-cover" /> : <div className="flex h-full items-center justify-center text-zinc-400">No Image</div>}
           </div>
           <div className="p-4 text-center">
             <h3 className="text-sm font-medium text-zinc-900">{product.title}</h3>

@@ -17,7 +17,7 @@ export default async function CollectionsPage() {
           {collections.map((collection: any) => (
             <Link key={collection._id.toString()} href={`/collection/${collection.slug}`} className="group flex flex-col w-[280px] sm:w-[320px] overflow-hidden rounded-xl bg-white shadow-sm transition hover:shadow-md">
               <div className="relative aspect-[4/5] w-full bg-zinc-200 overflow-hidden">
-                {collection.bannerImage ? <img src={collection.bannerImage} alt={collection.name} className="absolute inset-0 h-full w-full object-cover object-top transition duration-700 group-hover:scale-105" /> : <div className="flex h-full items-center justify-center text-zinc-500">VELRUMA</div>}
+                {collection.bannerImage ? <img src={collection.bannerImage} alt={collection.bannerImageAlt || collection.name} className="absolute inset-0 h-full w-full object-cover object-top transition duration-700 group-hover:scale-105" /> : <div className="flex h-full items-center justify-center text-zinc-500">VELRUMA</div>}
               </div>
               <div className="p-4 sm:p-5 flex-1">
                 <h2 className="text-lg font-semibold text-zinc-900 group-hover:text-amber-700 transition-colors">{collection.name}</h2>

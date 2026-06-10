@@ -146,7 +146,7 @@ function ProductCard({ product }: { product: any }) {
         {product.salePrice && product.salePrice < product.basePrice && <span className="rounded bg-red-600 px-2 py-1 text-xs font-bold tracking-wider text-white">SALE</span>}
       </div>
       <div className="aspect-[3/4] overflow-hidden bg-zinc-100">
-        {product.images?.[0]?.url ? <img src={product.images[0].url} alt={product.title} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" /> : <div className="flex h-full items-center justify-center text-zinc-400">No Image</div>}
+        {product.images?.[0]?.url ? <img src={product.images[0].url} alt={product.images[0].alt || product.title} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" /> : <div className="flex h-full items-center justify-center text-zinc-400">No Image</div>}
       </div>
       <div className="p-4 text-center">
         <h3 className="line-clamp-1 text-sm font-medium text-zinc-900">{product.title}</h3>

@@ -90,7 +90,7 @@ export default async function HomePage() {
           {categories.map((category: any) => (
             <Link key={category._id.toString()} href={`/category/${category.slug}`} className="group overflow-hidden rounded-lg bg-white shadow-sm ring-1 ring-zinc-200 transition hover:-translate-y-0.5 hover:shadow-md">
               <div className="aspect-[4/3] bg-zinc-100">
-                {category.image ? <img src={category.image} alt={category.name} className="h-full w-full object-cover transition duration-500 group-hover:scale-105" /> : <div className="flex h-full items-center justify-center text-zinc-400">VELRUMA</div>}
+                {category.image ? <img src={category.image} alt={category.imageAlt || category.name} className="h-full w-full object-cover transition duration-500 group-hover:scale-105" /> : <div className="flex h-full items-center justify-center text-zinc-400">VELRUMA</div>}
               </div>
               <div className="p-3">
                 <p className="font-semibold">{category.name}</p>
@@ -116,7 +116,7 @@ export default async function HomePage() {
               return (
                 <Link key={product._id.toString()} href={`/product/${product.slug}`} className="group rounded-lg bg-[#F7F4EF] p-2 ring-1 ring-zinc-200 transition hover:-translate-y-0.5 hover:shadow-md">
                   <div className="aspect-[3/4] overflow-hidden rounded-md bg-zinc-100">
-                    {product.images?.[0]?.url ? <img src={product.images[0].url} alt={product.title} className="h-full w-full object-cover transition duration-500 group-hover:scale-105" /> : <div className="flex h-full items-center justify-center text-zinc-400">No Image</div>}
+                    {product.images?.[0]?.url ? <img src={product.images[0].url} alt={product.images[0].alt || product.title} className="h-full w-full object-cover transition duration-500 group-hover:scale-105" /> : <div className="flex h-full items-center justify-center text-zinc-400">No Image</div>}
                   </div>
                   <div className="p-2">
                     <p className="line-clamp-1 text-sm font-semibold">{product.title}</p>
@@ -133,7 +133,7 @@ export default async function HomePage() {
         <div className="flex flex-wrap gap-6">
           {collections.map((collection: any) => (
             <Link key={collection._id.toString()} href={`/collection/${collection.slug}`} className="relative flex aspect-[4/5] overflow-hidden rounded-lg bg-zinc-900 shadow-sm group">
-              {collection.bannerImage && <img src={collection.bannerImage} alt={collection.name} className="absolute inset-0 h-full w-full object-cover object-top opacity-80 transition duration-700 group-hover:scale-105" />}
+              {collection.bannerImage && <img src={collection.bannerImage} alt={collection.bannerImageAlt || collection.name} className="absolute inset-0 h-full w-full object-cover object-top opacity-80 transition duration-700 group-hover:scale-105" />}
               <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/80 via-zinc-950/20 to-transparent" />
               <div className="absolute bottom-0 w-full p-4 text-white">
                 <p className="text-xl sm:text-2xl font-semibold" style={{ fontFamily: "'Playfair Display', serif" }}>{collection.name}</p>

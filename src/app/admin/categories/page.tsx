@@ -32,7 +32,9 @@ export default function CategoriesPage() {
     slug: '',
     description: '',
     image: '',
+    imageAlt: '',
     sizeChartImage: '',
+    sizeChartImageAlt: '',
     sizeChart: DEFAULT_SIZE_CHART,
     isActive: true,
     isFeatured: false,
@@ -78,7 +80,7 @@ export default function CategoriesPage() {
         toast.success(editTarget ? 'Category updated successfully' : 'Category created successfully');
         setIsModalOpen(false);
         setEditTarget(null);
-        setFormData({ name: '', slug: '', description: '', image: '', sizeChartImage: '', sizeChart: DEFAULT_SIZE_CHART, isActive: true, isFeatured: false });
+        setFormData({ name: '', slug: '', description: '', image: '', imageAlt: '', sizeChartImage: '', sizeChartImageAlt: '', sizeChart: DEFAULT_SIZE_CHART, isActive: true, isFeatured: false });
         fetchCategories();
       } else {
         toast.error(data.error || 'Failed to create category');
@@ -90,7 +92,7 @@ export default function CategoriesPage() {
 
   const openCreateModal = () => {
     setEditTarget(null);
-    setFormData({ name: '', slug: '', description: '', image: '', sizeChartImage: '', sizeChart: DEFAULT_SIZE_CHART, isActive: true, isFeatured: false });
+    setFormData({ name: '', slug: '', description: '', image: '', imageAlt: '', sizeChartImage: '', sizeChartImageAlt: '', sizeChart: DEFAULT_SIZE_CHART, isActive: true, isFeatured: false });
     setIsModalOpen(true);
   };
 
@@ -101,7 +103,9 @@ export default function CategoriesPage() {
       slug: category.slug || '',
       description: category.description || '',
       image: category.image || '',
+      imageAlt: category.imageAlt || '',
       sizeChartImage: category.sizeChartImage || '',
+      sizeChartImageAlt: category.sizeChartImageAlt || '',
       sizeChart: (category.sizeChart && category.sizeChart.sizes && category.sizeChart.sizes.length > 0) 
         ? category.sizeChart 
         : DEFAULT_SIZE_CHART,
@@ -253,8 +257,26 @@ export default function CategoriesPage() {
               <div className="flex items-center justify-between py-2">
                 <ImageUpload label="Category image" value={formData.image} folder="categories" onChange={(image) => setFormData({ ...formData, image })} />
               </div>
+              <div>
+                <label className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Category image alt text</label>
+                <input
+                  value={formData.imageAlt}
+                  onChange={(e) => setFormData({ ...formData, imageAlt: e.target.value })}
+                  className="w-full rounded-lg border border-zinc-200 bg-zinc-50 p-2.5 text-sm dark:border-white/10 dark:bg-white/5 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500/50"
+                  placeholder="Describe category image for SEO"
+                />
+              </div>
               <div className="flex items-center justify-between py-2">
                 <ImageUpload label="Size chart image" value={formData.sizeChartImage} folder="categories/size-charts" onChange={(image) => setFormData({ ...formData, sizeChartImage: image })} />
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Size chart image alt text</label>
+                <input
+                  value={formData.sizeChartImageAlt}
+                  onChange={(e) => setFormData({ ...formData, sizeChartImageAlt: e.target.value })}
+                  className="w-full rounded-lg border border-zinc-200 bg-zinc-50 p-2.5 text-sm dark:border-white/10 dark:bg-white/5 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500/50"
+                  placeholder="Describe size chart image"
+                />
               </div>
               
               <div className="space-y-3 pt-2 border-t border-zinc-100 dark:border-white/10">

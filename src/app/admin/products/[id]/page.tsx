@@ -180,6 +180,7 @@ export default function EditProductPage() {
                     folder="products"
                     onChange={(url) => updateImage(index, 'url', url)}
                   />
+                  <Input label="Image alt text" value={image.alt || ''} onChange={(value) => updateImage(index, 'alt', value)} />
                 </div>
                 <button onClick={() => setFormData({ ...formData, images: formData.images.filter((_: any, i: number) => i !== index) })} className="rounded-lg p-2 text-red-400 hover:bg-red-500/10">
                   <Trash2 className="h-4 w-4" />

@@ -18,7 +18,7 @@ export default async function CollectionPage({ params }: { params: Promise<{ slu
         {collection.bannerImage ? (
           <div className="mb-10 flex flex-col md:flex-row items-center gap-6 md:gap-8 bg-white p-4 sm:p-6 rounded-2xl border border-zinc-200 shadow-sm">
             <div className="w-full max-w-[300px] lg:max-w-[400px] shrink-0">
-              <CollectionImageModal imageUrl={collection.bannerImage} alt={collection.name} />
+              <CollectionImageModal imageUrl={collection.bannerImage} alt={collection.bannerImageAlt || collection.name} />
             </div>
             <div className="flex-1 text-center md:text-left px-2 sm:px-4">
               <h1 className="text-4xl sm:text-5xl font-bold text-zinc-900 tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }}>{collection.name}</h1>
@@ -35,7 +35,7 @@ export default async function CollectionPage({ params }: { params: Promise<{ slu
           {products.map((product: any) => (
             <Link key={product._id.toString()} href={`/product/${product.slug}`} className="overflow-hidden rounded-xl bg-white shadow-sm transition hover:shadow-md">
               <div className="aspect-[9/16] bg-zinc-100">
-                {product.images?.[0]?.url ? <img src={product.images[0].url} alt={product.title} className="h-full w-full object-cover object-top" /> : <div className="flex h-full items-center justify-center text-zinc-400">No Image</div>}
+                {product.images?.[0]?.url ? <img src={product.images[0].url} alt={product.images[0].alt || product.title} className="h-full w-full object-cover object-top" /> : <div className="flex h-full items-center justify-center text-zinc-400">No Image</div>}
               </div>
               <div className="p-1 text-center">
                 <h3 className="text-sm font-medium text-zinc-900">{product.title}</h3>

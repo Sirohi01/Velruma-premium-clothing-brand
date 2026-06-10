@@ -19,6 +19,7 @@ export default function CollectionsPage() {
     slug: '',
     description: '',
     bannerImage: '',
+    bannerImageAlt: '',
     isActive: true,
   });
 
@@ -62,7 +63,7 @@ export default function CollectionsPage() {
         toast.success(editTarget ? 'Collection updated successfully' : 'Collection created successfully');
         setIsModalOpen(false);
         setEditTarget(null);
-        setFormData({ name: '', slug: '', description: '', bannerImage: '', isActive: true });
+        setFormData({ name: '', slug: '', description: '', bannerImage: '', bannerImageAlt: '', isActive: true });
         fetchCollections();
       } else {
         toast.error(data.error || 'Failed to create collection');
@@ -74,7 +75,7 @@ export default function CollectionsPage() {
 
   const openCreateModal = () => {
     setEditTarget(null);
-    setFormData({ name: '', slug: '', description: '', bannerImage: '', isActive: true });
+    setFormData({ name: '', slug: '', description: '', bannerImage: '', bannerImageAlt: '', isActive: true });
     setIsModalOpen(true);
   };
 
@@ -85,6 +86,7 @@ export default function CollectionsPage() {
       slug: collection.slug || '',
       description: collection.description || '',
       bannerImage: collection.bannerImage || '',
+      bannerImageAlt: collection.bannerImageAlt || '',
       isActive: collection.isActive ?? true,
     });
     setIsModalOpen(true);
@@ -223,6 +225,16 @@ export default function CollectionsPage() {
                 />
               </div>
               <ImageUpload label="Collection banner" value={formData.bannerImage} folder="collections" onChange={(bannerImage) => setFormData({ ...formData, bannerImage })} />
+              <div>
+                <label className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Banner image alt text</label>
+                <input
+                  type="text"
+                  value={formData.bannerImageAlt}
+                  onChange={(e) => setFormData({ ...formData, bannerImageAlt: e.target.value })}
+                  className="w-full rounded-lg border border-zinc-200 bg-zinc-50 p-2.5 text-sm dark:border-white/10 dark:bg-white/5 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500/50"
+                  placeholder="Describe collection banner for SEO"
+                />
+              </div>
               <div className="flex items-center justify-between py-2">
                 <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Active</label>
                 <input

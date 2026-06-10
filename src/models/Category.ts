@@ -6,7 +6,9 @@ export interface ICategory extends Document {
   slug: string;
   description?: string;
   image?: string;
+  imageAlt?: string;
   sizeChartImage?: string;
+  sizeChartImageAlt?: string;
   sizeChart?: {
     sizes: string[];
     measurements: { name: string; values: string[] }[];
@@ -28,7 +30,9 @@ const CategorySchema = new Schema<ICategory>(
     slug: { type: String, required: true, unique: true, lowercase: true, trim: true },
     description: { type: String, trim: true },
     image: { type: String },
+    imageAlt: { type: String, trim: true },
     sizeChartImage: { type: String },
+    sizeChartImageAlt: { type: String, trim: true },
     sizeChart: {
       sizes: [{ type: String }],
       measurements: [

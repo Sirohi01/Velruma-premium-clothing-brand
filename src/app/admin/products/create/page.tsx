@@ -260,6 +260,16 @@ export default function CreateProductPage() {
                         setFormData({ ...formData, images: newImgs });
                       }}
                     />
+                    <input
+                      value={img.alt || ''}
+                      onChange={(e) => {
+                        const newImgs = [...formData.images];
+                        newImgs[index].alt = e.target.value;
+                        setFormData({ ...formData, images: newImgs });
+                      }}
+                      placeholder="Image alt text for SEO"
+                      className="mt-2 w-full rounded-lg border border-zinc-200 bg-zinc-50 p-2.5 text-sm dark:border-white/10 dark:bg-white/5 dark:text-white"
+                    />
                   </div>
                   {index > 0 && (
                     <button type="button" onClick={() => {
