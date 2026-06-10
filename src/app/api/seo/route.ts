@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
 import SeoPage from '@/models/SeoPage';
-import { scoreSeo, syncAllCmsSeoToSeoPages, syncSeoPageToCms } from '@/lib/seo-sync';
+import { normalizeSeoPayload, scoreSeo, syncAllCmsSeoToSeoPages, syncSeoPageToCms } from '@/lib/seo-sync';
 
 export async function GET() {
   try {
@@ -19,11 +19,10 @@ export async function POST(request: NextRequest) {
   try {
     await dbConnect();
     const body = await request.json();
-    const keywords = Array.isArray(body.keywords) ? body.keywords : String(body.keywords || '').split(',').map((item) => item.trim()).filter(Boolean);
+    const seoPayload = normalizeSeoPayload(body);
     const page = await SeoPage.create({
-      ...body,
-      keywords,
-      score: body.score ?? scoreSeo(body, keywords),
+      ...seoPayload,
+      score: body.score ?? scoreSeo(seoPayload, seoPayload.keywords),
     });
     await syncSeoPageToCms(page);
     return NextResponse.json({ success: true, data: page }, { status: 201 });

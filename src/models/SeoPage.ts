@@ -73,6 +73,10 @@ const SeoPageSchema = new Schema<ISeoPage>(
 
 SeoPageSchema.index({ path: 1, isRedirect: 1 });
 
+if (process.env.NODE_ENV !== 'production' && mongoose.models.SeoPage) {
+  delete mongoose.models.SeoPage;
+}
+
 const SeoPage: Model<ISeoPage> = mongoose.models.SeoPage || mongoose.model<ISeoPage>('SeoPage', SeoPageSchema);
 
 export default SeoPage;

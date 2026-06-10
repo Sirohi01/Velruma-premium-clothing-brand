@@ -33,6 +33,39 @@ function normalizeKeywords(value: unknown) {
     : String(value || '').split(',').map((item) => item.trim()).filter(Boolean);
 }
 
+export function normalizeSeoPayload(body: SeoLike) {
+  const keywords = normalizeKeywords(body.keywords);
+  return {
+    path: body.path,
+    title: body.title,
+    description: body.description,
+    keywords,
+    metaAuthor: body.metaAuthor,
+    metaViewport: body.metaViewport,
+    ogTitle: body.ogTitle,
+    ogDescription: body.ogDescription,
+    ogImage: body.ogImage,
+    ogType: body.ogType || 'website',
+    ogUrl: body.ogUrl,
+    twitterCard: body.twitterCard || 'summary_large_image',
+    twitterTitle: body.twitterTitle,
+    twitterDescription: body.twitterDescription,
+    twitterImage: body.twitterImage || body.ogImage,
+    twitterSite: body.twitterSite,
+    twitterCreator: body.twitterCreator,
+    canonicalUrl: body.canonicalUrl,
+    robots: body.robots || 'index,follow',
+    schemaType: body.schemaType || 'WebPage',
+    schemaJson: body.schemaJson,
+    breadcrumbsJson: body.breadcrumbsJson,
+    sitemapChangefreq: body.sitemapChangefreq || 'weekly',
+    sitemapPriority: Number(body.sitemapPriority ?? 0.7),
+    hreflang: Array.isArray(body.hreflang) ? body.hreflang : [],
+    redirectTo: body.redirectTo,
+    isRedirect: Boolean(body.isRedirect),
+  };
+}
+
 function seoFromCms(page: any) {
   const seo = page.seo || {};
   const keywords = normalizeKeywords(seo.keywords);
@@ -100,29 +133,30 @@ function mergeSeoPayload(existing: SeoLike | null, incoming: SeoLike) {
 }
 
 function cmsSeoFromSeo(page: SeoLike) {
+  const normalized = normalizeSeoPayload(page);
   return {
-    title: page.title,
-    description: page.description,
-    keywords: normalizeKeywords(page.keywords),
-    ogImage: page.ogImage,
-    canonicalUrl: page.canonicalUrl,
-    ogTitle: page.ogTitle,
-    ogDescription: page.ogDescription,
-    ogType: page.ogType,
-    ogUrl: page.ogUrl,
-    twitterCard: page.twitterCard,
-    twitterTitle: page.twitterTitle,
-    twitterDescription: page.twitterDescription,
-    twitterImage: page.twitterImage,
-    twitterSite: page.twitterSite,
-    twitterCreator: page.twitterCreator,
-    schemaType: page.schemaType,
-    schemaJson: page.schemaJson,
-    breadcrumbsJson: page.breadcrumbsJson,
-    sitemapChangefreq: page.sitemapChangefreq,
-    sitemapPriority: page.sitemapPriority,
-    hreflang: page.hreflang || [],
-    robots: page.robots,
+    title: normalized.title,
+    description: normalized.description,
+    keywords: normalized.keywords,
+    ogImage: normalized.ogImage,
+    canonicalUrl: normalized.canonicalUrl,
+    ogTitle: normalized.ogTitle,
+    ogDescription: normalized.ogDescription,
+    ogType: normalized.ogType,
+    ogUrl: normalized.ogUrl,
+    twitterCard: normalized.twitterCard,
+    twitterTitle: normalized.twitterTitle,
+    twitterDescription: normalized.twitterDescription,
+    twitterImage: normalized.twitterImage,
+    twitterSite: normalized.twitterSite,
+    twitterCreator: normalized.twitterCreator,
+    schemaType: normalized.schemaType,
+    schemaJson: normalized.schemaJson,
+    breadcrumbsJson: normalized.breadcrumbsJson,
+    sitemapChangefreq: normalized.sitemapChangefreq,
+    sitemapPriority: normalized.sitemapPriority,
+    hreflang: normalized.hreflang || [],
+    robots: normalized.robots,
   };
 }
 

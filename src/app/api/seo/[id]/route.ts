@@ -1,17 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
 import SeoPage from '@/models/SeoPage';
-import { scoreSeo, syncSeoPageToCms } from '@/lib/seo-sync';
+import { normalizeSeoPayload, scoreSeo, syncSeoPageToCms } from '@/lib/seo-sync';
 
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     await dbConnect();
     const { id } = await params;
     const body = await request.json();
-    const keywords = Array.isArray(body.keywords) ? body.keywords : String(body.keywords || '').split(',').map((item) => item.trim()).filter(Boolean);
+    const seoPayload = normalizeSeoPayload(body);
     const page = await SeoPage.findByIdAndUpdate(
       id,
-      { ...body, keywords, score: body.score ?? scoreSeo(body, keywords) },
+      { ...seoPayload, score: body.score ?? scoreSeo(seoPayload, seoPayload.keywords) },
       { returnDocument: 'after', runValidators: true }
     );
     if (!page) return NextResponse.json({ success: false, error: 'SEO page not found' }, { status: 404 });

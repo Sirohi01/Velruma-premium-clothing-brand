@@ -139,6 +139,10 @@ const CmsPageSchema = new Schema<ICmsPage>(
 CmsPageSchema.index({ type: 1, status: 1 });
 
 
+if (process.env.NODE_ENV !== 'production' && mongoose.models.CmsPage) {
+  delete mongoose.models.CmsPage;
+}
+
 const CmsPage: Model<ICmsPage> = mongoose.models.CmsPage || mongoose.model<ICmsPage>('CmsPage', CmsPageSchema);
 
 export default CmsPage;

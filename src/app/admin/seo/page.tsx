@@ -232,8 +232,18 @@ export default function AdminSeoPage() {
                     <p className="mt-1 line-clamp-1 text-xs text-zinc-500">{page.description}</p>
                   </td>
                   <td className="px-5 py-4">
-                    <StatusDot done={Boolean(page.ogTitle && page.ogDescription && page.ogImage)} label="OG" />
-                    <StatusDot done={Boolean(page.twitterTitle && page.twitterDescription && page.twitterImage)} label="Twitter" />
+                    <div className="flex items-center gap-3">
+                      {page.ogImage ? <img src={page.ogImage} alt="" className="h-10 w-14 rounded-md object-cover ring-1 ring-zinc-200" /> : <div className="h-10 w-14 rounded-md bg-zinc-100 ring-1 ring-zinc-200" />}
+                      <div className="min-w-0">
+                        <div>
+                          <StatusDot done={Boolean(page.ogTitle && page.ogDescription && page.ogImage)} label="OG" />
+                          <StatusDot done={Boolean(page.twitterTitle && page.twitterDescription && (page.twitterImage || page.ogImage))} label="Twitter" />
+                        </div>
+                        {(page.twitterSite || page.twitterCreator) && (
+                          <p className="mt-1 truncate text-xs text-zinc-500">{[page.twitterSite, page.twitterCreator].filter(Boolean).join(' / ')}</p>
+                        )}
+                      </div>
+                    </div>
                   </td>
                   <td className="px-5 py-4"><StatusDot done={Boolean(page.schemaType || page.schemaJson)} label={page.schemaType || 'Schema'} /></td>
                   <td className="px-5 py-4"><span className={`rounded-full px-2 py-1 text-xs font-semibold ${page.score >= 85 ? 'bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-300' : page.score >= 65 ? 'bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300' : 'bg-red-100 text-red-700 dark:bg-red-500/10 dark:text-red-300'}`}>{page.score}</span></td>
