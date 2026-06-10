@@ -19,6 +19,8 @@ export async function generateCmsMetadata(slug: string, fallbackTitle: string, f
   const twitterTitle = seo.twitterTitle || ogTitle;
   const twitterDescription = seo.twitterDescription || ogDescription;
   const ogImage = seo.ogImage || page?.heroImage || undefined;
+  const twitterImage = seo.twitterImage || ogImage;
+  const imageAlt = seo.ogTitle || seo.twitterTitle || title;
 
   return {
     title,
@@ -30,13 +32,22 @@ export async function generateCmsMetadata(slug: string, fallbackTitle: string, f
       title: ogTitle,
       description: ogDescription,
       url: canonical,
-      images: ogImage ? [{ url: ogImage }] : undefined,
+      type: seo.ogType || 'website',
+      images: ogImage ? [{
+        url: ogImage,
+        secureUrl: ogImage,
+        width: 1200,
+        height: 630,
+        alt: imageAlt,
+      }] : undefined,
     },
     twitter: {
-      card: 'summary_large_image',
+      card: seo.twitterCard || 'summary_large_image',
       title: twitterTitle,
       description: twitterDescription,
-      images: ogImage ? [ogImage] : undefined,
+      site: seo.twitterSite || undefined,
+      creator: seo.twitterCreator || undefined,
+      images: twitterImage ? [twitterImage] : undefined,
     },
   };
 }
