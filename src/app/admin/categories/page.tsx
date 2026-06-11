@@ -159,6 +159,7 @@ export default function CategoriesPage() {
           <thead className="bg-zinc-50 text-xs uppercase text-zinc-500 dark:bg-zinc-800/50 dark:text-zinc-400">
             <tr>
               <th className="px-6 py-4 font-medium">Category Name</th>
+              <th className="px-6 py-4 font-medium">Image</th>
               <th className="px-6 py-4 font-medium">Slug</th>
               <th className="px-6 py-4 font-medium">Status</th>
               <th className="px-6 py-4 font-medium">Featured</th>
@@ -168,11 +169,11 @@ export default function CategoriesPage() {
           <tbody className="divide-y divide-zinc-200 dark:divide-white/5">
             {loading ? (
               <tr>
-                <td colSpan={5} className="px-6 py-8 text-center text-zinc-500">Loading categories...</td>
+                <td colSpan={6} className="px-6 py-8 text-center text-zinc-500">Loading categories...</td>
               </tr>
             ) : categories.length === 0 ? (
               <tr>
-                <td colSpan={5} className="px-6 py-12 text-center text-zinc-500">
+                <td colSpan={6} className="px-6 py-12 text-center text-zinc-500">
                   <FolderPlus className="mx-auto mb-3 h-8 w-8 opacity-20" />
                   No categories found. Click Add Category to create one.
                 </td>
@@ -182,6 +183,22 @@ export default function CategoriesPage() {
                 <tr key={category._id} className="hover:bg-zinc-50 dark:hover:bg-white/[0.02] transition-colors">
                   <td className="px-6 py-4 font-medium text-zinc-900 dark:text-white">
                     {category.name}
+                  </td>
+                  <td className="px-6 py-4">
+                    {category.image ? (
+                      <div className="h-14 w-20 overflow-hidden rounded-lg border border-zinc-200 bg-zinc-100 dark:border-white/10 dark:bg-white/5">
+                        <img
+                          src={category.image}
+                          alt={category.imageAlt || `${category.name} category image`}
+                          className="h-full w-full object-cover"
+                          loading="lazy"
+                        />
+                      </div>
+                    ) : (
+                      <div className="flex h-14 w-20 items-center justify-center rounded-lg border border-dashed border-zinc-200 bg-zinc-50 text-xs text-zinc-400 dark:border-white/10 dark:bg-white/5">
+                        No image
+                      </div>
+                    )}
                   </td>
                   <td className="px-6 py-4 font-mono text-xs">{category.slug}</td>
                   <td className="px-6 py-4">

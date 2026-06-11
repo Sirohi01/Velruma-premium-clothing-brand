@@ -136,6 +136,7 @@ export default function CollectionsPage() {
           <thead className="bg-zinc-50 text-xs uppercase text-zinc-500 dark:bg-zinc-800/50 dark:text-zinc-400">
             <tr>
               <th className="px-6 py-4 font-medium">Collection Name</th>
+              <th className="px-6 py-4 font-medium">Image</th>
               <th className="px-6 py-4 font-medium">Slug</th>
               <th className="px-6 py-4 font-medium">Status</th>
               <th className="px-6 py-4 text-right font-medium">Actions</th>
@@ -144,11 +145,11 @@ export default function CollectionsPage() {
           <tbody className="divide-y divide-zinc-200 dark:divide-white/5">
             {loading ? (
               <tr>
-                <td colSpan={4} className="px-6 py-8 text-center text-zinc-500">Loading collections...</td>
+                <td colSpan={5} className="px-6 py-8 text-center text-zinc-500">Loading collections...</td>
               </tr>
             ) : collections.length === 0 ? (
               <tr>
-                <td colSpan={4} className="px-6 py-12 text-center text-zinc-500">
+                <td colSpan={5} className="px-6 py-12 text-center text-zinc-500">
                   <Layers className="mx-auto mb-3 h-8 w-8 opacity-20" />
                   No collections found. Click Add Collection to create one.
                 </td>
@@ -158,6 +159,22 @@ export default function CollectionsPage() {
                 <tr key={collection._id} className="hover:bg-zinc-50 dark:hover:bg-white/[0.02] transition-colors">
                   <td className="px-6 py-4 font-medium text-zinc-900 dark:text-white">
                     {collection.name}
+                  </td>
+                  <td className="px-6 py-4">
+                    {collection.bannerImage ? (
+                      <div className="h-14 w-24 overflow-hidden rounded-lg border border-zinc-200 bg-zinc-100 dark:border-white/10 dark:bg-white/5">
+                        <img
+                          src={collection.bannerImage}
+                          alt={collection.bannerImageAlt || `${collection.name} collection banner`}
+                          className="h-full w-full object-cover"
+                          loading="lazy"
+                        />
+                      </div>
+                    ) : (
+                      <div className="flex h-14 w-24 items-center justify-center rounded-lg border border-dashed border-zinc-200 bg-zinc-50 text-xs text-zinc-400 dark:border-white/10 dark:bg-white/5">
+                        No image
+                      </div>
+                    )}
                   </td>
                   <td className="px-6 py-4 font-mono text-xs">{collection.slug}</td>
                   <td className="px-6 py-4">
