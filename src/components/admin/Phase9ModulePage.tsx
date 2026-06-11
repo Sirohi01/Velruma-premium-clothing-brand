@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { Edit2, Plus, Save, Trash2, X } from 'lucide-react';
+import { AlertTriangle, Edit2, Plus, Save, Trash2, X } from 'lucide-react';
 import { toast } from 'sonner';
 import DataTable from '@/components/shared/DataTable';
 
@@ -39,6 +39,8 @@ export default function Phase9ModulePage({
   const [saving, setSaving] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<any | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<any | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const [form, setForm] = useState<Record<string, any>>(defaults);
 
   const emptyForm = useMemo(() => {
@@ -109,19 +111,23 @@ export default function Phase9ModulePage({
     }
   };
 
-  const deactivate = async (record: any) => {
-    if (!confirm(`Deactivate ${record.title || record.name || 'record'}?`)) return;
+  const deactivate = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
     try {
-      const res = await fetch(`${endpoint}/${record._id}`, { method: 'DELETE' });
+      const res = await fetch(`${endpoint}/${deleteTarget._id}`, { method: 'DELETE' });
       const data = await res.json();
       if (data.success) {
         toast.success('Record deactivated');
+        setDeleteTarget(null);
         fetchRecords();
       } else {
         toast.error(data.error || 'Action failed');
       }
     } catch {
       toast.error('Network error');
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -141,7 +147,7 @@ export default function Phase9ModulePage({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div className="flex items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-white" style={{ fontFamily: "'Playfair Display', serif" }}>
@@ -173,7 +179,7 @@ export default function Phase9ModulePage({
                 <button onClick={() => openEdit(record)} className="rounded-lg p-2 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-900 dark:hover:bg-white/10">
                   <Edit2 className="h-4 w-4" />
                 </button>
-                <button onClick={() => deactivate(record)} className="rounded-lg p-2 text-red-400 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-500/10">
+                <button onClick={() => setDeleteTarget(record)} className="rounded-lg p-2 text-red-400 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-500/10">
                   <Trash2 className="h-4 w-4" />
                 </button>
               </div>
@@ -184,23 +190,26 @@ export default function Phase9ModulePage({
 
       {modalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 backdrop-blur-sm">
-          <div className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl dark:bg-zinc-950">
+          <div className="max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-xl bg-white p-5 shadow-2xl dark:bg-zinc-950">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-semibold text-zinc-900 dark:text-white">{editTarget ? `Edit ${title}` : `Add ${title}`}</h2>
               <button onClick={() => setModalOpen(false)} className="rounded-lg p-2 text-zinc-400 hover:bg-zinc-100 dark:hover:bg-white/10">
                 <X className="h-4 w-4" />
               </button>
             </div>
-            <form onSubmit={saveRecord} className="mt-6 grid gap-4 md:grid-cols-2">
+            <form onSubmit={saveRecord} className="mt-5 grid gap-3 md:grid-cols-2">
               {fields.map((field) => (
                 <label key={field.key} className={field.type === 'textarea' || field.type === 'json' ? 'md:col-span-2' : ''}>
-                  <span className="mb-1 block text-xs font-medium uppercase text-zinc-500">{field.label}</span>
+                  <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-zinc-500">{field.label}</span>
                   {field.type === 'json' ? (
-                    <pre className="w-full max-h-64 overflow-auto rounded-lg border border-zinc-200 bg-zinc-50 p-2.5 text-xs dark:border-white/10 dark:bg-white/5 dark:text-zinc-300">
-                      {JSON.stringify(form[field.key] || {}, null, 2)}
-                    </pre>
+                    <textarea
+                      value={typeof form[field.key] === 'string' ? form[field.key] : JSON.stringify(form[field.key] || {}, null, 2)}
+                      onChange={(e) => setForm({ ...form, [field.key]: e.target.value })}
+                      rows={5}
+                      className="w-full rounded-lg border border-zinc-200 bg-zinc-50 p-2.5 font-mono text-xs dark:border-white/10 dark:bg-white/5 dark:text-zinc-300"
+                    />
                   ) : field.type === 'textarea' ? (
-                    <textarea required={field.required} value={form[field.key] || ''} onChange={(e) => setForm({ ...form, [field.key]: e.target.value })} rows={4} className="w-full rounded-lg border border-zinc-200 bg-zinc-50 p-2.5 text-sm dark:border-white/10 dark:bg-white/5 dark:text-white" />
+                    <textarea required={field.required} value={form[field.key] || ''} onChange={(e) => setForm({ ...form, [field.key]: e.target.value })} rows={3} className="w-full rounded-lg border border-zinc-200 bg-zinc-50 p-2.5 text-sm dark:border-white/10 dark:bg-white/5 dark:text-white" />
                   ) : field.type === 'select' ? (
                     <select value={form[field.key] || ''} onChange={(e) => setForm({ ...form, [field.key]: e.target.value })} className="w-full rounded-lg border border-zinc-200 bg-zinc-50 p-2.5 text-sm dark:border-white/10 dark:bg-white/5 dark:text-white">
                       {(field.options || []).map((option) => <option key={option} value={option}>{option.replaceAll('_', ' ')}</option>)}
@@ -220,6 +229,33 @@ export default function Phase9ModulePage({
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {deleteTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-xl bg-white p-5 shadow-2xl dark:bg-zinc-950">
+            <div className="flex gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-50 text-red-500 dark:bg-red-500/10">
+                <AlertTriangle className="h-5 w-5" />
+              </div>
+              <div>
+                <h2 className="text-base font-semibold text-zinc-950 dark:text-white">Deactivate record?</h2>
+                <p className="mt-1 text-sm leading-6 text-zinc-500">
+                  {deleteTarget.title || deleteTarget.name || 'This record'} will be hidden from active workflows. You can keep its history for audit.
+                </p>
+              </div>
+            </div>
+            <div className="mt-5 flex justify-end gap-2">
+              <button type="button" onClick={() => setDeleteTarget(null)} className="rounded-lg px-4 py-2 text-sm font-medium text-zinc-600 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-white/10">
+                Cancel
+              </button>
+              <button type="button" disabled={deleting} onClick={deactivate} className="inline-flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60">
+                <Trash2 className="h-4 w-4" />
+                {deleting ? 'Deactivating...' : 'Deactivate'}
+              </button>
+            </div>
           </div>
         </div>
       )}

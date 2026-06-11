@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
 import CmsPage from '@/models/CmsPage';
 import { syncCmsPageToSeo } from '@/lib/seo-sync';
+import { auditAdminAction, requireAdminAction } from '@/lib/admin-api';
 
 function slugify(value: string) {
   return value.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
@@ -157,9 +158,12 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     await dbConnect();
+    const admin = await requireAdminAction(request, 'cms', 'create');
+    if (!admin.ok) return admin.response;
     const body = await request.json();
     const page = await CmsPage.create({ ...body, slug: body.slug || slugify(body.title || 'page') });
     await syncCmsPageToSeo(page);
+    await auditAdminAction({ request, context: admin.context, module: 'cms', action: 'create', entity: page });
     return NextResponse.json({ success: true, data: page }, { status: 201 });
   } catch (error: any) {
     console.error('CMS POST error:', error);

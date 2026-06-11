@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
 import Collection from '@/models/Collection';
+import { auditAdminAction, requireAdminAction } from '@/lib/admin-api';
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -22,6 +23,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     await dbConnect();
+    const admin = await requireAdminAction(request, 'collections', 'edit');
+    if (!admin.ok) return admin.response;
     const { id } = await params;
     const body = await request.json();
     
@@ -29,6 +32,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     if (!collection) {
       return NextResponse.json({ success: false, error: 'Collection not found' }, { status: 404 });
     }
+    await auditAdminAction({ request, context: admin.context, module: 'collections', action: 'update', entity: collection });
     
     return NextResponse.json({ success: true, data: collection });
   } catch (error: any) {
@@ -43,15 +47,18 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     await dbConnect();
+    const admin = await requireAdminAction(request, 'collections', 'delete');
+    if (!admin.ok) return admin.response;
     const { id } = await params;
     
-    const collection = await Collection.findByIdAndDelete(id);
+    const collection = await Collection.findByIdAndUpdate(id, { isActive: false }, { returnDocument: 'after' });
     
     if (!collection) {
       return NextResponse.json({ success: false, error: 'Collection not found' }, { status: 404 });
     }
+    await auditAdminAction({ request, context: admin.context, module: 'collections', action: 'delete', entity: collection, description: 'deactivated collection' });
     
-    return NextResponse.json({ success: true, message: 'Collection deleted successfully' });
+    return NextResponse.json({ success: true, message: 'Collection deactivated successfully', data: collection });
   } catch (error) {
     console.error('Collection DELETE error:', error);
     return NextResponse.json({ success: false, error: 'Internal Server Error' }, { status: 500 });

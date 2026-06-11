@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
 import Setting from '@/models/Setting';
+import { auditAdminAction, requireAdminAction } from '@/lib/admin-api';
 
 export const dynamic = 'force-dynamic';
 
@@ -193,6 +194,8 @@ export async function GET(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   try {
     await dbConnect();
+    const admin = await requireAdminAction(request, 'settings', 'edit');
+    if (!admin.ok) return admin.response;
 
     const body = await request.json() as { settings?: SettingPayload[] } & SettingPayload;
     const entries: SettingPayload[] = Array.isArray(body.settings) ? body.settings : [body];
@@ -224,6 +227,14 @@ export async function PUT(request: NextRequest) {
     }
 
     const settings = await Setting.find({}).sort({ group: 1, key: 1 });
+    await auditAdminAction({
+      request,
+      context: admin.context,
+      module: 'settings',
+      action: 'update',
+      description: `updated ${settingsToSave.length} setting${settingsToSave.length === 1 ? '' : 's'}`,
+      metadata: { keys: settingsToSave.map((setting) => setting.key) },
+    });
     return NextResponse.json({ success: true, data: settings });
   } catch (error: unknown) {
     console.error('Settings PUT error:', error);

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
 import SeoPage from '@/models/SeoPage';
 import { normalizeSeoPayload, scoreSeo, syncAllCmsSeoToSeoPages, syncSeoPageToCms } from '@/lib/seo-sync';
+import { auditAdminAction, requireAdminAction } from '@/lib/admin-api';
 
 export async function GET() {
   try {
@@ -18,6 +19,8 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     await dbConnect();
+    const admin = await requireAdminAction(request, 'seo', 'create');
+    if (!admin.ok) return admin.response;
     const body = await request.json();
     const seoPayload = normalizeSeoPayload(body);
     const page = await SeoPage.create({
@@ -25,6 +28,7 @@ export async function POST(request: NextRequest) {
       score: body.score ?? scoreSeo(seoPayload, seoPayload.keywords),
     });
     await syncSeoPageToCms(page);
+    await auditAdminAction({ request, context: admin.context, module: 'seo', action: 'create', entity: page });
     return NextResponse.json({ success: true, data: page }, { status: 201 });
   } catch (error: any) {
     console.error('SEO POST error:', error);

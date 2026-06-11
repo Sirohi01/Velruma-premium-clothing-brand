@@ -36,7 +36,31 @@ export type ModuleName =
   | 'accounting'
   | 'roles'
   | 'settings'
-  | 'activity';
+  | 'activity'
+  | 'notifications'
+  | 'tasks'
+  | 'team'
+  | 'warehouses'
+  | 'stock-transfers'
+  | 'media'
+  | 'search'
+  | 'forms'
+  | 'form-submissions'
+  | 'backups'
+  | 'brand-assets'
+  | 'announcements'
+  | 'loyalty'
+  | 'widgets'
+  | 'audit'
+  | 'timelines'
+  | 'seo-audits'
+  | 'vendor-portal'
+  | 'brands'
+  | 'ai-ready'
+  | 'payments'
+  | 'estimates'
+  | 'proforma-invoices'
+  | 'receipts';
 
 export type ActionName = keyof Permission;
 
@@ -46,6 +70,11 @@ export const ALL_MODULES: ModuleName[] = [
   'production', 'quality', 'returns', 'invoices', 'seo',
   'cms', 'blog', 'coupons', 'marketing', 'support',
   'reports', 'accounting', 'roles', 'settings', 'activity',
+  'notifications', 'tasks', 'team', 'warehouses', 'stock-transfers',
+  'media', 'search', 'forms', 'form-submissions', 'backups',
+  'brand-assets', 'announcements', 'loyalty', 'widgets', 'audit',
+  'timelines', 'seo-audits', 'vendor-portal', 'brands', 'ai-ready',
+  'payments', 'estimates', 'proforma-invoices', 'receipts',
 ];
 
 export const ALL_ACTIONS: ActionName[] = [
@@ -78,6 +107,30 @@ export const MODULE_LABELS: Record<ModuleName, string> = {
   roles: 'Roles & Permissions',
   settings: 'Settings',
   activity: 'Activity Logs',
+  notifications: 'Notifications',
+  tasks: 'Tasks',
+  team: 'Team Management',
+  warehouses: 'Warehouses',
+  'stock-transfers': 'Stock Transfers',
+  media: 'Media Library',
+  search: 'Global Search',
+  forms: 'Dynamic Forms',
+  'form-submissions': 'Form Submissions',
+  backups: 'Backups',
+  'brand-assets': 'Brand Assets',
+  announcements: 'Announcements',
+  loyalty: 'Loyalty Engine',
+  widgets: 'Dashboard Widgets',
+  audit: 'Audit System',
+  timelines: 'Activity Timelines',
+  'seo-audits': 'SEO Audits',
+  'vendor-portal': 'Vendor Portal',
+  brands: 'Brands',
+  'ai-ready': 'AI Ready Layer',
+  payments: 'Payments',
+  estimates: 'Estimates',
+  'proforma-invoices': 'Proforma Invoices',
+  receipts: 'Receipts',
 };
 
 // Permission checking function

@@ -5,6 +5,7 @@ import '@/models/Category';
 import '@/models/Collection';
 import '@/models/Phase9';
 import { generateSKU } from '@/lib/utils';
+import { auditAdminAction, requireAdminAction } from '@/lib/admin-api';
 
 function normalizeVariantExtraPrice(value: unknown, body: any) {
   const extraPrice = Number(value || 0);
@@ -98,6 +99,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     await dbConnect();
+    const admin = await requireAdminAction(request, 'products', 'edit');
+    if (!admin.ok) return admin.response;
     const { id } = await params;
     const body = await request.json();
     const payload = normalizeProductPayload(body);
@@ -116,6 +119,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     if (!product) {
       return NextResponse.json({ success: false, error: 'Product not found' }, { status: 404 });
     }
+    await auditAdminAction({ request, context: admin.context, module: 'products', action: 'update', entity: product });
     
     return NextResponse.json({ success: true, data: product });
   } catch (error: any) {
@@ -130,6 +134,8 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     await dbConnect();
+    const admin = await requireAdminAction(request, 'products', 'delete');
+    if (!admin.ok) return admin.response;
     const { id } = await params;
     
     // Soft delete or status change is preferred
@@ -138,6 +144,7 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
     if (!product) {
       return NextResponse.json({ success: false, error: 'Product not found' }, { status: 404 });
     }
+    await auditAdminAction({ request, context: admin.context, module: 'products', action: 'delete', entity: product, description: 'archived product' });
     
     return NextResponse.json({ success: true, message: 'Product archived successfully' });
   } catch (error) {

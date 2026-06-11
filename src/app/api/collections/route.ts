@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
 import Collection from '@/models/Collection';
+import { auditAdminAction, requireAdminAction } from '@/lib/admin-api';
 
 export async function GET(request: NextRequest) {
   try {
@@ -24,9 +25,12 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     await dbConnect();
+    const admin = await requireAdminAction(request, 'collections', 'create');
+    if (!admin.ok) return admin.response;
     const body = await request.json();
     
     const collection = await Collection.create(body);
+    await auditAdminAction({ request, context: admin.context, module: 'collections', action: 'create', entity: collection });
     return NextResponse.json({ success: true, data: collection }, { status: 201 });
   } catch (error: any) {
     console.error('Collections POST error:', error);

@@ -8,14 +8,17 @@ import '@/models/Product';
 export async function GET(request: NextRequest) {
   try {
     await dbConnect();
-    const code = new URL(request.url).searchParams.get('code')?.trim();
+    const searchParams = new URL(request.url).searchParams;
+    const code = searchParams.get('code')?.trim();
+    const token = searchParams.get('token')?.trim();
     if (!code) return NextResponse.json({ success: false, error: 'Supplier code is required' }, { status: 400 });
 
     const account: any = await VendorPortalAccount.findOne({
       supplierCode: { $regex: `^${code.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, $options: 'i' },
+      ...(token ? { portalToken: token } : {}),
       accessStatus: 'active',
       isActive: true,
-    }).lean();
+    });
 
     if (!account) return NextResponse.json({ success: false, error: 'Active supplier portal access not found' }, { status: 404 });
 
@@ -25,8 +28,18 @@ export async function GET(request: NextRequest) {
       .limit(25)
       .lean();
 
-    const relatedOrders = purchaseOrders.filter((order: any) => order.supplier?.code === account.supplierCode || order.supplier?.name === account.supplierName);
-    return NextResponse.json({ success: true, data: { account, purchaseOrders: relatedOrders } });
+    const scopedPoNumbers = Array.isArray(account.visiblePurchaseOrders) ? account.visiblePurchaseOrders : [];
+    const relatedOrders = purchaseOrders.filter((order: any) => {
+      const isSupplierMatch = order.supplier?.code === account.supplierCode || order.supplier?.name === account.supplierName;
+      const isScoped = scopedPoNumbers.length === 0 || scopedPoNumbers.includes(order.poNumber);
+      return isSupplierMatch && isScoped;
+    });
+
+    account.lastLoginAt = new Date();
+    await account.save();
+
+    const safeAccount = account.toObject();
+    return NextResponse.json({ success: true, data: { account: safeAccount, purchaseOrders: relatedOrders } });
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message || 'Vendor portal access failed' }, { status: 500 });
   }

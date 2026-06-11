@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
 import Category from '@/models/Category';
+import { auditAdminAction, requireAdminAction } from '@/lib/admin-api';
 
 export async function GET(request: NextRequest) {
   try {
@@ -29,11 +30,12 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     await dbConnect();
+    const admin = await requireAdminAction(request, 'categories', 'create');
+    if (!admin.ok) return admin.response;
     const body = await request.json();
-    
-    // In a real app, you would add RBAC check here
-    
+
     const category = await Category.create(body);
+    await auditAdminAction({ request, context: admin.context, module: 'categories', action: 'create', entity: category });
     return NextResponse.json({ success: true, data: category }, { status: 201 });
   } catch (error: any) {
     console.error('Categories POST error:', error);

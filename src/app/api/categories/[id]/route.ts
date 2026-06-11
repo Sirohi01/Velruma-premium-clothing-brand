@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
 import Category from '@/models/Category';
+import { auditAdminAction, requireAdminAction } from '@/lib/admin-api';
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -22,6 +23,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     await dbConnect();
+    const admin = await requireAdminAction(request, 'categories', 'edit');
+    if (!admin.ok) return admin.response;
     const { id } = await params;
     const body = await request.json();
     
@@ -29,6 +32,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     if (!category) {
       return NextResponse.json({ success: false, error: 'Category not found' }, { status: 404 });
     }
+    await auditAdminAction({ request, context: admin.context, module: 'categories', action: 'update', entity: category });
     
     return NextResponse.json({ success: true, data: category });
   } catch (error: any) {
@@ -43,17 +47,17 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     await dbConnect();
+    const admin = await requireAdminAction(request, 'categories', 'delete');
+    if (!admin.ok) return admin.response;
     const { id } = await params;
-    
-    // In a real app, you might want to prevent deletion if products are linked
-    // Or just soft delete
-    const category = await Category.findByIdAndDelete(id);
+    const category = await Category.findByIdAndUpdate(id, { isActive: false }, { returnDocument: 'after' });
     
     if (!category) {
       return NextResponse.json({ success: false, error: 'Category not found' }, { status: 404 });
     }
+    await auditAdminAction({ request, context: admin.context, module: 'categories', action: 'delete', entity: category, description: 'deactivated category' });
     
-    return NextResponse.json({ success: true, message: 'Category deleted successfully' });
+    return NextResponse.json({ success: true, message: 'Category deactivated successfully', data: category });
   } catch (error) {
     console.error('Category DELETE error:', error);
     return NextResponse.json({ success: false, error: 'Internal Server Error' }, { status: 500 });

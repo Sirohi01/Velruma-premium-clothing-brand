@@ -5,6 +5,7 @@ import '@/models/Category';
 import '@/models/Collection';
 import '@/models/Phase9';
 import { generateSKU } from '@/lib/utils';
+import { auditAdminAction, requireAdminAction } from '@/lib/admin-api';
 
 function normalizeVariantExtraPrice(value: unknown, body: any) {
   const extraPrice = Number(value || 0);
@@ -105,6 +106,8 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     await dbConnect();
+    const admin = await requireAdminAction(request, 'products', 'create');
+    if (!admin.ok) return admin.response;
     const body = await request.json();
     const payload = normalizeProductPayload(body);
     
@@ -119,6 +122,7 @@ export async function POST(request: NextRequest) {
     }
 
     const product = await Product.create(payload);
+    await auditAdminAction({ request, context: admin.context, module: 'products', action: 'create', entity: product });
     return NextResponse.json({ success: true, data: product }, { status: 201 });
   } catch (error: any) {
     console.error('Products POST error:', error);
