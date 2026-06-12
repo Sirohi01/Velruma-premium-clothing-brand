@@ -5,7 +5,7 @@ export interface IPayment extends Document {
   paymentNumber: string;
   order: mongoose.Types.ObjectId;
   invoice?: mongoose.Types.ObjectId;
-  method: 'COD' | 'UPI';
+  method: 'COD' | 'UPI' | 'PREPAID';
   status: 'Pending' | 'Paid' | 'Failed' | 'Refunded';
   amount: number;
   proofImage?: string;
@@ -15,12 +15,16 @@ export interface IPayment extends Document {
   updatedAt: Date;
 }
 
+if (process.env.NODE_ENV === 'development' && mongoose.models.Payment) {
+  mongoose.deleteModel('Payment');
+}
+
 const PaymentSchema = new Schema<IPayment>(
   {
     paymentNumber: { type: String, required: true, unique: true },
     order: { type: Schema.Types.ObjectId, ref: 'Order', required: true },
     invoice: { type: Schema.Types.ObjectId, ref: 'Invoice' },
-    method: { type: String, enum: ['COD', 'UPI'], required: true },
+    method: { type: String, enum: ['COD', 'UPI', 'PREPAID'], required: true },
     status: { type: String, enum: ['Pending', 'Paid', 'Failed', 'Refunded'], default: 'Pending' },
     amount: { type: Number, required: true },
     proofImage: { type: String },

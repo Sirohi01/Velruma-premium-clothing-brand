@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
@@ -244,6 +244,24 @@ function NavItem({
 
 export default function AdminSidebar({ isOpen, onClose, isCollapsed, onToggleCollapse }: SidebarProps) {
   const pathname = usePathname();
+  const [brand, setBrand] = useState({ name: 'VELRUMA', logo: '' });
+
+  useEffect(() => {
+    fetch('/api/settings?public=true', { cache: 'no-store' })
+      .then((res) => res.json())
+      .then((data) => {
+        if (!data.success) return;
+        const settings = (data.data || []).reduce((map: Record<string, string>, item: { key: string; value: unknown }) => {
+          map[item.key] = item.value == null ? '' : String(item.value);
+          return map;
+        }, {});
+        setBrand({
+          name: settings.brand_name || 'VELRUMA',
+          logo: settings.brand_logo || '',
+        });
+      })
+      .catch(() => setBrand({ name: 'VELRUMA', logo: '' }));
+  }, []);
 
   return (
     <>
@@ -268,12 +286,16 @@ export default function AdminSidebar({ isOpen, onClose, isCollapsed, onToggleCol
         <div className="flex h-14 items-center justify-between border-b border-zinc-200 px-4">
           {!isCollapsed ? (
             <Link href="/admin/dashboard" prefetch={false} className="flex items-center gap-2.5">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-amber-400 to-amber-600 text-sm font-bold text-black">
-                V
+              <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-lg border border-zinc-200 bg-white shadow-sm">
+                {brand.logo ? (
+                  <img src={brand.logo} alt={brand.name} className="h-full w-full object-contain p-1" />
+                ) : (
+                  <span className="text-sm font-bold text-zinc-950">{brand.name.charAt(0).toUpperCase()}</span>
+                )}
               </div>
               <div>
                 <span className="text-[15px] font-semibold tracking-wider text-zinc-950">
-                  VELRUMA
+                  {brand.name}
                 </span>
                 <span className="ml-2 rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-medium text-amber-400">
                   ADMIN
@@ -282,8 +304,12 @@ export default function AdminSidebar({ isOpen, onClose, isCollapsed, onToggleCol
             </Link>
           ) : (
             <Link href="/admin/dashboard" prefetch={false} className="mx-auto">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-amber-400 to-amber-600 text-sm font-bold text-black">
-                V
+              <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-lg border border-zinc-200 bg-white shadow-sm">
+                {brand.logo ? (
+                  <img src={brand.logo} alt={brand.name} className="h-full w-full object-contain p-1" />
+                ) : (
+                  <span className="text-sm font-bold text-zinc-950">{brand.name.charAt(0).toUpperCase()}</span>
+                )}
               </div>
             </Link>
           )}

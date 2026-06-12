@@ -20,6 +20,10 @@ function sum(items: any[], key: string) {
   return items.reduce((total, item) => total + Number(item[key] || 0), 0);
 }
 
+function netOrderSale(order: any) {
+  return Math.max(0, Number(order.subtotal || 0) - Number(order.discount || 0));
+}
+
 export async function GET(request: NextRequest) {
   try {
     await dbConnect();
@@ -40,7 +44,7 @@ export async function GET(request: NextRequest) {
 
     const productCost = new Map(products.map((product: any) => [String(product._id), Number(product.costPrice || 0)]));
     const productCategory = new Map(products.map((product: any) => [String(product._id), product.category?.name || 'Uncategorized']));
-    const totalRevenue = sum(activeSalesOrders, 'total');
+    const totalRevenue = activeSalesOrders.reduce((total: number, order: any) => total + netOrderSale(order), 0);
     const grossSales = sum(orders, 'total');
     const taxCollected = sum(activeSalesOrders, 'tax');
     const shippingCollected = sum(activeSalesOrders, 'shippingFee');
@@ -89,7 +93,7 @@ export async function GET(request: NextRequest) {
       const key = order.email;
       const customer = customerReport.get(key) || { name: order.customerName, email: order.email, orders: 0, revenue: 0 };
       customer.orders += 1;
-      customer.revenue += Number(order.total || 0);
+      customer.revenue += netOrderSale(order);
       customerReport.set(key, customer);
     }
 

@@ -23,6 +23,10 @@ const OrderTimelineSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+if (process.env.NODE_ENV === 'development' && mongoose.models.Order) {
+  mongoose.deleteModel('Order');
+}
+
 const OrderSchema = new mongoose.Schema(
   {
     orderId: { type: String, required: true, unique: true },
@@ -55,14 +59,22 @@ const OrderSchema = new mongoose.Schema(
     total: { type: Number, required: true },
 
     // Payment
-    paymentMethod: { type: String, enum: ['COD', 'UPI'], required: true },
+    paymentMethod: { type: String, enum: ['COD', 'UPI', 'PREPAID'], required: true },
     paymentStatus: { type: String, enum: ['Pending', 'Paid', 'Failed', 'Refunded'], default: 'Pending' },
     upiProofImage: { type: String },
+
+    // Source
+    orderSource: {
+      type: String,
+      enum: ['Website', 'Admin Manual', 'WhatsApp', 'Instagram', 'Flipkart', 'Amazon', 'Other'],
+      default: 'Website'
+    },
+    sourceReference: { type: String },
 
     // Order Status
     orderStatus: {
       type: String,
-      enum: ['Pending', 'Confirmed', 'Processing', 'Shipped', 'Delivered', 'Cancelled', 'Returned'],
+      enum: ['Pending', 'Confirmed', 'Processing', 'Packed', 'Shipped', 'Out for Delivery', 'Delivered', 'Cancelled', 'Returned'],
       default: 'Pending'
     },
 

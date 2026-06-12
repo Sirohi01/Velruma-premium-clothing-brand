@@ -3,6 +3,8 @@
 import React, { Suspense, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 
+const trackingSteps = ['Confirmed', 'Processing', 'Packed', 'Shipped', 'Out for Delivery', 'Delivered'];
+
 export default function TrackOrderPage() {
   return (
     <Suspense fallback={<div className="bg-[#FAF9F6] px-4 py-12 text-center text-zinc-500">Loading tracker...</div>}>
@@ -44,6 +46,26 @@ function TrackOrderContent() {
                 <p className="mt-1 text-sm text-zinc-500">{result.order.customerName}</p>
               </div>
               <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-700">{result.order.orderStatus}</span>
+            </div>
+            {!['Cancelled', 'Returned'].includes(result.order.orderStatus) && (
+              <div className="mt-6 grid gap-3 sm:grid-cols-3">
+                {trackingSteps.map((step) => {
+                  const currentIndex = trackingSteps.indexOf(result.order.orderStatus);
+                  const stepIndex = trackingSteps.indexOf(step);
+                  const done = currentIndex >= stepIndex;
+                  return (
+                    <div key={step} className={`rounded-xl border p-3 text-sm ${done ? 'border-amber-200 bg-amber-50 text-amber-800' : 'border-zinc-200 bg-zinc-50 text-zinc-500'}`}>
+                      <span className="block text-xs font-semibold uppercase tracking-wide">{done ? 'Done' : 'Pending'}</span>
+                      <span className="mt-1 block font-semibold">{step}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+            <div className="mt-5 grid gap-2 rounded-xl bg-zinc-50 p-4 text-sm text-zinc-600 sm:grid-cols-3">
+              <p><span className="block text-xs uppercase text-zinc-400">Payment</span>{result.order.paymentMethod} / {result.order.paymentStatus}</p>
+              <p><span className="block text-xs uppercase text-zinc-400">Courier</span>{result.order.courierName || '-'}</p>
+              <p><span className="block text-xs uppercase text-zinc-400">Tracking</span>{result.order.trackingNumber || '-'}</p>
             </div>
             <div className="mt-5 space-y-3">
               {(result.order.timeline || []).map((step: any, index: number) => (

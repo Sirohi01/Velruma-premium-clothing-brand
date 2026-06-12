@@ -1,6 +1,7 @@
 'use client';
 
-import { Download, Printer } from 'lucide-react';
+import { Download, Printer, Send } from 'lucide-react';
+import { toast } from 'sonner';
 import { buildInvoicePdf, downloadInvoicePdf, type InvoicePdfData } from '@/lib/invoice-pdf';
 
 export default function InvoiceActions({ invoice }: { invoice: InvoicePdfData }) {
@@ -10,8 +11,22 @@ export default function InvoiceActions({ invoice }: { invoice: InvoicePdfData })
     window.open(blobUrl, '_blank', 'noopener,noreferrer');
   };
 
+  const sendInvoice = async () => {
+    const res = await fetch(`/api/invoices/${invoice._id}/send`, { method: 'POST' });
+    const data = await res.json();
+    if (data.success) {
+      toast.success('Invoice sent');
+    } else {
+      toast.error(data.error || 'Invoice email failed');
+    }
+  };
+
   return (
     <div className="flex gap-2">
+      <button onClick={sendInvoice} className="inline-flex items-center gap-2 rounded-lg bg-emerald-500 px-3 py-2 text-xs font-semibold text-black hover:bg-emerald-400">
+        <Send className="h-4 w-4" />
+        Send Email
+      </button>
       <button onClick={() => downloadInvoicePdf(invoice)} className="inline-flex items-center gap-2 rounded-lg bg-amber-500 px-3 py-2 text-xs font-semibold text-black hover:bg-amber-400">
         <Download className="h-4 w-4" />
         Download PDF

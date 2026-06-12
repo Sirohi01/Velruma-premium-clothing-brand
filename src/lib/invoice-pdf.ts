@@ -15,6 +15,7 @@ type InvoiceOrderItem = {
 };
 
 export type InvoicePdfData = {
+  _id?: string;
   invoiceNumber: string;
   issuedAt?: string | Date;
   customerName: string;

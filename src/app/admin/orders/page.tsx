@@ -24,6 +24,7 @@ export default async function AdminOrdersPage() {
             <tr>
               <th className="px-5 py-3">Order</th>
               <th className="px-5 py-3">Customer</th>
+              <th className="px-5 py-3">Source</th>
               <th className="px-5 py-3">Total</th>
               <th className="px-5 py-3">Status</th>
               <th className="px-5 py-3">Payment</th>
@@ -34,6 +35,7 @@ export default async function AdminOrdersPage() {
               <tr key={order._id.toString()} className="text-zinc-300">
                 <td className="px-5 py-3"><Link href={`/admin/orders/${order._id}`} className="font-medium text-amber-400">{order.orderId}</Link></td>
                 <td className="px-5 py-3">{order.customerName}<br /><span className="text-xs text-zinc-500">{order.email}</span></td>
+                <td className="px-5 py-3">{order.orderSource || 'Website'}<br /><span className="text-xs text-zinc-500">{order.sourceReference || '-'}</span></td>
                 <td className="px-5 py-3">INR {order.total.toLocaleString()}</td>
                 <td className="px-5 py-3"><StatusBadge value={String(order.orderStatus).toLowerCase()} /></td>
                 <td className="px-5 py-3">{order.paymentMethod} / {order.paymentStatus}</td>

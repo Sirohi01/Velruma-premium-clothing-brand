@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Edit2, Plus, Save, Trash2, X } from 'lucide-react';
+import { Edit2, Plus, Save, Send, Trash2, X } from 'lucide-react';
 import { toast } from 'sonner';
 import DataTable from '@/components/shared/DataTable';
 
@@ -77,6 +77,17 @@ export default function BusinessDocumentPage({ title, description, endpoint }: {
     }
   };
 
+  const sendDocument = async (document: any) => {
+    const res = await fetch(`/api/business-documents/${document._id}/send`, { method: 'POST' });
+    const data = await res.json();
+    if (data.success) {
+      toast.success(`${title} sent`);
+      fetchDocuments();
+    } else {
+      toast.error(data.error || 'Email failed');
+    }
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -104,6 +115,9 @@ export default function BusinessDocumentPage({ title, description, endpoint }: {
             className: 'px-5 py-3 text-right',
             cell: (row: any) => (
               <div className="flex justify-end gap-1">
+                <button onClick={() => sendDocument(row)} className="rounded-lg p-2 text-zinc-400 hover:bg-zinc-100 hover:text-emerald-600 dark:hover:bg-white/10" title="Send email">
+                  <Send className="h-4 w-4" />
+                </button>
                 <button onClick={() => openEdit(row)} className="rounded-lg p-2 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-900 dark:hover:bg-white/10">
                   <Edit2 className="h-4 w-4" />
                 </button>
@@ -132,7 +146,7 @@ export default function BusinessDocumentPage({ title, description, endpoint }: {
               <label>
                 <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-zinc-500">Status</span>
                 <select value={form.status} onChange={(event) => setForm({ ...form, status: event.target.value })} className="w-full rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm text-zinc-950 dark:border-white/10 dark:bg-white/5 dark:text-white">
-                  {['Draft', 'Sent', 'Accepted', 'Paid', 'Cancelled'].map((status) => <option key={status} value={status}>{status}</option>)}
+                  {['Draft', 'Issued', 'Sent', 'Accepted', 'Paid', 'Cancelled'].map((status) => <option key={status} value={status}>{status}</option>)}
                 </select>
               </label>
               <textarea placeholder="Notes" value={form.notes} onChange={(event) => setForm({ ...form, notes: event.target.value })} rows={3} className="rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm text-zinc-950 md:col-span-2 dark:border-white/10 dark:bg-white/5 dark:text-white" />

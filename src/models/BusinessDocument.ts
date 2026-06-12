@@ -10,11 +10,15 @@ export interface IBusinessDocument extends Document {
   tax: number;
   discount: number;
   total: number;
-  status: 'Draft' | 'Issued' | 'Paid' | 'Cancelled';
+  status: 'Draft' | 'Issued' | 'Sent' | 'Accepted' | 'Paid' | 'Cancelled';
   notes?: string;
   issuedAt: Date;
   createdAt: Date;
   updatedAt: Date;
+}
+
+if (process.env.NODE_ENV === 'development' && mongoose.models.BusinessDocument) {
+  mongoose.deleteModel('BusinessDocument');
 }
 
 const BusinessDocumentSchema = new Schema<IBusinessDocument>(
@@ -33,7 +37,7 @@ const BusinessDocumentSchema = new Schema<IBusinessDocument>(
     tax: { type: Number, default: 0 },
     discount: { type: Number, default: 0 },
     total: { type: Number, default: 0 },
-    status: { type: String, enum: ['Draft', 'Issued', 'Paid', 'Cancelled'], default: 'Draft' },
+    status: { type: String, enum: ['Draft', 'Issued', 'Sent', 'Accepted', 'Paid', 'Cancelled'], default: 'Draft' },
     notes: String,
     issuedAt: { type: Date, default: Date.now },
   },

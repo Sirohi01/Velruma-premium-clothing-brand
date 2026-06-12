@@ -5,7 +5,9 @@ import Product from '@/models/Product';
 import Invoice from '@/models/Invoice';
 import Payment from '@/models/Payment';
 import Setting from '@/models/Setting';
+import BusinessDocument from '@/models/BusinessDocument';
 import { verifyToken } from '@/lib/auth';
+import { notifyOrderConfirmed, notifyPaymentReceipt, notifyPaymentVerification } from '@/lib/order-email';
 
 function sequence(prefix: string) {
   const stamp = Date.now().toString().slice(-8);
@@ -50,30 +52,21 @@ export async function POST(request: NextRequest) {
     const subtotal = Number(body.subtotal || body.items.reduce((sum: number, item: any) => sum + item.price * item.quantity, 0));
     const discount = Number(body.discount || 0);
     const taxableSubtotal = Math.max(0, subtotal - discount);
+    const isAdminOrder = Boolean(body.orderSource);
     const freeShippingThreshold = await getNumberSetting('free_shipping_threshold', 999);
     const defaultShippingCharge = await getNumberSetting('shipping_charge', 79);
     const codCharge = await getNumberSetting('cod_charge', 49);
     const gstRate = await getNumberSetting('default_gst_rate', 12);
-    const shippingFee = subtotal >= freeShippingThreshold ? 0 : defaultShippingCharge;
-    const codFee = body.paymentMethod === 'COD' ? codCharge : 0;
-    const tax = Math.round((taxableSubtotal * gstRate) / 100);
+    const shippingFee = isAdminOrder ? Number(body.shippingFee || 0) : subtotal >= freeShippingThreshold ? 0 : defaultShippingCharge;
+    const codFee = isAdminOrder ? Number(body.codFee || 0) : body.paymentMethod === 'COD' ? codCharge : 0;
+    const tax = isAdminOrder ? Number(body.tax || 0) : Math.round((taxableSubtotal * gstRate) / 100);
     const total = taxableSubtotal + tax + shippingFee + codFee;
     const orderId = sequence('VEL-ORD');
-
-    for (const item of body.items) {
-      const product = await Product.findById(item.productId);
-      const variant = product?.variants.find((v: any) => v.sku === item.sku || v._id?.toString() === item.variantId);
-      if (!product || !variant) {
-        return NextResponse.json({ success: false, error: `Product unavailable: ${item.name}` }, { status: 400 });
-      }
-      if (variant.stock < item.quantity) {
-        return NextResponse.json({ success: false, error: `Insufficient stock for ${item.name}` }, { status: 400 });
-      }
-      variant.stock -= item.quantity;
-      await product.save();
-    }
-
-    const order = await Order.create({
+    const isManualPayment = body.paymentMethod === 'UPI';
+    const isPrepaid = body.paymentMethod === 'PREPAID';
+    const initialOrderStatus = isManualPayment ? 'Pending' : 'Confirmed';
+    const initialPaymentStatus = isPrepaid ? 'Paid' : 'Pending';
+    const orderPayload = {
       orderId,
       user: payload?.userId,
       customerName: body.customerName,
@@ -96,11 +89,57 @@ export async function POST(request: NextRequest) {
       codFee,
       total,
       paymentMethod: body.paymentMethod,
-      paymentStatus: body.paymentMethod === 'COD' ? 'Pending' : 'Pending',
+      paymentStatus: initialPaymentStatus,
       upiProofImage: body.upiProofImage,
-      orderStatus: 'Pending',
-      timeline: [{ status: 'Pending', note: 'Order placed successfully' }],
-    });
+      orderSource: body.orderSource || 'Website',
+      sourceReference: body.sourceReference,
+      orderStatus: initialOrderStatus,
+      timeline: [{
+        status: initialOrderStatus,
+        note: isManualPayment
+          ? 'Manual payment proof received. Waiting for payment verification.'
+          : 'Order confirmed successfully',
+      }],
+    };
+    await new Order(orderPayload).validate();
+
+    const stockReservations = new Map<string, { productId: string; variantId: string; quantity: number; name: string }>();
+
+    for (const item of body.items) {
+      const product = await Product.findById(item.productId);
+      const variant = product?.variants.find((v: any) => v.sku === item.sku || v._id?.toString() === item.variantId);
+      if (!product || !variant) {
+        return NextResponse.json({ success: false, error: `Product unavailable: ${item.name}` }, { status: 400 });
+      }
+      const key = `${product._id.toString()}:${variant._id?.toString()}`;
+      const existing = stockReservations.get(key);
+      const requestedQuantity = Number(item.quantity || 0) + (existing?.quantity || 0);
+      if (variant.stock < requestedQuantity) {
+        return NextResponse.json({ success: false, error: `Insufficient stock for ${item.name}` }, { status: 400 });
+      }
+      stockReservations.set(key, {
+        productId: product._id.toString(),
+        variantId: variant._id?.toString() || '',
+        quantity: requestedQuantity,
+        name: item.name || item.title,
+      });
+    }
+
+    const order = await Order.create(orderPayload);
+
+    for (const reservation of stockReservations.values()) {
+      const result = await Product.updateOne(
+        { _id: reservation.productId, 'variants._id': reservation.variantId, 'variants.stock': { $gte: reservation.quantity } },
+        { $inc: { 'variants.$.stock': -reservation.quantity } }
+      );
+      if (result.modifiedCount === 0) {
+        order.orderStatus = 'Cancelled';
+        order.adminNotes = `Auto-cancelled: stock changed before reservation for ${reservation.name}`;
+        order.timeline.push({ status: 'Cancelled', note: `Stock unavailable for ${reservation.name}` });
+        await order.save();
+        return NextResponse.json({ success: false, error: `Insufficient stock for ${reservation.name}` }, { status: 409 });
+      }
+    }
 
     const invoice = await Invoice.create({
       invoiceNumber: sequence('VEL-INV'),
@@ -112,7 +151,31 @@ export async function POST(request: NextRequest) {
       shippingFee,
       discount,
       total,
-      status: 'Issued',
+      status: isPrepaid ? 'Paid' : 'Issued',
+    });
+
+    const documentBase = {
+      customerName: order.customerName,
+      customerEmail: order.email,
+      reference: order.orderId,
+      subtotal,
+      tax,
+      discount,
+      total,
+      status: 'Issued' as const,
+      notes: `Auto-generated for ${order.orderId}`,
+    };
+
+    const estimate = await BusinessDocument.create({
+      ...documentBase,
+      documentType: 'estimate',
+      documentNumber: sequence('VEL-EST'),
+    });
+
+    const proforma = await BusinessDocument.create({
+      ...documentBase,
+      documentType: 'proforma',
+      documentNumber: sequence('VEL-PRO'),
     });
 
     const payment = await Payment.create({
@@ -120,12 +183,34 @@ export async function POST(request: NextRequest) {
       order: order._id,
       invoice: invoice._id,
       method: body.paymentMethod,
-      status: 'Pending',
+      status: initialPaymentStatus,
       amount: total,
       proofImage: body.upiProofImage,
+      paidAt: isPrepaid ? new Date() : undefined,
     });
 
-    return NextResponse.json({ success: true, data: { order, invoice, payment } }, { status: 201 });
+    const receipt = isPrepaid ? await BusinessDocument.create({
+      documentType: 'receipt',
+      documentNumber: sequence('VEL-RCT'),
+      customerName: order.customerName,
+      customerEmail: order.email,
+      reference: order.orderId,
+      subtotal: order.total,
+      tax: 0,
+      discount: 0,
+      total: order.total,
+      status: 'Paid',
+      notes: `Payment received for ${order.orderId}`,
+    }) : null;
+
+    if (isManualPayment) {
+      await notifyPaymentVerification(order);
+    } else {
+      await notifyOrderConfirmed(order);
+    }
+    if (receipt) await notifyPaymentReceipt(receipt);
+
+    return NextResponse.json({ success: true, data: { order, invoice, payment, estimate, proforma, receipt } }, { status: 201 });
   } catch (error: any) {
     console.error('Orders POST error:', error);
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
