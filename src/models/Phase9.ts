@@ -21,7 +21,7 @@ const TaskSchema = new Schema({
   assignedToCode: String,
   dueDate: Date,
   priority: { type: String, enum: ['lowest', 'low', 'normal', 'medium', 'high', 'urgent', 'critical'], default: 'normal' },
-  status: { type: String, enum: ['todo', 'planned', 'assigned', 'in_progress', 'waiting', 'review', 'done', 'blocked', 'cancelled'], default: 'todo' },
+  status: { type: String, enum: ['todo', 'planned', 'assigned', 'in_progress', 'waiting', 'review', 'completed', 'done', 'blocked', 'cancelled'], default: 'todo' },
   notes: String,
   isActive: { type: Boolean, default: true },
 }, baseOptions);

@@ -195,7 +195,8 @@ export async function updateRecord(moduleKey: ModuleKey, request: NextRequest, i
     await auditAdminAction({ request, context: admin.context, module: moduleKey, action: 'update', entity: record });
     if (moduleKey === 'tasks') {
       const assignedChanged = Boolean(record.assignedTo) && (!previous || previous.assignedTo !== record.assignedTo || previous.assignedToCode !== record.assignedToCode);
-      const completedNow = record.status === 'done' && previous?.status !== 'done';
+      const completedStatuses = ['done', 'completed'];
+      const completedNow = completedStatuses.includes(record.status) && !completedStatuses.includes(previous?.status);
       if (assignedChanged) await notifyTaskAssigned(record);
       if (completedNow) await notifyTaskCompleted(record);
     }

@@ -14,7 +14,7 @@ export default function TasksPage() {
         { key: 'assignedTo', label: 'Assigned To', type: 'select', optionsEndpoint: '/api/team?status=active', optionValueKey: 'employeeCode', optionLabelKey: 'name' },
         { key: 'dueDate', label: 'Due Date', type: 'date' },
         { key: 'priority', label: 'Priority', type: 'select', options: ['lowest', 'low', 'normal', 'medium', 'high', 'urgent', 'critical'] },
-        { key: 'status', label: 'Status', type: 'select', options: ['todo', 'planned', 'assigned', 'in_progress', 'waiting', 'review', 'done', 'blocked', 'cancelled'] },
+        { key: 'status', label: 'Status', type: 'select', options: ['todo', 'planned', 'assigned', 'in_progress', 'waiting', 'review', 'completed', 'blocked', 'cancelled'] },
         { key: 'notes', label: 'Notes', type: 'textarea' },
       ]}
       columns={[
