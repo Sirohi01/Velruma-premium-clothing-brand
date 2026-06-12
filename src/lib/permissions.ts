@@ -29,6 +29,7 @@ export type ModuleName =
   | 'seo'
   | 'cms'
   | 'blog'
+  | 'lookbook'
   | 'coupons'
   | 'marketing'
   | 'support'
@@ -70,7 +71,7 @@ export const ALL_MODULES: ModuleName[] = [
   'dashboard', 'products', 'categories', 'collections', 'inventory',
   'orders', 'customers', 'crm', 'suppliers', 'purchases',
   'production', 'quality', 'returns', 'invoices', 'seo',
-  'cms', 'blog', 'coupons', 'marketing', 'support',
+  'cms', 'blog', 'lookbook', 'coupons', 'marketing', 'support',
   'reports', 'accounting', 'roles', 'settings', 'activity',
   'notifications', 'tasks', 'team', 'departments', 'designations', 'warehouses', 'stock-transfers',
   'media', 'search', 'forms', 'form-submissions', 'backups',
@@ -101,6 +102,7 @@ export const MODULE_LABELS: Record<ModuleName, string> = {
   seo: 'SEO Management',
   cms: 'CMS Page Builder',
   blog: 'Blog Management',
+  lookbook: 'Lookbook Gallery',
   coupons: 'Coupons & Offers',
   marketing: 'Marketing',
   support: 'Support Tickets',

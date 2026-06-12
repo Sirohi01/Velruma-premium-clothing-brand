@@ -93,6 +93,7 @@ const navigation = [
       { title: 'SEO Manager', href: '/admin/seo', icon: Search },
       { title: 'Homepage', href: '/admin/homepage', icon: PanelLeft },
       { title: 'CMS Pages', href: '/admin/cms', icon: PanelLeft },
+      { title: 'Lookbook', href: '/admin/lookbook', icon: Images },
       { title: 'Blog', href: '/admin/blog', icon: Newspaper },
     ],
   },
