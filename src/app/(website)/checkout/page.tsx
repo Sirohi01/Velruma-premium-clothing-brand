@@ -231,9 +231,9 @@ export default function CheckoutPage() {
           <div className="border-t border-zinc-200 p-4">
             <div className="space-y-2 text-sm">
               <PriceRow label="Subtotal" value={`Rs.${productSubtotal.toLocaleString('en-IN')}`} />
-              <PriceRow label={`GST on subtotal (${gstRate}%)`} value={`Rs.${gstEstimate.toLocaleString('en-IN')}`} muted />
+              {gstEstimate > 0 && <PriceRow label={`GST on subtotal (${gstRate}%)`} value={`Rs.${gstEstimate.toLocaleString('en-IN')}`} muted />}
               <PriceRow label={`Shipping ${freeShippingThreshold > 0 ? `(free above Rs.${freeShippingThreshold.toLocaleString('en-IN')})` : ''}`} value={shippingCharge === 0 ? 'Free' : `Rs.${shippingCharge.toLocaleString('en-IN')}`} />
-              {form.paymentMethod === 'COD' && <PriceRow label="COD charge" value={`Rs.${codCharge.toLocaleString('en-IN')}`} />}
+              {codCharge > 0 && <PriceRow label="COD charge" value={`Rs.${codCharge.toLocaleString('en-IN')}`} />}
               {totalSavings > 0 && <PriceRow label="Total savings" value={`Rs.${totalSavings.toLocaleString('en-IN')}`} success />}
             </div>
             <div className="mt-3 flex items-center justify-between border-t border-zinc-200 pt-3">
