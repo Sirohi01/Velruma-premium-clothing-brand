@@ -18,9 +18,10 @@ const TaskSchema = new Schema({
   description: String,
   module: { type: String, default: 'crm' },
   assignedTo: String,
+  assignedToCode: String,
   dueDate: Date,
-  priority: { type: String, enum: ['low', 'normal', 'high', 'urgent'], default: 'normal' },
-  status: { type: String, enum: ['todo', 'in_progress', 'done', 'blocked'], default: 'todo' },
+  priority: { type: String, enum: ['lowest', 'low', 'normal', 'medium', 'high', 'urgent', 'critical'], default: 'normal' },
+  status: { type: String, enum: ['todo', 'planned', 'assigned', 'in_progress', 'waiting', 'review', 'done', 'blocked', 'cancelled'], default: 'todo' },
   notes: String,
   isActive: { type: Boolean, default: true },
 }, baseOptions);

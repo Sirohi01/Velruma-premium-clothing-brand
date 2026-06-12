@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
-import { Department, Designation, phase9Models } from '@/models/Phase9';
+import { Department, Designation, Employee, phase9Models } from '@/models/Phase9';
 import Setting from '@/models/Setting';
 import { auditAdminAction, requireAdminAction } from '@/lib/admin-api';
 import type { ModuleName } from '@/lib/permissions';
@@ -71,6 +71,17 @@ async function normalizeRecordPayload(moduleKey: ModuleKey, body: Record<string,
   if (moduleKey === 'designations') {
     payload.code = payload.code || makeCode(payload.title, 'DES-');
     payload.responsibilities = toList(payload.responsibilities);
+  }
+
+  if (moduleKey === 'tasks' && payload.assignedTo) {
+    const employee: any = await Employee.findOne({
+      $or: [{ employeeCode: payload.assignedTo }, { name: payload.assignedTo }],
+      isActive: true,
+    }).lean();
+    if (employee) {
+      payload.assignedTo = employee.name;
+      payload.assignedToCode = employee.employeeCode;
+    }
   }
 
   if (moduleKey === 'team') {

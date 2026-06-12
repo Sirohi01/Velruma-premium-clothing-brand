@@ -39,6 +39,7 @@ export default function TeamPage() {
   const [designations, setDesignations] = useState<any[]>([]);
   const [roles, setRoles] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<any | null>(null);
   const [form, setForm] = useState(emptyForm);
@@ -157,22 +158,30 @@ export default function TeamPage() {
 
   const save = async (event: React.FormEvent) => {
     event.preventDefault();
-    const res = await fetch(editTarget ? `/api/team/${editTarget._id}` : '/api/team', {
-      method: editTarget ? 'PUT' : 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        ...form,
-        salary: Number(form.salary || 0),
-        performanceScore: Number(form.performanceScore || 0),
-      }),
-    });
-    const data = await res.json();
-    if (data.success) {
-      toast.success(editTarget ? 'Team member updated' : 'Team member created');
-      setModalOpen(false);
-      fetchAll();
-    } else {
-      toast.error(data.error || 'Save failed');
+    if (saving) return;
+    setSaving(true);
+    try {
+      const res = await fetch(editTarget ? `/api/team/${editTarget._id}` : '/api/team', {
+        method: editTarget ? 'PUT' : 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...form,
+          salary: Number(form.salary || 0),
+          performanceScore: Number(form.performanceScore || 0),
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success(editTarget ? 'Team member updated' : 'Team member created');
+        setModalOpen(false);
+        fetchAll();
+      } else {
+        toast.error(data.error || 'Save failed');
+      }
+    } catch {
+      toast.error('Network error while saving team member');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -381,9 +390,9 @@ export default function TeamPage() {
                 <textarea value={form.dailyLog} onChange={(e) => setForm({ ...form, dailyLog: e.target.value })} rows={3} className={inputClass} />
               </label>
               <div className="flex justify-end gap-3 md:col-span-3">
-                <button type="button" onClick={() => setModalOpen(false)} className="rounded-lg px-4 py-2 text-sm font-medium text-zinc-600 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-white/10">Cancel</button>
-                <button className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-semibold text-white hover:bg-zinc-800 dark:bg-amber-500 dark:text-black">
-                  Save Member
+                <button type="button" disabled={saving} onClick={() => setModalOpen(false)} className="rounded-lg px-4 py-2 text-sm font-medium text-zinc-600 hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-60 dark:text-zinc-300 dark:hover:bg-white/10">Cancel</button>
+                <button disabled={saving} className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-semibold text-white hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-amber-500 dark:text-black">
+                  {saving ? 'Saving...' : 'Save Member'}
                 </button>
               </div>
             </form>
