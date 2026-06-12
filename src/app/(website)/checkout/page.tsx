@@ -230,7 +230,7 @@ export default function CheckoutPage() {
 
           <div className="border-t border-zinc-200 p-4">
             <div className="space-y-2 text-sm">
-              <PriceRow label="Subtotal" value={`Rs.${productSubtotal.toLocaleString('en-IN')}`} />
+              <PriceRow label={productSubtotal > 0 && gstEstimate === 0 ? 'Subtotal (including GST)' : 'Subtotal'} value={`Rs.${productSubtotal.toLocaleString('en-IN')}`} />
               {gstEstimate > 0 && <PriceRow label={`GST on subtotal (${gstRate}%)`} value={`Rs.${gstEstimate.toLocaleString('en-IN')}`} muted />}
               <PriceRow label={`Shipping ${freeShippingThreshold > 0 ? `(free above Rs.${freeShippingThreshold.toLocaleString('en-IN')})` : ''}`} value={shippingCharge === 0 ? 'Free' : `Rs.${shippingCharge.toLocaleString('en-IN')}`} />
               {codCharge > 0 && <PriceRow label="COD charge" value={`Rs.${codCharge.toLocaleString('en-IN')}`} />}
