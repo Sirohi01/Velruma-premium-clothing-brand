@@ -40,6 +40,8 @@ export type ModuleName =
   | 'notifications'
   | 'tasks'
   | 'team'
+  | 'departments'
+  | 'designations'
   | 'warehouses'
   | 'stock-transfers'
   | 'media'
@@ -70,7 +72,7 @@ export const ALL_MODULES: ModuleName[] = [
   'production', 'quality', 'returns', 'invoices', 'seo',
   'cms', 'blog', 'coupons', 'marketing', 'support',
   'reports', 'accounting', 'roles', 'settings', 'activity',
-  'notifications', 'tasks', 'team', 'warehouses', 'stock-transfers',
+  'notifications', 'tasks', 'team', 'departments', 'designations', 'warehouses', 'stock-transfers',
   'media', 'search', 'forms', 'form-submissions', 'backups',
   'brand-assets', 'announcements', 'loyalty', 'widgets', 'audit',
   'timelines', 'seo-audits', 'vendor-portal', 'brands', 'ai-ready',
@@ -110,6 +112,8 @@ export const MODULE_LABELS: Record<ModuleName, string> = {
   notifications: 'Notifications',
   tasks: 'Tasks',
   team: 'Team Management',
+  departments: 'Departments',
+  designations: 'Designations',
   warehouses: 'Warehouses',
   'stock-transfers': 'Stock Transfers',
   media: 'Media Library',

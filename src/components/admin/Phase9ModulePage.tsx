@@ -4,13 +4,15 @@ import { useEffect, useMemo, useState } from 'react';
 import { AlertTriangle, Edit2, Plus, Save, Trash2, X } from 'lucide-react';
 import { toast } from 'sonner';
 import DataTable from '@/components/shared/DataTable';
+import ImageUpload from '@/components/shared/ImageUpload';
 
 export type Phase9Field = {
   key: string;
   label: string;
-  type?: 'text' | 'textarea' | 'number' | 'date' | 'select' | 'checkbox' | 'json';
+  type?: 'text' | 'textarea' | 'number' | 'date' | 'select' | 'checkbox' | 'json' | 'image';
   options?: string[];
   required?: boolean;
+  folder?: string;
 };
 
 export type Phase9Column = {
@@ -199,9 +201,16 @@ export default function Phase9ModulePage({
             </div>
             <form onSubmit={saveRecord} className="mt-5 grid gap-3 md:grid-cols-2">
               {fields.map((field) => (
-                <label key={field.key} className={field.type === 'textarea' || field.type === 'json' ? 'md:col-span-2' : ''}>
+                <label key={field.key} className={field.type === 'textarea' || field.type === 'json' || field.type === 'image' ? 'md:col-span-2' : ''}>
                   <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-zinc-500">{field.label}</span>
-                  {field.type === 'json' ? (
+                  {field.type === 'image' ? (
+                    <ImageUpload
+                      label={field.label}
+                      value={form[field.key] || ''}
+                      folder={field.folder || 'admin'}
+                      onChange={(value) => setForm({ ...form, [field.key]: value })}
+                    />
+                  ) : field.type === 'json' ? (
                     <textarea
                       value={typeof form[field.key] === 'string' ? form[field.key] : JSON.stringify(form[field.key] || {}, null, 2)}
                       onChange={(e) => setForm({ ...form, [field.key]: e.target.value })}

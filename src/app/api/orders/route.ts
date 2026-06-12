@@ -48,15 +48,16 @@ export async function POST(request: NextRequest) {
     }
 
     const subtotal = Number(body.subtotal || body.items.reduce((sum: number, item: any) => sum + item.price * item.quantity, 0));
+    const discount = Number(body.discount || 0);
+    const taxableSubtotal = Math.max(0, subtotal - discount);
     const freeShippingThreshold = await getNumberSetting('free_shipping_threshold', 999);
     const defaultShippingCharge = await getNumberSetting('shipping_charge', 79);
     const codCharge = await getNumberSetting('cod_charge', 49);
     const gstRate = await getNumberSetting('default_gst_rate', 12);
     const shippingFee = subtotal >= freeShippingThreshold ? 0 : defaultShippingCharge;
     const codFee = body.paymentMethod === 'COD' ? codCharge : 0;
-    const tax = Math.round((subtotal * gstRate) / 100);
-    const discount = Number(body.discount || 0);
-    const total = subtotal + shippingFee + codFee + tax - discount;
+    const tax = Math.round((taxableSubtotal * gstRate) / 100);
+    const total = taxableSubtotal + tax + shippingFee + codFee;
     const orderId = sequence('VEL-ORD');
 
     for (const item of body.items) {

@@ -27,14 +27,51 @@ const TaskSchema = new Schema({
 
 const EmployeeSchema = new Schema({
   name: { type: String, required: true, trim: true },
+  employeeCode: { type: String, uppercase: true, trim: true },
+  avatar: String,
   email: String,
   phone: String,
+  roleName: String,
   department: { type: String, default: 'operations' },
+  departmentCode: String,
   designation: String,
+  designationCode: String,
+  reportingTo: String,
+  reportingToName: String,
+  hod: String,
+  hodName: String,
   salary: { type: Number, default: 0 },
   joiningDate: Date,
+  employmentType: { type: String, enum: ['full_time', 'part_time', 'contract', 'intern'], default: 'full_time' },
+  workLocation: String,
+  emergencyContact: String,
   performanceScore: { type: Number, default: 3 },
   dailyLog: String,
+  isActive: { type: Boolean, default: true },
+}, baseOptions);
+
+const DepartmentSchema = new Schema({
+  name: { type: String, required: true, trim: true },
+  code: { type: String, required: true, uppercase: true, trim: true },
+  image: String,
+  description: String,
+  hod: String,
+  hodName: String,
+  email: String,
+  phone: String,
+  location: String,
+  isActive: { type: Boolean, default: true },
+}, baseOptions);
+
+const DesignationSchema = new Schema({
+  title: { type: String, required: true, trim: true },
+  code: { type: String, required: true, uppercase: true, trim: true },
+  departmentCode: String,
+  level: { type: Number, default: 1 },
+  reportingTo: String,
+  reportingToName: String,
+  defaultRole: String,
+  responsibilities: [String],
   isActive: { type: Boolean, default: true },
 }, baseOptions);
 
@@ -235,6 +272,8 @@ function model(name: string, schema: Schema): Model<any> {
 export const Notification = model('Notification', NotificationSchema);
 export const Task = model('Task', TaskSchema);
 export const Employee = model('Employee', EmployeeSchema);
+export const Department = model('Department', DepartmentSchema);
+export const Designation = model('Designation', DesignationSchema);
 export const Warehouse = model('Warehouse', WarehouseSchema);
 export const StockTransfer = model('StockTransfer', StockTransferSchema);
 export const MediaAsset = model('MediaAsset', MediaAssetSchema);
@@ -255,6 +294,8 @@ export const phase9Models = {
   notifications: Notification,
   tasks: Task,
   team: Employee,
+  departments: Department,
+  designations: Designation,
   warehouses: Warehouse,
   'stock-transfers': StockTransfer,
   media: MediaAsset,

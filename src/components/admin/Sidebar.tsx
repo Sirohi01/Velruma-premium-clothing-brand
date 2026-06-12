@@ -106,6 +106,8 @@ const navigation = [
       { title: 'Notifications', href: '/admin/notifications', icon: Bell },
       { title: 'Tasks', href: '/admin/tasks', icon: CheckSquare },
       { title: 'Team', href: '/admin/team', icon: Users },
+      { title: 'Departments', href: '/admin/departments', icon: BriefcaseBusiness },
+      { title: 'Designations', href: '/admin/designations', icon: UserCheck },
       { title: 'Warehouses', href: '/admin/warehouses', icon: Warehouse },
       { title: 'Stock Transfers', href: '/admin/stock-transfers', icon: RotateCcw },
       { title: 'Media Library', href: '/admin/media', icon: Images },
