@@ -246,21 +246,27 @@ export default function Phase9ModulePage({
                   ) : field.type === 'textarea' ? (
                     <textarea required={field.required} value={form[field.key] || ''} onChange={(e) => setForm({ ...form, [field.key]: e.target.value })} rows={3} className="w-full rounded-lg border border-zinc-200 bg-zinc-50 p-2.5 text-sm dark:border-white/10 dark:bg-white/5 dark:text-white" />
                   ) : field.type === 'select' ? (
-                    <>
-                      <input
-                        list={`${field.key}-options`}
-                        value={form[field.key] || ''}
-                        onChange={(e) => setForm({ ...form, [field.key]: e.target.value })}
-                        placeholder={`Search ${field.label.toLowerCase()}...`}
-                        className="w-full rounded-lg border border-zinc-200 bg-zinc-50 p-2.5 text-sm dark:border-white/10 dark:bg-white/5 dark:text-white"
-                      />
-                      <datalist id={`${field.key}-options`}>
-                        {((remoteOptions[field.key]?.map((option) => option.value)) || field.options || []).map((option) => {
-                          const remote = remoteOptions[field.key]?.find((item) => item.value === option);
-                          return <option key={option} value={option}>{remote?.label || option.replaceAll('_', ' ')}</option>;
-                        })}
-                      </datalist>
-                    </>
+                    field.optionsEndpoint ? (
+                      <>
+                        <input
+                          list={`${field.key}-options`}
+                          value={form[field.key] || ''}
+                          onChange={(e) => setForm({ ...form, [field.key]: e.target.value })}
+                          placeholder={`Search ${field.label.toLowerCase()}...`}
+                          className="w-full rounded-lg border border-zinc-200 bg-zinc-50 p-2.5 text-sm dark:border-white/10 dark:bg-white/5 dark:text-white"
+                        />
+                        <datalist id={`${field.key}-options`}>
+                          {(remoteOptions[field.key] || []).map((option) => (
+                            <option key={option.value} value={option.value}>{option.label}</option>
+                          ))}
+                        </datalist>
+                      </>
+                    ) : (
+                      <select value={form[field.key] || ''} onChange={(e) => setForm({ ...form, [field.key]: e.target.value })} className="w-full rounded-lg border border-zinc-200 bg-zinc-50 p-2.5 text-sm dark:border-white/10 dark:bg-white/5 dark:text-white">
+                        <option value="">Select {field.label.toLowerCase()}</option>
+                        {(field.options || []).map((option) => <option key={option} value={option}>{option.replaceAll('_', ' ')}</option>)}
+                      </select>
+                    )
                   ) : field.type === 'checkbox' ? (
                     <input type="checkbox" checked={Boolean(form[field.key])} onChange={(e) => setForm({ ...form, [field.key]: e.target.checked })} className="h-4 w-4" />
                   ) : (

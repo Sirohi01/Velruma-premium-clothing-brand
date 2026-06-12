@@ -3,6 +3,7 @@ import dbConnect from '@/lib/db';
 import { Department, Designation, Employee, phase9Models } from '@/models/Phase9';
 import Setting from '@/models/Setting';
 import { auditAdminAction, requireAdminAction } from '@/lib/admin-api';
+import { notifyTaskAssigned, notifyTaskCompleted } from '@/lib/task-email';
 import type { ModuleName } from '@/lib/permissions';
 
 type ModuleKey = keyof typeof phase9Models;
@@ -164,6 +165,7 @@ export async function createRecord(moduleKey: ModuleKey, request: NextRequest, d
     const body = await request.json();
     const record = await phase9Models[moduleKey].create(await normalizeRecordPayload(moduleKey, { ...defaults, ...body }, 'create'));
     await auditAdminAction({ request, context: admin.context, module: moduleKey, action: 'create', entity: record });
+    if (moduleKey === 'tasks' && record.assignedTo) await notifyTaskAssigned(record);
     return NextResponse.json({ success: true, data: record }, { status: 201 });
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message || 'Internal Server Error' }, { status: 500 });
@@ -187,9 +189,16 @@ export async function updateRecord(moduleKey: ModuleKey, request: NextRequest, i
     const admin = await requireAdminAction(request, moduleName(moduleKey), 'edit');
     if (!admin.ok) return admin.response;
     const body = await request.json();
+    const previous = moduleKey === 'tasks' ? await phase9Models[moduleKey].findById(id).lean() : null;
     const record = await phase9Models[moduleKey].findByIdAndUpdate(id, await normalizeRecordPayload(moduleKey, body, 'update'), { returnDocument: 'after', runValidators: true });
     if (!record) return NextResponse.json({ success: false, error: 'Record not found' }, { status: 404 });
     await auditAdminAction({ request, context: admin.context, module: moduleKey, action: 'update', entity: record });
+    if (moduleKey === 'tasks') {
+      const assignedChanged = Boolean(record.assignedTo) && (!previous || previous.assignedTo !== record.assignedTo || previous.assignedToCode !== record.assignedToCode);
+      const completedNow = record.status === 'done' && previous?.status !== 'done';
+      if (assignedChanged) await notifyTaskAssigned(record);
+      if (completedNow) await notifyTaskCompleted(record);
+    }
     return NextResponse.json({ success: true, data: record });
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message || 'Internal Server Error' }, { status: 500 });
