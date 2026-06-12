@@ -87,6 +87,8 @@ const defaultSettings: DefaultSetting[] = [
   { group: 'invoice', key: 'debit_note_prefix', value: 'VEL-DN', label: 'Debit Note Prefix', type: 'string', isPublic: false },
   { group: 'invoice', key: 'purchase_prefix', value: 'VEL-PO', label: 'Purchase Order Prefix', type: 'string', isPublic: false },
   { group: 'invoice', key: 'order_prefix', value: 'VEL', label: 'Order Number Prefix', type: 'string', isPublic: false },
+  { group: 'team', key: 'employee_code_prefix', value: 'EMP', label: 'Employee Code Prefix', description: 'Used to auto-generate employee codes.', type: 'string', isPublic: false },
+  { group: 'team', key: 'employee_code_next_number', value: 1, label: 'Next Employee Code Number', description: 'Next auto number for team members.', type: 'number', isPublic: false },
   { group: 'bank', key: 'bank_name', value: '', label: 'Bank Name', type: 'string', isPublic: true },
   { group: 'bank', key: 'bank_account', value: '', label: 'Account Number', type: 'string', isPublic: true },
   { group: 'bank', key: 'bank_ifsc', value: '', label: 'IFSC Code', type: 'string', isPublic: true },

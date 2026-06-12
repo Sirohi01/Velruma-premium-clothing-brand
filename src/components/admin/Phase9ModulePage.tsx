@@ -11,6 +11,9 @@ export type Phase9Field = {
   label: string;
   type?: 'text' | 'textarea' | 'number' | 'date' | 'select' | 'checkbox' | 'json' | 'image';
   options?: string[];
+  optionsEndpoint?: string;
+  optionValueKey?: string;
+  optionLabelKey?: string;
   required?: boolean;
   folder?: string;
 };
@@ -44,6 +47,7 @@ export default function Phase9ModulePage({
   const [deleteTarget, setDeleteTarget] = useState<any | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [form, setForm] = useState<Record<string, any>>(defaults);
+  const [remoteOptions, setRemoteOptions] = useState<Record<string, { value: string; label: string }[]>>({});
 
   const emptyForm = useMemo(() => {
     const next: Record<string, any> = { ...defaults };
@@ -56,7 +60,29 @@ export default function Phase9ModulePage({
 
   useEffect(() => {
     fetchRecords();
+    fetchRemoteOptions();
   }, []);
+
+  const fetchRemoteOptions = async () => {
+    const endpointFields = fields.filter((field) => field.optionsEndpoint);
+    if (!endpointFields.length) return;
+
+    const next: Record<string, { value: string; label: string }[]> = {};
+    await Promise.all(endpointFields.map(async (field) => {
+      try {
+        const res = await fetch(field.optionsEndpoint as string);
+        const data = await res.json();
+        if (!data.success) return;
+        next[field.key] = (data.data || []).map((item: any) => ({
+          value: String(item[field.optionValueKey || 'value'] || ''),
+          label: String(item[field.optionLabelKey || 'label'] || item.name || item.title || ''),
+        })).filter((item: { value: string; label: string }) => item.value && item.label);
+      } catch {
+        next[field.key] = [];
+      }
+    }));
+    setRemoteOptions(next);
+  };
 
   const fetchRecords = async () => {
     try {
@@ -220,9 +246,21 @@ export default function Phase9ModulePage({
                   ) : field.type === 'textarea' ? (
                     <textarea required={field.required} value={form[field.key] || ''} onChange={(e) => setForm({ ...form, [field.key]: e.target.value })} rows={3} className="w-full rounded-lg border border-zinc-200 bg-zinc-50 p-2.5 text-sm dark:border-white/10 dark:bg-white/5 dark:text-white" />
                   ) : field.type === 'select' ? (
-                    <select value={form[field.key] || ''} onChange={(e) => setForm({ ...form, [field.key]: e.target.value })} className="w-full rounded-lg border border-zinc-200 bg-zinc-50 p-2.5 text-sm dark:border-white/10 dark:bg-white/5 dark:text-white">
-                      {(field.options || []).map((option) => <option key={option} value={option}>{option.replaceAll('_', ' ')}</option>)}
-                    </select>
+                    <>
+                      <input
+                        list={`${field.key}-options`}
+                        value={form[field.key] || ''}
+                        onChange={(e) => setForm({ ...form, [field.key]: e.target.value })}
+                        placeholder={`Search ${field.label.toLowerCase()}...`}
+                        className="w-full rounded-lg border border-zinc-200 bg-zinc-50 p-2.5 text-sm dark:border-white/10 dark:bg-white/5 dark:text-white"
+                      />
+                      <datalist id={`${field.key}-options`}>
+                        {((remoteOptions[field.key]?.map((option) => option.value)) || field.options || []).map((option) => {
+                          const remote = remoteOptions[field.key]?.find((item) => item.value === option);
+                          return <option key={option} value={option}>{remote?.label || option.replaceAll('_', ' ')}</option>;
+                        })}
+                      </datalist>
+                    </>
                   ) : field.type === 'checkbox' ? (
                     <input type="checkbox" checked={Boolean(form[field.key])} onChange={(e) => setForm({ ...form, [field.key]: e.target.checked })} className="h-4 w-4" />
                   ) : (

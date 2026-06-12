@@ -10,10 +10,8 @@ export default function DesignationsPage() {
       fields={[
         { key: 'title', label: 'Designation Title', required: true },
         { key: 'code', label: 'Designation Code' },
-        { key: 'departmentCode', label: 'Department Code' },
+        { key: 'departmentCode', label: 'Department', type: 'select', optionsEndpoint: '/api/departments?status=active', optionValueKey: 'code', optionLabelKey: 'name' },
         { key: 'level', label: 'Level', type: 'number' },
-        { key: 'reportingToName', label: 'Reports To Name' },
-        { key: 'reportingTo', label: 'Reports To Employee Code' },
         { key: 'defaultRole', label: 'Default Role' },
         { key: 'responsibilities', label: 'Responsibilities', type: 'textarea' },
       ]}
@@ -21,7 +19,7 @@ export default function DesignationsPage() {
         { key: 'title', label: 'Designation' },
         { key: 'code', label: 'Code' },
         { key: 'departmentCode', label: 'Department' },
-        { key: 'reportingToName', label: 'Reports To' },
+        { key: 'defaultRole', label: 'Role' },
         { key: 'level', label: 'Level' },
       ]}
     />

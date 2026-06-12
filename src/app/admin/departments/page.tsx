@@ -12,8 +12,6 @@ export default function DepartmentsPage() {
         { key: 'code', label: 'Department Code' },
         { key: 'image', label: 'Department Image', type: 'image', folder: 'departments' },
         { key: 'description', label: 'Description', type: 'textarea' },
-        { key: 'hodName', label: 'HOD Name' },
-        { key: 'hod', label: 'HOD Employee Code' },
         { key: 'email', label: 'Department Email' },
         { key: 'phone', label: 'Department Phone' },
         { key: 'location', label: 'Location' },
@@ -21,7 +19,7 @@ export default function DepartmentsPage() {
       columns={[
         { key: 'name', label: 'Department' },
         { key: 'code', label: 'Code' },
-        { key: 'hodName', label: 'HOD' },
+        { key: 'email', label: 'Email' },
         { key: 'location', label: 'Location' },
       ]}
     />

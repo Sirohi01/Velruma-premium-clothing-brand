@@ -12,6 +12,7 @@ const emptyForm = {
   email: '',
   phone: '',
   roleName: '',
+  roleSlug: '',
   departmentCode: '',
   department: '',
   designationCode: '',
@@ -20,6 +21,8 @@ const emptyForm = {
   reportingToName: '',
   hod: '',
   hodName: '',
+  isHod: false,
+  canReceiveReports: false,
   salary: 0,
   joiningDate: '',
   employmentType: 'full_time',
@@ -34,6 +37,7 @@ export default function TeamPage() {
   const [employees, setEmployees] = useState<any[]>([]);
   const [departments, setDepartments] = useState<any[]>([]);
   const [designations, setDesignations] = useState<any[]>([]);
+  const [roles, setRoles] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<any | null>(null);
@@ -45,15 +49,17 @@ export default function TeamPage() {
 
   const fetchAll = async () => {
     try {
-      const [teamRes, deptRes, desigRes] = await Promise.all([
-        fetch('/api/team'),
+      const [teamRes, deptRes, desigRes, roleRes] = await Promise.all([
+        fetch('/api/team?status=active'),
         fetch('/api/departments?status=active'),
         fetch('/api/designations?status=active'),
+        fetch('/api/roles'),
       ]);
-      const [team, dept, desig] = await Promise.all([teamRes.json(), deptRes.json(), desigRes.json()]);
+      const [team, dept, desig, roleData] = await Promise.all([teamRes.json(), deptRes.json(), desigRes.json(), roleRes.json()]);
       if (team.success) setEmployees(team.data);
       if (dept.success) setDepartments(dept.data);
       if (desig.success) setDesignations(desig.data);
+      if (roleData.success) setRoles(roleData.data.filter((role: any) => role.isActive !== false));
     } catch {
       toast.error('Failed to load team data');
     } finally {
@@ -65,6 +71,16 @@ export default function TeamPage() {
     if (!form.departmentCode) return designations;
     return designations.filter((item) => !item.departmentCode || item.departmentCode === form.departmentCode);
   }, [designations, form.departmentCode]);
+
+  const reportingOptions = useMemo(
+    () => employees.filter((employee) => employee._id !== editTarget?._id && (employee.canReceiveReports || employee.isHod)),
+    [employees, editTarget?._id]
+  );
+
+  const hodOptions = useMemo(
+    () => employees.filter((employee) => employee._id !== editTarget?._id && employee.isHod),
+    [employees, editTarget?._id]
+  );
 
   const openCreate = () => {
     setEditTarget(null);
@@ -99,6 +115,7 @@ export default function TeamPage() {
 
   const chooseDesignation = (designationCode: string) => {
     const designation = designations.find((item) => item.code === designationCode);
+    const defaultRole = roles.find((role) => role.name === designation?.defaultRole || role.slug === designation?.defaultRole);
     setForm({
       ...form,
       designationCode,
@@ -106,7 +123,35 @@ export default function TeamPage() {
       departmentCode: designation?.departmentCode || form.departmentCode,
       reportingTo: designation?.reportingTo || '',
       reportingToName: designation?.reportingToName || '',
-      roleName: designation?.defaultRole || form.roleName,
+      roleName: defaultRole?.name || designation?.defaultRole || form.roleName,
+      roleSlug: defaultRole?.slug || form.roleSlug,
+    });
+  };
+
+  const chooseRole = (value: string) => {
+    const role = roles.find((item) => item.name === value || item.slug === value);
+    setForm({
+      ...form,
+      roleName: role?.name || value,
+      roleSlug: role?.slug || form.roleSlug,
+    });
+  };
+
+  const chooseReportingTo = (value: string) => {
+    const employee = employees.find((item) => item.employeeCode === value || item.name === value);
+    setForm({
+      ...form,
+      reportingTo: employee?.employeeCode || value.toUpperCase(),
+      reportingToName: employee?.name || form.reportingToName,
+    });
+  };
+
+  const chooseHod = (value: string) => {
+    const employee = employees.find((item) => item.employeeCode === value || item.name === value);
+    setForm({
+      ...form,
+      hod: employee?.employeeCode || value.toUpperCase(),
+      hodName: employee?.name || form.hodName,
     });
   };
 
@@ -188,14 +233,18 @@ export default function TeamPage() {
                     <div>
                       <p className="font-semibold text-zinc-950 dark:text-white">{employee.name}</p>
                       <p className="font-mono text-xs text-zinc-500">{employee.employeeCode || '-'}</p>
+                      <div className="mt-1 flex flex-wrap gap-1">
+                        {employee.isHod && <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-700">HOD</span>}
+                        {employee.canReceiveReports && <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-[10px] font-bold text-zinc-600">Manager</span>}
+                      </div>
                     </div>
                   </div>
                 </td>
                 <td className="px-5 py-4">{employee.department || '-'}</td>
                 <td className="px-5 py-4">{employee.designation || '-'}</td>
                 <td className="px-5 py-4">
-                  <p>{employee.reportingToName || '-'}</p>
-                  <p className="text-xs text-zinc-500">HOD: {employee.hodName || '-'}</p>
+                  <p>{employee.reportingToName || (employee.canReceiveReports ? 'Self' : '-')}</p>
+                  <p className="text-xs text-zinc-500">HOD: {employee.hodName || (employee.isHod ? 'Self' : '-')}</p>
                 </td>
                 <td className="px-5 py-4">{employee.roleName || '-'}</td>
                 <td className="px-5 py-4 text-right">
@@ -225,8 +274,24 @@ export default function TeamPage() {
                 <ImageUpload label="Employee Photo" value={form.avatar} folder="team" onChange={(avatar) => setForm({ ...form, avatar })} />
               </div>
               <Field label="Name"><input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className={inputClass} /></Field>
-              <Field label="Employee Code"><input value={form.employeeCode} onChange={(e) => setForm({ ...form, employeeCode: e.target.value.toUpperCase() })} className={inputClass} placeholder="Auto if blank" /></Field>
-              <Field label="Role"><input value={form.roleName} onChange={(e) => setForm({ ...form, roleName: e.target.value })} className={inputClass} placeholder="Auto from designation" /></Field>
+              <div className="rounded-lg border border-dashed border-zinc-200 bg-zinc-50 p-3 text-sm text-zinc-600 dark:border-white/10 dark:bg-white/5 dark:text-zinc-300">
+                <span className="block text-xs font-semibold uppercase tracking-wide text-zinc-500">Employee Code</span>
+                <span>{editTarget ? (form.employeeCode || 'Already generated') : 'Auto generated from Settings'}</span>
+              </div>
+              <Field label="Role">
+                <>
+                  <input
+                    list="team-roles"
+                    value={form.roleName}
+                    onChange={(e) => chooseRole(e.target.value)}
+                    className={inputClass}
+                    placeholder="Search role..."
+                  />
+                  <datalist id="team-roles">
+                    {roles.map((role) => <option key={role._id} value={role.name}>{role.slug}</option>)}
+                  </datalist>
+                </>
+              </Field>
               <Field label="Email"><input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className={inputClass} /></Field>
               <Field label="Phone"><input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} className={inputClass} /></Field>
               <Field label="Employment Type">
@@ -235,25 +300,81 @@ export default function TeamPage() {
                 </select>
               </Field>
               <Field label="Department">
-                <select value={form.departmentCode} onChange={(e) => chooseDepartment(e.target.value)} className={inputClass}>
-                  <option value="">Select department</option>
-                  {departments.map((item) => <option key={item._id} value={item.code}>{item.name}</option>)}
-                </select>
+                <>
+                  <input
+                    list="team-departments"
+                    value={form.departmentCode}
+                    onChange={(e) => chooseDepartment(e.target.value)}
+                    className={inputClass}
+                    placeholder="Search department..."
+                  />
+                  <datalist id="team-departments">
+                    {departments.map((item) => <option key={item._id} value={item.code}>{item.name}</option>)}
+                  </datalist>
+                </>
               </Field>
               <Field label="Designation">
-                <select value={form.designationCode} onChange={(e) => chooseDesignation(e.target.value)} className={inputClass}>
-                  <option value="">Select designation</option>
-                  {filteredDesignations.map((item) => <option key={item._id} value={item.code}>{item.title}</option>)}
-                </select>
+                <>
+                  <input
+                    list="team-designations"
+                    value={form.designationCode}
+                    onChange={(e) => chooseDesignation(e.target.value)}
+                    className={inputClass}
+                    placeholder="Search designation..."
+                  />
+                  <datalist id="team-designations">
+                    {filteredDesignations.map((item) => <option key={item._id} value={item.code}>{item.title}</option>)}
+                  </datalist>
+                </>
               </Field>
               <Field label="Salary"><input type="number" min="0" value={form.salary} onChange={(e) => setForm({ ...form, salary: Number(e.target.value) })} className={inputClass} /></Field>
-              <Field label="Reports To"><input value={form.reportingToName} onChange={(e) => setForm({ ...form, reportingToName: e.target.value })} className={inputClass} /></Field>
-              <Field label="Reports To Code"><input value={form.reportingTo} onChange={(e) => setForm({ ...form, reportingTo: e.target.value.toUpperCase() })} className={inputClass} /></Field>
-              <Field label="Department HOD"><input value={form.hodName} onChange={(e) => setForm({ ...form, hodName: e.target.value })} className={inputClass} /></Field>
-              <Field label="HOD Code"><input value={form.hod} onChange={(e) => setForm({ ...form, hod: e.target.value.toUpperCase() })} className={inputClass} /></Field>
+              <div className="md:col-span-3 rounded-xl border border-zinc-200 bg-zinc-50 p-3 dark:border-white/10 dark:bg-white/5">
+                <p className="text-sm font-semibold text-zinc-950 dark:text-white">Reporting Assignment</p>
+                <p className="mt-1 text-xs text-zinc-500">Department/designation master sirf create karo. HOD aur reporting yahan employee ke hisaab se assign karo.</p>
+                <div className="mt-3 grid gap-3 md:grid-cols-2">
+                  <Field label="Reports To">
+                    <>
+                      <input
+                        list="team-reporting-options"
+                        value={form.reportingTo}
+                        onChange={(e) => chooseReportingTo(e.target.value)}
+                        className={inputClass}
+                        placeholder="Search employee code/name..."
+                      />
+                      <datalist id="team-reporting-options">
+                        {reportingOptions.map((employee) => <option key={employee._id} value={employee.employeeCode || employee.name}>{employee.name}</option>)}
+                      </datalist>
+                    </>
+                  </Field>
+                  <Field label="Reports To Name"><input value={form.reportingToName} onChange={(e) => setForm({ ...form, reportingToName: e.target.value })} className={inputClass} placeholder="Auto from employee" /></Field>
+                  <Field label="Department HOD">
+                    <>
+                      <input
+                        list="team-hod-options"
+                        value={form.hod}
+                        onChange={(e) => chooseHod(e.target.value)}
+                        className={inputClass}
+                        placeholder="Search HOD code/name..."
+                      />
+                      <datalist id="team-hod-options">
+                        {hodOptions.map((employee) => <option key={employee._id} value={employee.employeeCode || employee.name}>{employee.name}</option>)}
+                      </datalist>
+                    </>
+                  </Field>
+                  <Field label="HOD Name"><input value={form.hodName} onChange={(e) => setForm({ ...form, hodName: e.target.value })} className={inputClass} placeholder="Auto from employee" /></Field>
+                </div>
+              </div>
               <Field label="Joining Date"><input type="date" value={form.joiningDate} onChange={(e) => setForm({ ...form, joiningDate: e.target.value })} className={inputClass} /></Field>
               <Field label="Work Location"><input value={form.workLocation} onChange={(e) => setForm({ ...form, workLocation: e.target.value })} className={inputClass} /></Field>
               <Field label="Emergency Contact"><input value={form.emergencyContact} onChange={(e) => setForm({ ...form, emergencyContact: e.target.value })} className={inputClass} /></Field>
+              <label className="flex items-center justify-between rounded-lg border border-zinc-200 bg-zinc-50 p-3 dark:border-white/10 dark:bg-white/5">
+                <span className="text-sm font-semibold text-zinc-700 dark:text-zinc-200">This member is HOD</span>
+                <input type="checkbox" checked={form.isHod} onChange={(e) => setForm({ ...form, isHod: e.target.checked, canReceiveReports: e.target.checked ? true : form.canReceiveReports })} className="h-4 w-4 accent-amber-500" />
+              </label>
+              <label className="flex items-center justify-between rounded-lg border border-zinc-200 bg-zinc-50 p-3 dark:border-white/10 dark:bg-white/5">
+                <span className="text-sm font-semibold text-zinc-700 dark:text-zinc-200">Can receive reports</span>
+                <input type="checkbox" checked={form.canReceiveReports} onChange={(e) => setForm({ ...form, canReceiveReports: e.target.checked })} className="h-4 w-4 accent-amber-500" />
+              </label>
               <Field label="Performance Score"><input type="number" min="1" max="5" value={form.performanceScore} onChange={(e) => setForm({ ...form, performanceScore: Number(e.target.value) })} className={inputClass} /></Field>
               <label className="md:col-span-3">
                 <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-zinc-500">Daily Log / Notes</span>

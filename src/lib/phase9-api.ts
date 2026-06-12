@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
 import { Department, Designation, phase9Models } from '@/models/Phase9';
+import Setting from '@/models/Setting';
 import { auditAdminAction, requireAdminAction } from '@/lib/admin-api';
 import type { ModuleName } from '@/lib/permissions';
 
@@ -37,7 +38,30 @@ function makeCode(value: string, prefix = '') {
   return `${prefix}${code || Math.random().toString(36).slice(2, 8).toUpperCase()}`;
 }
 
-async function normalizeRecordPayload(moduleKey: ModuleKey, body: Record<string, any>) {
+async function generateEmployeeCode() {
+  const prefixSetting = await Setting.findOne({ key: 'employee_code_prefix' }).select('value').lean();
+  const nextSetting = await Setting.findOne({ key: 'employee_code_next_number' }).select('value').lean();
+  const prefix = String(prefixSetting?.value || 'EMP').replace(/[^A-Z0-9-]/gi, '').toUpperCase() || 'EMP';
+  const nextNumber = Math.max(1, Number(nextSetting?.value || 1));
+  await Setting.findOneAndUpdate(
+    { key: 'employee_code_next_number' },
+    {
+      $set: {
+        group: 'team',
+        key: 'employee_code_next_number',
+        value: nextNumber + 1,
+        label: 'Next Employee Code Number',
+        description: 'Next auto number for team members.',
+        type: 'number',
+        isPublic: false,
+      },
+    },
+    { upsert: true }
+  );
+  return `${prefix}-${String(nextNumber).padStart(4, '0')}`;
+}
+
+async function normalizeRecordPayload(moduleKey: ModuleKey, body: Record<string, any>, mode: 'create' | 'update' = 'create') {
   const payload = { ...body };
 
   if (moduleKey === 'departments') {
@@ -50,7 +74,13 @@ async function normalizeRecordPayload(moduleKey: ModuleKey, body: Record<string,
   }
 
   if (moduleKey === 'team') {
-    payload.employeeCode = payload.employeeCode || `EMP-${Date.now().toString().slice(-6)}`;
+    payload.isHod = Boolean(payload.isHod);
+    payload.canReceiveReports = Boolean(payload.canReceiveReports || payload.isHod);
+    if (mode === 'create') {
+      payload.employeeCode = payload.employeeCode || await generateEmployeeCode();
+    } else if (!payload.employeeCode) {
+      delete payload.employeeCode;
+    }
     if (payload.departmentCode) {
       const department: any = await Department.findOne({ code: payload.departmentCode }).lean();
       if (department) {
@@ -121,7 +151,7 @@ export async function createRecord(moduleKey: ModuleKey, request: NextRequest, d
     const admin = await requireAdminAction(request, moduleName(moduleKey), 'create');
     if (!admin.ok) return admin.response;
     const body = await request.json();
-    const record = await phase9Models[moduleKey].create(await normalizeRecordPayload(moduleKey, { ...defaults, ...body }));
+    const record = await phase9Models[moduleKey].create(await normalizeRecordPayload(moduleKey, { ...defaults, ...body }, 'create'));
     await auditAdminAction({ request, context: admin.context, module: moduleKey, action: 'create', entity: record });
     return NextResponse.json({ success: true, data: record }, { status: 201 });
   } catch (error: any) {
@@ -146,7 +176,7 @@ export async function updateRecord(moduleKey: ModuleKey, request: NextRequest, i
     const admin = await requireAdminAction(request, moduleName(moduleKey), 'edit');
     if (!admin.ok) return admin.response;
     const body = await request.json();
-    const record = await phase9Models[moduleKey].findByIdAndUpdate(id, await normalizeRecordPayload(moduleKey, body), { returnDocument: 'after', runValidators: true });
+    const record = await phase9Models[moduleKey].findByIdAndUpdate(id, await normalizeRecordPayload(moduleKey, body, 'update'), { returnDocument: 'after', runValidators: true });
     if (!record) return NextResponse.json({ success: false, error: 'Record not found' }, { status: 404 });
     await auditAdminAction({ request, context: admin.context, module: moduleKey, action: 'update', entity: record });
     return NextResponse.json({ success: true, data: record });

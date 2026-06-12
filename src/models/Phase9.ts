@@ -32,6 +32,7 @@ const EmployeeSchema = new Schema({
   email: String,
   phone: String,
   roleName: String,
+  roleSlug: String,
   department: { type: String, default: 'operations' },
   departmentCode: String,
   designation: String,
@@ -40,6 +41,8 @@ const EmployeeSchema = new Schema({
   reportingToName: String,
   hod: String,
   hodName: String,
+  isHod: { type: Boolean, default: false },
+  canReceiveReports: { type: Boolean, default: false },
   salary: { type: Number, default: 0 },
   joiningDate: Date,
   employmentType: { type: String, enum: ['full_time', 'part_time', 'contract', 'intern'], default: 'full_time' },
@@ -266,6 +269,9 @@ const AiReadyConfigSchema = new Schema({
 }, baseOptions);
 
 function model(name: string, schema: Schema): Model<any> {
+  if (process.env.NODE_ENV === 'development' && mongoose.models[name]) {
+    delete mongoose.models[name];
+  }
   return mongoose.models[name] || mongoose.model(name, schema);
 }
 
