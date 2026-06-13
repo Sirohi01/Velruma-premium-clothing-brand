@@ -170,3 +170,12 @@ export async function notifyPaymentReceipt(document: any) {
     `Your payment has been received. Receipt ${document.documentNumber} has been generated.\n\nReference: ${document.reference || '-'}\nAmount: INR ${Number(document.total || 0).toLocaleString('en-IN')}`
   ));
 }
+
+export async function notifyRefundProcessed(order: any) {
+  await safelySend(() => sendOrderEmail(
+    order,
+    `Refund processed: ${order.orderId}`,
+    'Refund Processed',
+    'Your order payment has been marked as refunded. If the refund is not visible yet, please allow the standard bank/payment processing time.'
+  ));
+}

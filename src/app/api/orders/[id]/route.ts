@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
 import Order from '@/models/Order';
+import Product from '@/models/Product';
 import Payment from '@/models/Payment';
 import Invoice from '@/models/Invoice';
 import BusinessDocument from '@/models/BusinessDocument';
-import { notifyOrderConfirmed, notifyOrderStatusChanged, notifyPaymentReceipt } from '@/lib/order-email';
+import User from '@/models/User';
+import { notifyOrderConfirmed, notifyOrderStatusChanged, notifyPaymentReceipt, notifyRefundProcessed } from '@/lib/order-email';
+import { syncCustomerFromOrder } from '@/lib/customer-sync';
 
 function findQuery(id: string) {
   return id.match(/^[0-9a-fA-F]{24}$/) ? { _id: id } : { orderId: id };
@@ -14,6 +17,64 @@ function sequence(prefix: string) {
   const stamp = Date.now().toString().slice(-8);
   const random = Math.random().toString(36).slice(2, 5).toUpperCase();
   return `${prefix}-${stamp}-${random}`;
+}
+
+function netOrderSale(order: any) {
+  return Math.max(0, Number(order.subtotal || 0) - Number(order.discount || 0));
+}
+
+function loyaltyPointsForOrder(order: any) {
+  return Math.max(1, Math.floor(netOrderSale(order) / 100));
+}
+
+async function restoreOrderStock(order: any) {
+  if (order.stockRestored) return false;
+  for (const item of order.items || []) {
+    const sku = item.variant?.sku;
+    if (!item.productId || !sku) continue;
+    await Product.updateOne(
+      { _id: item.productId, 'variants.sku': sku },
+      { $inc: { 'variants.$.stock': Number(item.quantity || 0) } }
+    );
+  }
+  order.stockRestored = true;
+  order.timeline.push({ status: order.orderStatus, note: 'Inventory restored for cancelled/returned order' });
+  return true;
+}
+
+async function adjustLoyalty(order: any, previousPaymentStatus: string, previousOrderStatus: string) {
+  await syncCustomerFromOrder(order);
+  const email = String(order.email || '').toLowerCase();
+  if (!email) return;
+
+  const shouldAward =
+    !Number(order.loyaltyPointsAwarded || 0) &&
+    !['Cancelled', 'Returned'].includes(order.orderStatus) &&
+    (order.paymentStatus === 'Paid' || order.orderStatus === 'Delivered');
+
+  if (shouldAward) {
+    const points = loyaltyPointsForOrder(order);
+    await User.updateOne({ email }, { $inc: { loyaltyPoints: points } });
+    order.loyaltyPointsAwarded = points;
+    order.loyaltyPointsReversed = false;
+    order.timeline.push({ status: order.orderStatus, note: `${points} loyalty points credited` });
+  }
+
+  const shouldReverse =
+    Number(order.loyaltyPointsAwarded || 0) > 0 &&
+    !order.loyaltyPointsReversed &&
+    (['Cancelled', 'Returned'].includes(order.orderStatus) || order.paymentStatus === 'Refunded');
+
+  if (shouldReverse) {
+    const points = Number(order.loyaltyPointsAwarded || 0);
+    await User.updateOne({ email }, { $inc: { loyaltyPoints: -points } });
+    order.loyaltyPointsReversed = true;
+    order.timeline.push({ status: order.orderStatus, note: `${points} loyalty points reversed` });
+  }
+
+  if (previousPaymentStatus !== order.paymentStatus || previousOrderStatus !== order.orderStatus) {
+    await syncCustomerFromOrder(order);
+  }
 }
 
 export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -62,6 +123,12 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     if (body.adminNotes !== undefined) order.adminNotes = body.adminNotes;
     if (body.orderSource !== undefined) order.orderSource = body.orderSource;
     if (body.sourceReference !== undefined) order.sourceReference = body.sourceReference;
+
+    if (['Cancelled', 'Returned'].includes(order.orderStatus)) {
+      await restoreOrderStock(order);
+    }
+
+    await adjustLoyalty(order, previousPaymentStatus, previousOrderStatus);
     await order.save();
 
     if (body.paymentStatus) {
@@ -85,6 +152,11 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
         notes: `Payment received for ${order.orderId}`,
       });
       await notifyPaymentReceipt(receipt);
+    }
+
+    if (body.paymentStatus === 'Refunded' && previousPaymentStatus !== 'Refunded') {
+      await Invoice.updateMany({ order: order._id }, { status: 'Cancelled' });
+      await notifyRefundProcessed(order);
     }
 
     if (confirmationEmail || statusEmail === 'Confirmed') {

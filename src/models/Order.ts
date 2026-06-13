@@ -85,6 +85,9 @@ const OrderSchema = new mongoose.Schema(
 
     // Admin Notes
     adminNotes: { type: String },
+    stockRestored: { type: Boolean, default: false },
+    loyaltyPointsAwarded: { type: Number, default: 0 },
+    loyaltyPointsReversed: { type: Boolean, default: false },
     timeline: [OrderTimelineSchema]
   },
   { timestamps: true }

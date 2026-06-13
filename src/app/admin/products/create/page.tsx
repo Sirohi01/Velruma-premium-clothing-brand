@@ -45,7 +45,7 @@ export default function CreateProductPage() {
     discountValue: 0,
     images: [{ url: '', alt: '', isPrimary: true }],
     videos: [] as { url: string; title: string; isPrimary: boolean }[],
-    variants: [{ size: '', color: '', stock: 0, extraPrice: 0, sku: '' }],
+    variants: [{ size: '', color: '', stock: 0, extraPrice: 0, sku: '', barcode: '' }],
     productHighlights: defaultHighlights,
     productDetailsText: '',
     washCareText: '',
@@ -90,7 +90,7 @@ export default function CreateProductPage() {
   const handleAddVariant = () => {
     setFormData({
       ...formData,
-      variants: [...formData.variants, { size: '', color: '', stock: 0, extraPrice: 0, sku: '' }]
+      variants: [...formData.variants, { size: '', color: '', stock: 0, extraPrice: 0, sku: '', barcode: '' }]
     });
   };
 
@@ -340,12 +340,20 @@ export default function CreateProductPage() {
             </div>
             <div className="space-y-4">
               {formData.variants.map((v, index) => (
-                <div key={index} className="grid grid-cols-5 gap-3 items-end border-b border-zinc-100 dark:border-white/5 pb-4 last:border-0 last:pb-0">
+                <div key={index} className="grid grid-cols-6 gap-3 items-end border-b border-zinc-100 dark:border-white/5 pb-4 last:border-0 last:pb-0">
                   <div className="col-span-1">
                     <label className="mb-1 block text-xs text-zinc-500">Size</label>
                     <input type="text" placeholder="L" value={v.size} onChange={(e) => {
                       const newVars = [...formData.variants];
                       newVars[index].size = e.target.value;
+                      setFormData({ ...formData, variants: newVars });
+                    }} className="w-full rounded-lg border border-zinc-200 bg-zinc-50 p-2 text-sm dark:border-white/10 dark:bg-white/5 dark:text-white" />
+                  </div>
+                  <div className="col-span-1">
+                    <label className="mb-1 block text-xs text-zinc-500">Barcode</label>
+                    <input type="text" placeholder="Auto from SKU" value={v.barcode || ''} onChange={(e) => {
+                      const newVars = [...formData.variants];
+                      newVars[index].barcode = e.target.value;
                       setFormData({ ...formData, variants: newVars });
                     }} className="w-full rounded-lg border border-zinc-200 bg-zinc-50 p-2 text-sm dark:border-white/10 dark:bg-white/5 dark:text-white" />
                   </div>

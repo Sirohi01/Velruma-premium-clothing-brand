@@ -140,6 +140,7 @@ function Filter({ title, children }: { title: string; children: React.ReactNode 
 
 function ProductCard({ product }: { product: any }) {
   const price = product.salePrice && product.salePrice < product.basePrice ? product.salePrice : product.basePrice;
+  const mrp = Number(product.basePrice || 0);
   return (
     <Link href={`/product/${product.slug}`} className="group relative block overflow-hidden rounded-xl bg-white shadow-sm transition-shadow hover:shadow-md">
       <div className="absolute left-3 top-3 z-10 flex flex-col gap-2">
@@ -150,7 +151,10 @@ function ProductCard({ product }: { product: any }) {
       </div>
       <div className="p-4 text-center">
         <h3 className="line-clamp-1 text-sm font-medium text-zinc-900">{product.title}</h3>
-        <p className="mt-2 text-sm text-amber-700">INR {price.toLocaleString()}</p>
+        <div className="mt-2 flex items-center justify-center gap-2">
+          <p className="text-sm font-semibold text-amber-700">INR {price.toLocaleString()}</p>
+          {mrp > price && <p className="text-xs text-zinc-400 line-through">INR {mrp.toLocaleString()}</p>}
+        </div>
       </div>
     </Link>
   );

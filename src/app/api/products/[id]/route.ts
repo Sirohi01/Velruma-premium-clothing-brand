@@ -43,6 +43,7 @@ function normalizeProductPayload(body: any) {
         ...variant,
         size: String(variant.size || '').trim(),
         color: String(variant.color || '').trim(),
+        barcode: String(variant.barcode || variant.sku || '').trim(),
         stock: Number(variant.stock || 0),
         extraPrice: normalizeVariantExtraPrice(variant.extraPrice, body),
       }))
@@ -111,6 +112,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
         if (!variant.sku) {
           variant.sku = generateSKU(payload.category?.toString() || 'GEN', payload.title || 'PRD', variant.size, variant.color);
         }
+        if (!variant.barcode) variant.barcode = variant.sku;
         return variant;
       });
     }

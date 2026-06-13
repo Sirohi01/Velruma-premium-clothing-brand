@@ -2,10 +2,19 @@
 
 import { useEffect, useState } from 'react';
 import { Edit2, Plus, Trash2, Users, X } from 'lucide-react';
+import Link from 'next/link';
 import { toast } from 'sonner';
 import DataTable from '@/components/shared/DataTable';
 
 const emptyForm = { name: '', email: '', phone: '', password: '', loyaltyPoints: 0, isActive: true };
+
+function money(value: number) {
+  return `INR ${Number(value || 0).toLocaleString('en-IN')}`;
+}
+
+function dateText(value?: string) {
+  return value ? new Date(value).toLocaleDateString('en-IN') : '-';
+}
 
 export default function CustomersPage() {
   const [customers, setCustomers] = useState<any[]>([]);
@@ -89,9 +98,12 @@ export default function CustomersPage() {
         data={customers}
         empty="No customers found."
         columns={[
-          { key: 'name', header: 'Customer', cell: (row: any) => <span className="font-medium text-white">{row.name}</span> },
+          { key: 'name', header: 'Customer', cell: (row: any) => <Link href={`/admin/customers/${row._id}`} className="font-medium text-white hover:text-amber-300">{row.name}</Link> },
           { key: 'email', header: 'Email', cell: (row: any) => row.email },
           { key: 'phone', header: 'Phone', cell: (row: any) => row.phone || '-' },
+          { key: 'orders', header: 'Orders', cell: (row: any) => row.orderStats?.orders || 0 },
+          { key: 'spend', header: 'Spend', cell: (row: any) => money(row.orderStats?.revenue || 0) },
+          { key: 'lastOrder', header: 'Last Order', cell: (row: any) => dateText(row.orderStats?.lastOrderAt) },
           { key: 'loyalty', header: 'Loyalty', cell: (row: any) => `${row.loyaltyPoints || 0} pts` },
           { key: 'status', header: 'Status', cell: (row: any) => row.isActive ? 'Active' : 'Inactive' },
           { key: 'actions', header: 'Actions', className: 'px-5 py-3 text-right', cell: (row: any) => (

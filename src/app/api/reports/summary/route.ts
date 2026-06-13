@@ -48,7 +48,10 @@ export async function GET(request: NextRequest) {
       Product.find({}).populate('category', 'name').lean(),
     ]);
 
-    const activeSalesOrders = orders.filter((order: any) => !['Cancelled', 'Returned'].includes(order.orderStatus));
+    const activeSalesOrders = orders.filter((order: any) =>
+      !['Cancelled', 'Returned'].includes(order.orderStatus) &&
+      !['Refunded', 'Failed'].includes(order.paymentStatus)
+    );
     const deliveredOrders = orders.filter((order: any) => order.orderStatus === 'Delivered');
     const returnedOrders = orders.filter((order: any) => order.orderStatus === 'Returned');
     const cancelledOrders = orders.filter((order: any) => order.orderStatus === 'Cancelled');

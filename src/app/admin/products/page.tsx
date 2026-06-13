@@ -10,7 +10,10 @@ export default function ProductsPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [archiveTarget, setArchiveTarget] = useState<any | null>(null);
+  const [variantTarget, setVariantTarget] = useState<any | null>(null);
+  const [page, setPage] = useState(1);
   const [archiving, setArchiving] = useState(false);
+  const pageSize = 10;
 
   useEffect(() => {
     fetchProducts();
@@ -94,13 +97,24 @@ export default function ProductsPage() {
             type="text"
             placeholder="Search by title, SKU..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPage(1);
+            }}
             className="w-full rounded-lg border-none bg-transparent py-2 pl-10 pr-4 text-sm text-zinc-900 focus:outline-none dark:text-white"
           />
         </div>
       </div>
 
+      {(() => {
+        const totalPages = Math.max(1, Math.ceil(filteredProducts.length / pageSize));
+        const currentPage = Math.min(page, totalPages);
+        const start = (currentPage - 1) * pageSize;
+        const visibleProducts = filteredProducts.slice(start, start + pageSize);
+
       {/* Table */}
+      return (
+      <>
       <div className="overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm dark:border-white/10 dark:bg-zinc-900">
         <table className="w-full text-left text-sm text-zinc-600 dark:text-zinc-400">
           <thead className="bg-zinc-50 text-xs uppercase text-zinc-500 dark:bg-zinc-800/50 dark:text-zinc-400">
@@ -125,8 +139,12 @@ export default function ProductsPage() {
                 </td>
               </tr>
             ) : (
-              filteredProducts.map((product) => (
-                <tr key={product._id} className="hover:bg-zinc-50 dark:hover:bg-white/[0.02] transition-colors">
+              visibleProducts.map((product) => (
+                <tr
+                  key={product._id}
+                  onClick={() => setVariantTarget(product)}
+                  className="cursor-pointer transition-colors hover:bg-zinc-50 dark:hover:bg-white/[0.02]"
+                >
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
                       <div className="h-10 w-10 overflow-hidden rounded-lg bg-zinc-100 dark:bg-zinc-800">
@@ -172,11 +190,14 @@ export default function ProductsPage() {
                   </td>
                   <td className="px-6 py-4 text-right">
                     <div className="flex items-center justify-end gap-2">
-                      <Link href={`/admin/products/${product._id}`} prefetch={false} className="rounded-lg p-2 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-900 dark:hover:bg-white/10 dark:hover:text-white">
+                      <Link href={`/admin/products/${product._id}`} prefetch={false} onClick={(event) => event.stopPropagation()} className="rounded-lg p-2 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-900 dark:hover:bg-white/10 dark:hover:text-white">
                         <Edit2 className="h-4 w-4" />
                       </Link>
                       <button 
-                        onClick={() => setArchiveTarget(product)}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          setArchiveTarget(product);
+                        }}
                         className="rounded-lg p-2 text-red-400 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-500/10 dark:hover:text-red-400"
                       >
                         <Trash2 className="h-4 w-4" />
@@ -189,6 +210,88 @@ export default function ProductsPage() {
           </tbody>
         </table>
       </div>
+
+      <div className="flex flex-col gap-3 rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm text-zinc-600 shadow-sm dark:border-white/10 dark:bg-zinc-900 dark:text-zinc-300 sm:flex-row sm:items-center sm:justify-between">
+        <p>
+          Showing {filteredProducts.length === 0 ? 0 : start + 1}-{Math.min(start + pageSize, filteredProducts.length)} of {filteredProducts.length}
+        </p>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setPage((value) => Math.max(1, value - 1))}
+            disabled={currentPage === 1}
+            className="rounded-lg border border-zinc-200 px-3 py-1.5 font-medium disabled:opacity-50 dark:border-white/10"
+          >
+            Previous
+          </button>
+          <span className="px-2 font-semibold text-zinc-900 dark:text-white">{currentPage} / {totalPages}</span>
+          <button
+            type="button"
+            onClick={() => setPage((value) => Math.min(totalPages, value + 1))}
+            disabled={currentPage === totalPages}
+            className="rounded-lg border border-zinc-200 px-3 py-1.5 font-medium disabled:opacity-50 dark:border-white/10"
+          >
+            Next
+          </button>
+        </div>
+      </div>
+      </>
+      );
+      })()}
+
+      {variantTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 backdrop-blur-sm">
+          <div className="w-full max-w-4xl overflow-hidden rounded-2xl border border-amber-500/10 bg-white shadow-2xl dark:bg-zinc-950">
+            <div className="flex items-start justify-between border-b border-zinc-100 p-5 dark:border-white/10">
+              <div>
+                <h2 className="text-lg font-semibold text-zinc-900 dark:text-white">{variantTarget.title}</h2>
+                <p className="mt-1 text-sm text-zinc-500">{variantTarget.variants?.length || 0} variants with SKU, stock, price add-on and barcode.</p>
+              </div>
+              <button onClick={() => setVariantTarget(null)} className="rounded-lg p-2 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-700 dark:hover:bg-white/10 dark:hover:text-white">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="max-h-[70vh] overflow-y-auto p-5">
+              <div className="overflow-hidden rounded-xl border border-zinc-200 dark:border-white/10">
+                <table className="w-full min-w-[760px] text-left text-sm text-zinc-600 dark:text-zinc-400">
+                  <thead className="bg-zinc-50 text-xs uppercase text-zinc-500 dark:bg-white/5">
+                    <tr>
+                      <th className="px-4 py-3">Size</th>
+                      <th className="px-4 py-3">Color</th>
+                      <th className="px-4 py-3">SKU</th>
+                      <th className="px-4 py-3">Barcode</th>
+                      <th className="px-4 py-3">Stock</th>
+                      <th className="px-4 py-3">Extra Price</th>
+                      <th className="px-4 py-3">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-zinc-200 dark:divide-white/5">
+                    {(variantTarget.variants || []).map((variant: any, index: number) => (
+                      <tr key={variant._id || index}>
+                        <td className="px-4 py-3 font-semibold text-zinc-900 dark:text-white">{variant.size || '-'}</td>
+                        <td className="px-4 py-3">{variant.color || '-'}</td>
+                        <td className="px-4 py-3 font-mono text-xs">{variant.sku || '-'}</td>
+                        <td className="px-4 py-3 font-mono text-xs">{variant.barcode || '-'}</td>
+                        <td className="px-4 py-3">{variant.stock ?? 0}</td>
+                        <td className="px-4 py-3">Rs.{Number(variant.extraPrice || 0).toLocaleString('en-IN')}</td>
+                        <td className="px-4 py-3">{variant.isActive === false ? 'Inactive' : 'Active'}</td>
+                      </tr>
+                    ))}
+                    {(!variantTarget.variants || variantTarget.variants.length === 0) && (
+                      <tr><td colSpan={7} className="px-4 py-8 text-center text-zinc-500">No variants found.</td></tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+              <div className="mt-5 flex justify-end">
+                <Link href={`/admin/products/${variantTarget._id}`} prefetch={false} className="rounded-lg bg-amber-500 px-4 py-2 text-sm font-semibold text-black hover:bg-amber-400">
+                  Edit Product
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {archiveTarget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 backdrop-blur-sm">

@@ -18,6 +18,10 @@ function price(product: any) {
   return Math.max(0, sale - discount);
 }
 
+function mrp(product: any) {
+  return Number(product.basePrice || 0);
+}
+
 function parseSlides(value: unknown): HeroSlide[] {
   try {
     const slides = typeof value === 'string' && value.trim()
@@ -113,6 +117,7 @@ export default async function HomePage() {
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
             {products.map((product: any) => {
               const finalPrice = price(product);
+              const productMrp = mrp(product);
               return (
                 <Link key={product._id.toString()} href={`/product/${product.slug}`} className="group rounded-lg bg-[#F7F4EF] p-2 ring-1 ring-zinc-200 transition hover:-translate-y-0.5 hover:shadow-md">
                   <div className="aspect-[3/4] overflow-hidden rounded-md bg-zinc-100">
@@ -120,7 +125,12 @@ export default async function HomePage() {
                   </div>
                   <div className="p-2">
                     <p className="line-clamp-1 text-sm font-semibold">{product.title}</p>
-                    <p className="mt-1 text-sm font-bold">Rs.{finalPrice.toLocaleString('en-IN')}</p>
+                    <div className="mt-1 flex flex-wrap items-center gap-2">
+                      <p className="text-sm font-bold">Rs.{finalPrice.toLocaleString('en-IN')}</p>
+                      {productMrp > finalPrice && (
+                        <p className="text-xs text-zinc-400 line-through">Rs.{productMrp.toLocaleString('en-IN')}</p>
+                      )}
+                    </div>
                   </div>
                 </Link>
               );

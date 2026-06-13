@@ -6,6 +6,7 @@ import Invoice from '@/models/Invoice';
 import Payment from '@/models/Payment';
 import Setting from '@/models/Setting';
 import BusinessDocument from '@/models/BusinessDocument';
+import User from '@/models/User';
 import { verifyToken } from '@/lib/auth';
 import { notifyOrderConfirmed, notifyPaymentReceipt, notifyPaymentVerification } from '@/lib/order-email';
 import { syncCustomerFromOrder } from '@/lib/customer-sync';
@@ -20,6 +21,14 @@ async function getNumberSetting(key: string, fallback: number) {
   const setting = await Setting.findOne({ key }).select('value').lean();
   const value = Number(setting?.value ?? fallback);
   return Number.isFinite(value) ? value : fallback;
+}
+
+function netOrderSale(order: any) {
+  return Math.max(0, Number(order.subtotal || 0) - Number(order.discount || 0));
+}
+
+function loyaltyPointsForOrder(order: any) {
+  return Math.max(1, Math.floor(netOrderSale(order) / 100));
 }
 
 export async function GET(request: NextRequest) {
@@ -136,6 +145,13 @@ export async function POST(request: NextRequest) {
 
     const order = await Order.create(orderPayload);
     await syncCustomerFromOrder(order);
+    if (order.paymentStatus === 'Paid') {
+      const points = loyaltyPointsForOrder(order);
+      await User.updateOne({ email: order.email }, { $inc: { loyaltyPoints: points } });
+      order.loyaltyPointsAwarded = points;
+      order.timeline.push({ status: order.orderStatus, note: `${points} loyalty points credited` });
+      await order.save();
+    }
 
     for (const reservation of stockReservations.values()) {
       const result = await Product.updateOne(
