@@ -8,6 +8,7 @@ import Setting from '@/models/Setting';
 import BusinessDocument from '@/models/BusinessDocument';
 import { verifyToken } from '@/lib/auth';
 import { notifyOrderConfirmed, notifyPaymentReceipt, notifyPaymentVerification } from '@/lib/order-email';
+import { syncCustomerFromOrder } from '@/lib/customer-sync';
 
 function sequence(prefix: string) {
   const stamp = Date.now().toString().slice(-8);
@@ -134,6 +135,7 @@ export async function POST(request: NextRequest) {
     await new Order(orderPayload).validate();
 
     const order = await Order.create(orderPayload);
+    await syncCustomerFromOrder(order);
 
     for (const reservation of stockReservations.values()) {
       const result = await Product.updateOne(

@@ -3,10 +3,12 @@ import dbConnect from '@/lib/db';
 import User from '@/models/User';
 import Role from '@/models/Role';
 import { hashPassword } from '@/lib/auth';
+import { syncCustomersFromOrders } from '@/lib/customer-sync';
 
 export async function GET(request: NextRequest) {
   try {
     await dbConnect();
+    await syncCustomersFromOrders();
     const { searchParams } = new URL(request.url);
     const search = searchParams.get('search');
     const customerRole = await Role.findOne({ slug: 'customer' }).select('_id').lean();
