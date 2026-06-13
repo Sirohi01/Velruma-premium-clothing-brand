@@ -138,6 +138,12 @@ export default function AccountingPage() {
         <div className="rounded-xl border border-zinc-200 bg-white p-4 dark:border-white/10 dark:bg-zinc-900"><p className="text-sm text-zinc-500">COGS</p><p className="mt-2 text-xl font-semibold text-zinc-900 dark:text-white">{money(report?.kpis?.cogs || 0)}</p></div>
       </div>
 
+      {Number(report?.kpis?.missingCostItems || 0) > 0 && (
+        <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          {report.kpis.missingCostItems} sold item(s) have missing cost price. Add Cost Price / Landed Cost in products to make COGS and Net Profit exact.
+        </div>
+      )}
+
       <div className="overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm dark:border-white/10 dark:bg-zinc-900">
         <table className="w-full text-left text-sm text-zinc-600 dark:text-zinc-400">
           <thead className="bg-zinc-50 text-xs uppercase text-zinc-500 dark:bg-zinc-800/50">

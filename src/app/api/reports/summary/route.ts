@@ -32,6 +32,10 @@ function netOrderSale(order: any) {
   return Math.max(0, Number(order.subtotal || 0) - Number(order.discount || 0));
 }
 
+function itemProductId(item: any) {
+  return String(item.productId || item.product || item.productRef || '');
+}
+
 export async function GET(request: NextRequest) {
   try {
     await dbConnect();
@@ -62,7 +66,19 @@ export async function GET(request: NextRequest) {
     const purchaseTotal = sum(purchases, 'total');
 
     const soldItems = activeSalesOrders.flatMap((order: any) => order.items || []);
-    const cogs = soldItems.reduce((total: number, item: any) => total + Number(item.quantity || 0) * Number(productCost.get(String(item.productId)) || 0), 0);
+    const lineCogs = (item: any) => {
+      const productId = itemProductId(item);
+      const quantity = Number(item.quantity || 0);
+      const unitCost = Number(item.costPrice ?? item.unitCost ?? productCost.get(productId) ?? 0);
+      return quantity * unitCost;
+    };
+    const missingCostItems = soldItems.filter((item: any) => {
+      const productId = itemProductId(item);
+      const quantity = Number(item.quantity || 0);
+      const unitCost = Number(item.costPrice ?? item.unitCost ?? productCost.get(productId) ?? 0);
+      return quantity > 0 && unitCost <= 0;
+    }).length;
+    const cogs = soldItems.reduce((total: number, item: any) => total + lineCogs(item), 0);
     const netProfit = totalRevenue - cogs - expenseTotal;
 
     const productReport = new Map<string, any>();
@@ -70,17 +86,22 @@ export async function GET(request: NextRequest) {
     const sizeReport = new Map<string, any>();
     const colorReport = new Map<string, any>();
     for (const item of soldItems) {
-      const key = String(item.productId);
+      const key = itemProductId(item);
       const revenue = Number(item.price || 0) * Number(item.quantity || 0);
-      const product = productReport.get(key) || { title: item.title, quantity: 0, revenue: 0 };
+      const itemCogs = lineCogs(item);
+      const product = productReport.get(key) || { title: item.title, quantity: 0, revenue: 0, cogs: 0, profit: 0 };
       product.quantity += Number(item.quantity || 0);
       product.revenue += revenue;
+      product.cogs += itemCogs;
+      product.profit = product.revenue - product.cogs;
       productReport.set(key, product);
 
       const category = productCategory.get(key) || 'Uncategorized';
-      const categoryItem = categoryReport.get(category) || { category, quantity: 0, revenue: 0 };
+      const categoryItem = categoryReport.get(category) || { category, quantity: 0, revenue: 0, cogs: 0, profit: 0 };
       categoryItem.quantity += Number(item.quantity || 0);
       categoryItem.revenue += revenue;
+      categoryItem.cogs += itemCogs;
+      categoryItem.profit = categoryItem.revenue - categoryItem.cogs;
       categoryReport.set(category, categoryItem);
 
       const size = item.variant?.size || 'N/A';
@@ -139,6 +160,7 @@ export async function GET(request: NextRequest) {
           shippingCollected,
           discounts,
           cogs,
+          missingCostItems,
           expenses: expenseTotal,
           purchases: purchaseTotal,
           netProfit,

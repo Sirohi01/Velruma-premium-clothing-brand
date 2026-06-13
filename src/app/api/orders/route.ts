@@ -79,6 +79,7 @@ export async function POST(request: NextRequest) {
         slug: item.slug,
         image: item.image,
         price: item.price,
+        costPrice: Number(item.costPrice || 0),
         quantity: item.quantity,
         variant: { size: item.size, color: item.color, sku: item.sku },
       })),
@@ -101,9 +102,9 @@ export async function POST(request: NextRequest) {
           : 'Order confirmed successfully',
       }],
     };
-    await new Order(orderPayload).validate();
 
     const stockReservations = new Map<string, { productId: string; variantId: string; quantity: number; name: string }>();
+    const productCostSnapshot = new Map<string, number>();
 
     for (const item of body.items) {
       const product = await Product.findById(item.productId);
@@ -123,7 +124,14 @@ export async function POST(request: NextRequest) {
         quantity: requestedQuantity,
         name: item.name || item.title,
       });
+      productCostSnapshot.set(product._id.toString(), Number(product.costPrice || 0));
     }
+
+    orderPayload.items = orderPayload.items.map((item: any) => ({
+      ...item,
+      costPrice: productCostSnapshot.get(String(item.productId)) ?? Number(item.costPrice || 0),
+    }));
+    await new Order(orderPayload).validate();
 
     const order = await Order.create(orderPayload);
 
