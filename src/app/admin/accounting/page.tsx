@@ -37,10 +37,15 @@ export default function AccountingPage() {
 
   const fetchAll = async () => {
     try {
-      const [expenseRes, reportRes] = await Promise.all([fetch('/api/expenses'), fetch('/api/reports/summary')]);
+      const [expenseRes, reportRes] = await Promise.all([
+        fetch('/api/expenses', { cache: 'no-store' }),
+        fetch('/api/reports/summary?range=all', { cache: 'no-store' }),
+      ]);
       const [expenseData, reportData] = await Promise.all([expenseRes.json(), reportRes.json()]);
       if (expenseData.success) setExpenses(expenseData.data);
+      else toast.error(expenseData.error || 'Failed to load expenses');
       if (reportData.success) setReport(reportData.data);
+      else toast.error(reportData.error || 'Failed to load accounting summary');
     } catch {
       toast.error('Failed to load accounting data');
     }

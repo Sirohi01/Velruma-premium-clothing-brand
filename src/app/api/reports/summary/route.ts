@@ -4,12 +4,20 @@ import Order from '@/models/Order';
 import Product from '@/models/Product';
 import Expense from '@/models/Expense';
 import PurchaseOrder from '@/models/PurchaseOrder';
+import '@/models/Category';
 import '@/models/Supplier';
 
 function dateRange(request: NextRequest) {
   const { searchParams } = new URL(request.url);
+  const range = searchParams.get('range');
   const from = searchParams.get('from');
   const to = searchParams.get('to');
+  if (range === 'all') {
+    const start = new Date(0);
+    const end = new Date();
+    end.setHours(23, 59, 59, 999);
+    return { start, end };
+  }
   const start = from ? new Date(from) : new Date(new Date().getFullYear(), new Date().getMonth(), 1);
   const end = to ? new Date(to) : new Date();
   end.setHours(23, 59, 59, 999);
