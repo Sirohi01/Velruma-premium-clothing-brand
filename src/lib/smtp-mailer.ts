@@ -1,5 +1,6 @@
 import net from 'node:net';
 import tls from 'node:tls';
+import { getAppUrl } from '@/lib/env';
 
 export type SmtpAttachment = {
   filename: string;
@@ -177,6 +178,7 @@ export function renderMarketingEmail({
   preheader?: string;
 }) {
   const paragraphs = String(body || '').split('\n').map((line) => line.trim()).filter(Boolean);
+  const absoluteCtaUrl = ctaUrl?.startsWith('/') ? `${getAppUrl()}${ctaUrl}` : ctaUrl;
   return `<!doctype html>
 <html>
 <body style="margin:0;background:#f7f4ef;font-family:Inter,Arial,sans-serif;color:#18181b;">
@@ -199,7 +201,7 @@ export function renderMarketingEmail({
           <tr>
             <td style="padding:0 28px 20px;">
               ${paragraphs.map((paragraph) => `<p style="margin:14px 0 0;font-size:15px;line-height:1.75;color:#52525b;">${paragraph}</p>`).join('')}
-              ${ctaLabel && ctaUrl ? `<p style="margin:26px 0 4px;"><a href="${ctaUrl}" style="display:inline-block;background:#09090b;color:#ffffff;text-decoration:none;border-radius:10px;padding:13px 20px;font-size:14px;font-weight:700;">${ctaLabel}</a></p>` : ''}
+              ${ctaLabel && absoluteCtaUrl ? `<p style="margin:26px 0 4px;"><a href="${absoluteCtaUrl}" style="display:inline-block;background:#09090b;color:#ffffff;text-decoration:none;border-radius:10px;padding:13px 20px;font-size:14px;font-weight:700;">${ctaLabel}</a></p>` : ''}
             </td>
           </tr>
           <tr>

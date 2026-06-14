@@ -1,5 +1,6 @@
 import Setting from '@/models/Setting';
 import { renderMarketingEmail, sendSmtpMail } from '@/lib/smtp-mailer';
+import { getAppUrl } from '@/lib/env';
 
 type SettingMap = Record<string, unknown>;
 
@@ -64,6 +65,7 @@ async function sendOrderEmail(order: any, subject: string, headline: string, bod
   const replyTo = valueAsString(settings, 'marketing_reply_to', fromEmail);
   const logo = valueAsString(settings, 'marketing_default_logo', '');
   const footerNote = valueAsString(settings, 'marketing_footer_text', 'VELRUMA - Premium oversized essentials crafted in India.');
+  const trackUrl = `${getAppUrl()}/track-order?order=${encodeURIComponent(order.orderId)}`;
 
   await sendSmtpMail(smtp, {
     fromName,
@@ -76,7 +78,7 @@ async function sendOrderEmail(order: any, subject: string, headline: string, bod
       headline,
       body: `Hi ${order.customerName || 'there'},\n\n${body}\n\nOrder ID: ${order.orderId}\nTotal: INR ${Number(order.total || 0).toLocaleString('en-IN')}`,
       ctaLabel: 'Track order',
-      ctaUrl: `/track-order?order=${encodeURIComponent(order.orderId)}`,
+      ctaUrl: trackUrl,
       footerNote,
       preheader: subject,
     }),
