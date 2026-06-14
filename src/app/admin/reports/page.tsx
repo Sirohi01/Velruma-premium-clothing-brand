@@ -59,9 +59,9 @@ export default function ReportsPage() {
   const kpis = report?.kpis || {};
 
   return (
-    <div className="space-y-4">
-      <section className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm">
-        <div className="flex flex-wrap items-center justify-between gap-3">
+    <div className="space-y-3">
+      <section className="rounded-xl border border-zinc-200 bg-white p-3 shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-start gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-50 text-amber-600">
               <BarChart3 className="h-5 w-5" />
@@ -71,7 +71,7 @@ export default function ReportsPage() {
               <p className="text-sm text-zinc-500">Sales, products, customers, suppliers, GST, COD and profit reports.</p>
             </div>
           </div>
-          <div className="flex flex-wrap items-center gap-2 rounded-lg bg-[#faf8f4] p-2">
+          <div className="flex flex-wrap items-center gap-2 rounded-lg bg-[#faf8f4] p-1.5">
             <input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="h-9 rounded-md border border-zinc-200 bg-white px-3 text-sm text-zinc-800 outline-none focus:border-amber-500" />
             <input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="h-9 rounded-md border border-zinc-200 bg-white px-3 text-sm text-zinc-800 outline-none focus:border-amber-500" />
             <button onClick={fetchReport} className="flex h-9 items-center gap-2 rounded-md bg-zinc-950 px-3 text-sm font-bold text-white hover:bg-zinc-800">
@@ -88,7 +88,7 @@ export default function ReportsPage() {
         <div className="rounded-xl border border-zinc-200 bg-white p-10 text-center text-zinc-500 shadow-sm"><BarChart3 className="mx-auto mb-3 h-8 w-8 opacity-30" />No report data.</div>
       ) : (
         <>
-          <div className="grid gap-3 md:grid-cols-4">
+          <div className="grid gap-2 md:grid-cols-4">
             <Kpi label="Net Sales" value={money(kpis.netSales)} />
             <Kpi label="Orders" value={kpis.orders || 0} />
             <Kpi label="Net Profit" value={money(kpis.netProfit)} tone={kpis.netProfit >= 0 ? 'green' : 'red'} />
@@ -99,7 +99,7 @@ export default function ReportsPage() {
             <Kpi label="Returns / Cancelled" value={`${kpis.returnedOrders || 0} / ${kpis.cancelledOrders || 0}`} />
           </div>
 
-          <div className="grid gap-4 xl:grid-cols-2">
+          <div className="grid gap-3 xl:grid-cols-2">
             <ReportTable title="Product-wise Sales" rows={report.products} onExport={() => exportCsv(report.products, 'product-sales')} columns={[['title', 'Product'], ['quantity', 'Qty'], ['revenue', 'Revenue']]} />
             <ReportTable title="Category-wise Sales" rows={report.categories} onExport={() => exportCsv(report.categories, 'category-sales')} columns={[['category', 'Category'], ['quantity', 'Qty'], ['revenue', 'Revenue']]} />
             <ReportTable title="Size-wise Sales" rows={report.sizes} onExport={() => exportCsv(report.sizes, 'size-sales')} columns={[['size', 'Size'], ['quantity', 'Qty'], ['revenue', 'Revenue']]} />
@@ -116,7 +116,7 @@ export default function ReportsPage() {
 
 function Kpi({ label, value, tone = 'default' }: { label: string; value: string | number; tone?: 'default' | 'green' | 'red' }) {
   return (
-    <div className="rounded-xl border border-zinc-200 bg-white p-3 shadow-sm">
+    <div className="rounded-xl border border-zinc-200 bg-white p-2.5 shadow-sm">
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.08em] text-zinc-400">{label}</p>
@@ -131,7 +131,7 @@ function Kpi({ label, value, tone = 'default' }: { label: string; value: string 
 function ReportTable({ title, rows, columns, onExport }: { title: string; rows: any[]; columns: [string, string][]; onExport: () => void }) {
   return (
     <div className="overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm">
-      <div className="flex items-center justify-between border-b border-zinc-200 bg-[#faf8f4] px-4 py-3">
+      <div className="flex items-center justify-between border-b border-zinc-200 bg-[#faf8f4] px-3 py-2.5">
         <h2 className="text-sm font-bold text-zinc-950">{title}</h2>
         <button onClick={onExport} className="flex items-center gap-2 rounded-md border border-zinc-200 bg-white px-3 py-1.5 text-xs font-bold text-zinc-700 hover:bg-zinc-50">
           <Download className="h-3.5 w-3.5" />
@@ -140,12 +140,12 @@ function ReportTable({ title, rows, columns, onExport }: { title: string; rows: 
       </div>
       <table className="w-full text-left text-sm">
         <thead className="bg-white text-[11px] uppercase tracking-[0.08em] text-zinc-400">
-          <tr>{columns.map(([, label]) => <th key={label} className="px-4 py-2.5 font-bold">{label}</th>)}</tr>
+          <tr>{columns.map(([, label]) => <th key={label} className="px-3 py-2 font-bold">{label}</th>)}</tr>
         </thead>
         <tbody className="divide-y divide-zinc-100">
           {rows?.length ? rows.slice(0, 10).map((row, index) => (
             <tr key={index} className="hover:bg-[#fbf8f2]">
-              {columns.map(([key]) => <td key={key} className="px-4 py-2.5 text-zinc-700">{['revenue', 'total', 'amount', 'taxAmount'].includes(key) ? money(row[key]) : row[key]}</td>)}
+              {columns.map(([key]) => <td key={key} className="px-3 py-2 text-zinc-700">{['revenue', 'total', 'amount', 'taxAmount'].includes(key) ? money(row[key]) : row[key]}</td>)}
             </tr>
           )) : <tr><td colSpan={columns.length} className="px-4 py-8 text-center text-zinc-500">No data</td></tr>}
         </tbody>
