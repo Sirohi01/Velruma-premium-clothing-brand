@@ -11,12 +11,24 @@ export default function AdminDashboard() {
   const [data, setData] = useState<any | null>(null);
 
   useEffect(() => {
-    fetch('/api/dashboard/summary')
-      .then((res) => res.json())
-      .then((json) => {
-        if (json.success) setData(json.data);
-      })
-      .catch(() => undefined);
+    let cancelled = false;
+    const sections = ['kpis', 'sales', 'categories', 'lists'];
+
+    setData({ kpis: {}, salesData: [], categoryData: [], recentOrders: [], topProducts: [] });
+    sections.forEach((section) => {
+      fetch(`/api/dashboard/summary?section=${section}`, { cache: 'no-store' })
+        .then((res) => res.json())
+        .then((json) => {
+          if (!cancelled && json.success) {
+            setData((prev: any) => ({ ...(prev || {}), ...json.data }));
+          }
+        })
+        .catch(() => undefined);
+    });
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const kpis = data?.kpis || {};

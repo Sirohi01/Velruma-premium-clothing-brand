@@ -23,11 +23,18 @@ const defaultHighlights = [
   { icon: 'users', title: 'UNISEX', subtitle: 'For Everyone' },
 ];
 
+const productTabs = [
+  { id: 'basics', label: 'Basics' },
+  { id: 'media', label: 'Media' },
+  { id: 'variants', label: 'Variants' },
+];
+
 export default function CreateProductPage() {
   const router = useRouter();
   const [categories, setCategories] = useState<any[]>([]);
   const [collections, setCollections] = useState<any[]>([]);
   const [saving, setSaving] = useState(false);
+  const [activeProductTab, setActiveProductTab] = useState('basics');
   
   const [formData, setFormData] = useState({
     title: '',
@@ -155,35 +162,51 @@ export default function CreateProductPage() {
   const marginPercent = finalSellingPrice > 0 ? Math.round((profit / finalSellingPrice) * 100) : 0;
 
   return (
-    <div className="mx-auto max-w-7xl space-y-6 pb-12">
-      <div className="flex items-center justify-between">
+    <div className="mx-auto max-w-7xl space-y-3 pb-8">
+      <div className="flex items-center justify-between rounded-xl border border-zinc-200 bg-white p-3 shadow-sm">
         <div className="flex items-center gap-4">
-          <Link href="/admin/products" className="rounded-lg p-2 text-zinc-400 hover:bg-white hover:text-zinc-900 dark:hover:bg-white/10 dark:hover:text-white">
+          <Link href="/admin/products" className="rounded-lg p-2 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-900">
             <ArrowLeft className="h-5 w-5" />
           </Link>
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-white" style={{ fontFamily: "'Playfair Display', serif" }}>
+            <h1 className="text-2xl font-bold tracking-tight text-zinc-950" style={{ fontFamily: "'Playfair Display', serif" }}>
               Add New Product
             </h1>
+            <p className="text-sm text-zinc-500">Create catalog item, media, variants and pricing.</p>
           </div>
         </div>
         <button
           onClick={handleSubmit}
           disabled={saving}
-          className="flex items-center gap-2 rounded-lg bg-zinc-900 px-6 py-2.5 text-sm font-medium text-white hover:bg-zinc-800 dark:bg-amber-500 dark:text-black dark:hover:bg-amber-400 shadow-lg shadow-amber-500/20"
+          className="flex h-10 items-center gap-2 rounded-lg bg-zinc-950 px-4 text-sm font-bold text-white hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-60"
         >
           <Save className="h-4 w-4" />
           {saving ? 'Saving...' : 'Save Product'}
         </button>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+      <div className="rounded-xl border border-zinc-200 bg-white p-1.5 shadow-sm">
+        <div className="flex flex-wrap gap-1.5">
+          {productTabs.map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setActiveProductTab(tab.id)}
+              className={`rounded-lg px-4 py-2 text-sm font-bold transition ${activeProductTab === tab.id ? 'bg-zinc-950 text-white' : 'text-zinc-500 hover:bg-zinc-50 hover:text-zinc-950'}`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
         {/* Main Column */}
-        <div className="space-y-6 lg:col-span-2">
+        <div className="space-y-3 lg:col-span-2">
           {/* General Information */}
-          <div className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-zinc-900">
-            <h2 className="mb-4 text-lg font-semibold text-zinc-900 dark:text-white">General Information</h2>
-            <div className="space-y-4">
+          <div className={`${activeProductTab === 'basics' ? '' : 'hidden'} rounded-xl border border-zinc-200 bg-white p-4 shadow-sm`}>
+            <h2 className="mb-3 text-sm font-bold uppercase tracking-[0.08em] text-zinc-500">General Information</h2>
+            <div className="space-y-3">
               <div>
                 <label className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Product Title</label>
                 <input
@@ -239,9 +262,9 @@ export default function CreateProductPage() {
           </div>
 
           {/* Images */}
-          <div className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-zinc-900">
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-zinc-900 dark:text-white">Media</h2>
+          <div className={`${activeProductTab === 'media' ? '' : 'hidden'} rounded-xl border border-zinc-200 bg-white p-4 shadow-sm`}>
+            <div className="mb-3 flex items-center justify-between">
+              <h2 className="text-sm font-bold uppercase tracking-[0.08em] text-zinc-500">Media</h2>
               <button type="button" onClick={handleAddImage} className="text-sm font-medium text-amber-600 dark:text-amber-500">
                 + Add Image
               </button>
@@ -285,9 +308,9 @@ export default function CreateProductPage() {
           </div>
 
           {/* Videos */}
-          <div className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-zinc-900">
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-zinc-900 dark:text-white">Product Videos</h2>
+          <div className={`${activeProductTab === 'media' ? '' : 'hidden'} rounded-xl border border-zinc-200 bg-white p-4 shadow-sm`}>
+            <div className="mb-3 flex items-center justify-between">
+              <h2 className="text-sm font-bold uppercase tracking-[0.08em] text-zinc-500">Product Videos</h2>
               <button type="button" onClick={handleAddVideo} className="text-sm font-medium text-amber-600 dark:text-amber-500">
                 + Add Video
               </button>
@@ -331,9 +354,9 @@ export default function CreateProductPage() {
           </div>
 
           {/* Variants */}
-          <div className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-zinc-900">
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-zinc-900 dark:text-white">Variants (Size/Color)</h2>
+          <div className={`${activeProductTab === 'variants' ? '' : 'hidden'} rounded-xl border border-zinc-200 bg-white p-4 shadow-sm`}>
+            <div className="mb-3 flex items-center justify-between">
+              <h2 className="text-sm font-bold uppercase tracking-[0.08em] text-zinc-500">Variants (Size/Color)</h2>
               <button type="button" onClick={handleAddVariant} className="text-sm font-medium text-amber-600 dark:text-amber-500">
                 + Add Variant
               </button>
@@ -399,9 +422,9 @@ export default function CreateProductPage() {
         </div>
 
         {/* Sidebar Column */}
-        <div className="space-y-6">
+        <div className="space-y-3 lg:sticky lg:top-16 lg:self-start">
           {/* Status & Organization */}
-          <div className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-zinc-900 space-y-4">
+          <div className="space-y-3 rounded-xl border border-zinc-200 bg-white p-4 shadow-sm">
             <div>
               <label className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Status</label>
               <select
@@ -433,7 +456,7 @@ export default function CreateProductPage() {
               {collections.length === 0 ? (
                 <p className="rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 text-xs text-zinc-500 dark:border-white/10 dark:bg-white/5">No collections found. Create collections first.</p>
               ) : (
-                <div className="max-h-52 space-y-2 overflow-y-auto rounded-lg border border-zinc-200 bg-zinc-50 p-2 dark:border-white/10 dark:bg-white/5">
+                <div className="max-h-36 space-y-2 overflow-y-auto rounded-lg border border-zinc-200 bg-zinc-50 p-2 dark:border-white/10 dark:bg-white/5">
                   {collections.map((collection) => {
                     const checked = formData.collections.includes(collection._id);
                     return (
@@ -466,12 +489,15 @@ export default function CreateProductPage() {
             </div>
           </div>
 
-          <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-zinc-900">
-            <div className="mb-3 flex items-start justify-between gap-3">
+          <details className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm">
+            <summary className="flex cursor-pointer list-none items-start justify-between gap-3">
               <div>
                 <h2 className="text-base font-semibold text-zinc-900 dark:text-white">Product Highlight Strip</h2>
                 <p className="mt-1 text-xs text-zinc-500">Product page par icon strip me dikhega.</p>
               </div>
+              <span className="rounded-full bg-zinc-100 px-2.5 py-1 text-xs font-bold text-zinc-500">Open</span>
+            </summary>
+            <div className="mt-3 flex justify-end">
               <button
                 type="button"
                 onClick={() => setFormData({ ...formData, productHighlights: [...formData.productHighlights, { icon: 'sparkles', title: '', subtitle: '' }] })}
@@ -480,7 +506,7 @@ export default function CreateProductPage() {
                 + Add
               </button>
             </div>
-            <div className="space-y-3">
+            <div className="mt-3 space-y-3">
               {formData.productHighlights.map((highlight, index) => (
                 <div key={index} className="space-y-2 rounded-lg border border-zinc-100 bg-zinc-50 p-3 dark:border-white/10 dark:bg-white/5">
                   <div className="flex gap-2">
@@ -514,11 +540,11 @@ export default function CreateProductPage() {
                 </div>
               ))}
             </div>
-          </div>
+          </details>
 
           {/* Pricing */}
-          <div className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-zinc-900 space-y-4">
-            <h2 className="text-lg font-semibold text-zinc-900 dark:text-white">Pricing</h2>
+          <div className="space-y-3 rounded-xl border border-zinc-200 bg-white p-4 shadow-sm">
+            <h2 className="text-sm font-bold uppercase tracking-[0.08em] text-zinc-500">Pricing</h2>
             <div>
               <label className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Base Price (₹)</label>
               <input

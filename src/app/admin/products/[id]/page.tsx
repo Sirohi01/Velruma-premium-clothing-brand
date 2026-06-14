@@ -24,6 +24,12 @@ const defaultHighlights = [
   { icon: 'users', title: 'UNISEX', subtitle: 'For Everyone' },
 ];
 
+const productTabs = [
+  { id: 'basics', label: 'Basics' },
+  { id: 'media', label: 'Media' },
+  { id: 'variants', label: 'Variants' },
+];
+
 export default function EditProductPage() {
   const router = useRouter();
   const params = useParams<{ id: string }>();
@@ -32,6 +38,7 @@ export default function EditProductPage() {
   const [categories, setCategories] = useState<any[]>([]);
   const [collections, setCollections] = useState<any[]>([]);
   const [formData, setFormData] = useState<any>(null);
+  const [activeProductTab, setActiveProductTab] = useState('basics');
 
   useEffect(() => {
     Promise.all([
@@ -139,47 +146,62 @@ export default function EditProductPage() {
   const marginPercent = finalSellingPrice > 0 ? Math.round((profit / finalSellingPrice) * 100) : 0;
 
   return (
-    <div className="mx-auto max-w-7xl space-y-6 pb-12">
-      <div className="flex items-center justify-between">
+    <div className="mx-auto max-w-7xl space-y-3 pb-8">
+      <div className="flex items-center justify-between rounded-xl border border-zinc-200 bg-white p-3 shadow-sm">
         <div className="flex items-center gap-4">
-          <Link href="/admin/products" className="rounded-lg p-2 text-zinc-400 hover:bg-white/10 hover:text-white">
+          <Link href="/admin/products" className="rounded-lg p-2 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-900">
             <ArrowLeft className="h-5 w-5" />
           </Link>
           <div>
-            <h1 className="text-2xl font-bold text-white">Edit Product</h1>
+            <h1 className="text-2xl font-bold text-zinc-950" style={{ fontFamily: "'Playfair Display', serif" }}>Edit Product</h1>
             <p className="text-sm text-zinc-500">{formData.title}</p>
           </div>
         </div>
-        <button onClick={save} disabled={saving} className="flex items-center gap-2 rounded-lg bg-amber-500 px-5 py-2 text-sm font-semibold text-black hover:bg-amber-400 disabled:cursor-not-allowed disabled:opacity-60">
+        <button onClick={save} disabled={saving} className="flex h-10 items-center gap-2 rounded-lg bg-zinc-950 px-4 text-sm font-bold text-white hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-60">
           <Save className="h-4 w-4" />
           {saving ? 'Saving...' : 'Save'}
         </button>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        <section className="space-y-5 lg:col-span-2">
-          <Panel title="General">
+      <div className="rounded-xl border border-zinc-200 bg-white p-1.5 shadow-sm">
+        <div className="flex flex-wrap gap-1.5">
+          {productTabs.map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setActiveProductTab(tab.id)}
+              className={`rounded-lg px-4 py-2 text-sm font-bold transition ${activeProductTab === tab.id ? 'bg-zinc-950 text-white' : 'text-zinc-500 hover:bg-zinc-50 hover:text-zinc-950'}`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="grid gap-3 lg:grid-cols-3">
+        <section className="space-y-3 lg:col-span-2">
+          <Panel title="General" className={activeProductTab !== 'basics' ? 'hidden' : ''}>
             <Input label="Title" value={formData.title} onChange={(value) => setFormData({ ...formData, title: value })} />
             <Input label="Slug" value={formData.slug} onChange={(value) => setFormData({ ...formData, slug: value })} />
             <label className="block">
-              <span className="mb-1 block text-sm text-zinc-300">Description</span>
-              <textarea value={formData.description || ''} onChange={(event) => setFormData({ ...formData, description: event.target.value })} rows={5} className="w-full rounded-lg border border-white/10 bg-white/5 p-3 text-sm text-white outline-none focus:border-amber-500" />
+              <span className="mb-1 block text-sm font-medium text-zinc-700">Description</span>
+              <textarea value={formData.description || ''} onChange={(event) => setFormData({ ...formData, description: event.target.value })} rows={4} className="w-full rounded-lg border border-zinc-200 bg-white p-3 text-sm text-zinc-900 outline-none focus:border-amber-500" />
             </label>
             <label className="block">
-              <span className="mb-1 block text-sm text-zinc-300">Product Details (One point per line)</span>
-              <textarea value={formData.productDetailsText || ''} onChange={(event) => setFormData({ ...formData, productDetailsText: event.target.value })} rows={4} className="w-full rounded-lg border border-white/10 bg-white/5 p-3 text-sm text-white outline-none focus:border-amber-500" />
+              <span className="mb-1 block text-sm font-medium text-zinc-700">Product Details (One point per line)</span>
+              <textarea value={formData.productDetailsText || ''} onChange={(event) => setFormData({ ...formData, productDetailsText: event.target.value })} rows={3} className="w-full rounded-lg border border-zinc-200 bg-white p-3 text-sm text-zinc-900 outline-none focus:border-amber-500" />
             </label>
             <label className="block">
-              <span className="mb-1 block text-sm text-zinc-300">Wash Care (One point per line)</span>
-              <textarea value={formData.washCareText || ''} onChange={(event) => setFormData({ ...formData, washCareText: event.target.value })} rows={4} className="w-full rounded-lg border border-white/10 bg-white/5 p-3 text-sm text-white outline-none focus:border-amber-500" />
+              <span className="mb-1 block text-sm font-medium text-zinc-700">Wash Care (One point per line)</span>
+              <textarea value={formData.washCareText || ''} onChange={(event) => setFormData({ ...formData, washCareText: event.target.value })} rows={3} className="w-full rounded-lg border border-zinc-200 bg-white p-3 text-sm text-zinc-900 outline-none focus:border-amber-500" />
             </label>
             <label className="block">
-              <span className="mb-1 block text-sm text-zinc-300">Delivery & Returns (One point per line)</span>
-              <textarea value={formData.deliveryReturnsText || ''} onChange={(event) => setFormData({ ...formData, deliveryReturnsText: event.target.value })} rows={4} className="w-full rounded-lg border border-white/10 bg-white/5 p-3 text-sm text-white outline-none focus:border-amber-500" />
+              <span className="mb-1 block text-sm font-medium text-zinc-700">Delivery & Returns (One point per line)</span>
+              <textarea value={formData.deliveryReturnsText || ''} onChange={(event) => setFormData({ ...formData, deliveryReturnsText: event.target.value })} rows={3} className="w-full rounded-lg border border-zinc-200 bg-white p-3 text-sm text-zinc-900 outline-none focus:border-amber-500" />
             </label>
           </Panel>
 
-          <Panel title="Media">
+          <Panel title="Media" className={activeProductTab !== 'media' ? 'hidden' : ''}>
             {formData.images.map((image: any, index: number) => (
               <div key={index} className="flex items-start gap-3">
                 <div className="flex-1">
@@ -196,13 +218,13 @@ export default function EditProductPage() {
                 </button>
               </div>
             ))}
-            <button onClick={() => setFormData({ ...formData, images: [...formData.images, { url: '', alt: '', isPrimary: false }] })} className="flex items-center gap-2 text-sm font-medium text-amber-400">
+            <button onClick={() => setFormData({ ...formData, images: [...formData.images, { url: '', alt: '', isPrimary: false }] })} className="flex items-center gap-2 text-sm font-bold text-amber-600">
               <Plus className="h-4 w-4" />
               Add image
             </button>
           </Panel>
 
-          <Panel title="Product Videos">
+          <Panel title="Product Videos" className={activeProductTab !== 'media' ? 'hidden' : ''}>
             {(formData.videos || []).length === 0 && <p className="text-sm text-zinc-500">No product videos uploaded.</p>}
             {(formData.videos || []).map((video: any, index: number) => (
               <div key={index} className="flex items-start gap-3">
@@ -221,15 +243,15 @@ export default function EditProductPage() {
                 </button>
               </div>
             ))}
-            <button onClick={() => setFormData({ ...formData, videos: [...(formData.videos || []), { url: '', title: '', isPrimary: (formData.videos || []).length === 0 }] })} className="flex items-center gap-2 text-sm font-medium text-amber-400">
+            <button onClick={() => setFormData({ ...formData, videos: [...(formData.videos || []), { url: '', title: '', isPrimary: (formData.videos || []).length === 0 }] })} className="flex items-center gap-2 text-sm font-bold text-amber-600">
               <Plus className="h-4 w-4" />
               Add video
             </button>
           </Panel>
 
-          <Panel title="Variants">
+          <Panel title="Variants" className={activeProductTab !== 'variants' ? 'hidden' : ''}>
             {formData.variants.map((variant: any, index: number) => (
-              <div key={variant._id || index} className="flex flex-col gap-3 border-b border-white/5 pb-4 last:border-0 sm:flex-row sm:items-end">
+              <div key={variant._id || index} className="flex flex-col gap-3 border-b border-zinc-100 pb-3 last:border-0 sm:flex-row sm:items-end">
                 <div className="grid flex-1 gap-3 md:grid-cols-6">
                   <Input label="Size" value={variant.size || ''} onChange={(value) => updateVariant(index, 'size', value)} />
                   <Input label="Color" value={variant.color || ''} onChange={(value) => updateVariant(index, 'color', value)} />
@@ -248,7 +270,7 @@ export default function EditProductPage() {
                 </button>
               </div>
             ))}
-            <button onClick={() => setFormData({ ...formData, variants: [...formData.variants, { size: '', color: '', stock: 0, extraPrice: 0, sku: '', barcode: '' }] })} className="flex items-center gap-2 text-sm font-medium text-amber-400">
+            <button onClick={() => setFormData({ ...formData, variants: [...formData.variants, { size: '', color: '', stock: 0, extraPrice: 0, sku: '', barcode: '' }] })} className="flex items-center gap-2 text-sm font-bold text-amber-600">
               <Plus className="h-4 w-4" />
               Add variant
             </button>
@@ -256,33 +278,33 @@ export default function EditProductPage() {
 
         </section>
 
-        <section className="space-y-5">
+        <section className="space-y-3 lg:sticky lg:top-16 lg:self-start">
           <Panel title="Organization">
             <label className="block">
-              <span className="mb-1 block text-sm text-zinc-300">Status</span>
-              <select value={formData.status} onChange={(event) => setFormData({ ...formData, status: event.target.value })} className="h-10 w-full rounded-lg border border-white/10 bg-zinc-950 px-3 text-sm text-white">
+              <span className="mb-1 block text-sm font-medium text-zinc-700">Status</span>
+              <select value={formData.status} onChange={(event) => setFormData({ ...formData, status: event.target.value })} className="h-10 w-full rounded-lg border border-zinc-200 bg-white px-3 text-sm text-zinc-900 outline-none focus:border-amber-500">
                 <option value="draft">Draft</option>
                 <option value="active">Active</option>
                 <option value="archived">Archived</option>
               </select>
             </label>
             <label className="block">
-              <span className="mb-1 block text-sm text-zinc-300">Category</span>
-              <select value={formData.category} onChange={(event) => setFormData({ ...formData, category: event.target.value })} className="h-10 w-full rounded-lg border border-white/10 bg-zinc-950 px-3 text-sm text-white">
+              <span className="mb-1 block text-sm font-medium text-zinc-700">Category</span>
+              <select value={formData.category} onChange={(event) => setFormData({ ...formData, category: event.target.value })} className="h-10 w-full rounded-lg border border-zinc-200 bg-white px-3 text-sm text-zinc-900 outline-none focus:border-amber-500">
                 {categories.map((category) => <option key={category._id} value={category._id}>{category.name}</option>)}
               </select>
             </label>
             <div>
-              <span className="mb-2 block text-sm text-zinc-300">Collections</span>
+              <span className="mb-2 block text-sm font-medium text-zinc-700">Collections</span>
               {collections.length === 0 ? (
-                <p className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs text-zinc-500">No collections found.</p>
+                <p className="rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 text-xs text-zinc-500">No collections found.</p>
               ) : (
-                <div className="max-h-52 space-y-2 overflow-y-auto rounded-lg border border-white/10 bg-white/5 p-2">
+                <div className="max-h-36 space-y-2 overflow-y-auto rounded-lg border border-zinc-200 bg-zinc-50 p-2">
                   {collections.map((collection) => {
                     const collectionId = collection._id;
                     const checked = (formData.collections || []).includes(collectionId);
                     return (
-                      <label key={collectionId} className={`flex cursor-pointer items-center gap-2 rounded-md px-2 py-2 text-sm transition ${checked ? 'bg-amber-500/10 text-amber-300 ring-1 ring-amber-500/20' : 'text-zinc-300 hover:bg-white/10'}`}>
+                      <label key={collectionId} className={`flex cursor-pointer items-center gap-2 rounded-md px-2 py-2 text-sm transition ${checked ? 'bg-amber-50 text-amber-800 ring-1 ring-amber-200' : 'text-zinc-600 hover:bg-white'}`}>
                         <input type="checkbox" checked={checked} onChange={() => toggleCollection(collectionId)} className="h-4 w-4 accent-amber-500" />
                         <span className="min-w-0 flex-1 truncate">{collection.name}</span>
                       </label>
@@ -293,8 +315,8 @@ export default function EditProductPage() {
               <p className="mt-1 text-xs text-zinc-500">{(formData.collections || []).length} selected</p>
             </div>
             <label className="block">
-              <span className="mb-1 block text-sm text-zinc-300">Audience</span>
-              <select value={formData.gender || 'unisex'} onChange={(event) => setFormData({ ...formData, gender: event.target.value })} className="h-10 w-full rounded-lg border border-white/10 bg-zinc-950 px-3 text-sm text-white">
+              <span className="mb-1 block text-sm font-medium text-zinc-700">Audience</span>
+              <select value={formData.gender || 'unisex'} onChange={(event) => setFormData({ ...formData, gender: event.target.value })} className="h-10 w-full rounded-lg border border-zinc-200 bg-white px-3 text-sm text-zinc-900 outline-none focus:border-amber-500">
                 <option value="unisex">Unisex</option>
                 <option value="male">Male</option>
                 <option value="female">Female</option>
@@ -302,15 +324,22 @@ export default function EditProductPage() {
             </label>
           </Panel>
 
-          <Panel title="Product Highlight Strip">
-            <p className="text-xs text-zinc-500">Product page par icon strip me dikhega.</p>
+          <details className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm">
+            <summary className="flex cursor-pointer list-none items-start justify-between gap-3">
+              <div>
+                <h2 className="text-sm font-bold uppercase tracking-[0.08em] text-zinc-500">Product Highlight Strip</h2>
+                <p className="mt-1 text-xs text-zinc-500">Product page par icon strip me dikhega.</p>
+              </div>
+              <span className="rounded-full bg-zinc-100 px-2.5 py-1 text-xs font-bold text-zinc-500">Open</span>
+            </summary>
+            <div className="mt-3 space-y-3">
             {(formData.productHighlights || []).map((highlight: any, index: number) => (
-              <div key={highlight._id || index} className="space-y-2 rounded-lg border border-white/10 bg-white/5 p-3">
+              <div key={highlight._id || index} className="space-y-2 rounded-lg border border-zinc-200 bg-zinc-50 p-3">
                 <div className="flex gap-2">
                   <select
                     value={highlight.icon || 'shirt'}
                     onChange={(event) => updateHighlight(index, 'icon', event.target.value)}
-                    className="h-10 w-32 rounded-lg border border-white/10 bg-zinc-950 px-2 text-sm text-white"
+                    className="h-10 w-32 rounded-lg border border-zinc-200 bg-white px-2 text-sm text-zinc-900 outline-none focus:border-amber-500"
                   >
                     {highlightIconOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
                   </select>
@@ -328,30 +357,31 @@ export default function EditProductPage() {
             ))}
             <button
               onClick={() => setFormData({ ...formData, productHighlights: [...(formData.productHighlights || []), { icon: 'sparkles', title: '', subtitle: '' }] })}
-              className="flex items-center gap-2 text-sm font-medium text-amber-400"
+              className="flex items-center gap-2 text-sm font-bold text-amber-600"
             >
               <Plus className="h-4 w-4" />
               Add highlight
             </button>
-          </Panel>
+            </div>
+          </details>
 
           <Panel title="Pricing">
             <Input label="MRP / Compare-at Price" type="number" value={formData.basePrice || 0} onChange={(value) => setFormData({ ...formData, basePrice: Number(value) })} />
             <Input label="Selling Price" type="number" value={formData.salePrice || 0} onChange={(value) => setFormData({ ...formData, salePrice: Number(value) })} />
             <Input label="Cost Price / Landed Cost" type="number" value={formData.costPrice || 0} onChange={(value) => setFormData({ ...formData, costPrice: Number(value) })} />
             <label className="block">
-              <span className="mb-1 block text-sm text-zinc-300">Extra Discount</span>
-              <select value={formData.discountType || 'none'} onChange={(event) => setFormData({ ...formData, discountType: event.target.value })} className="h-10 w-full rounded-lg border border-white/10 bg-zinc-950 px-3 text-sm text-white">
+              <span className="mb-1 block text-sm font-medium text-zinc-700">Extra Discount</span>
+              <select value={formData.discountType || 'none'} onChange={(event) => setFormData({ ...formData, discountType: event.target.value })} className="h-10 w-full rounded-lg border border-zinc-200 bg-white px-3 text-sm text-zinc-900 outline-none focus:border-amber-500">
                 <option value="none">None</option>
                 <option value="percentage">Percentage</option>
                 <option value="fixed">Fixed Amount</option>
               </select>
             </label>
             <Input label="Discount Value" type="number" value={formData.discountValue || 0} onChange={(value) => setFormData({ ...formData, discountValue: Number(value) })} />
-            <div className="rounded-xl border border-amber-500/20 bg-amber-500/10 p-4 text-sm">
-              <div className="flex justify-between text-zinc-300"><span>Final selling price</span><strong className="text-white">₹{finalSellingPrice.toLocaleString('en-IN')}</strong></div>
-              <div className="mt-2 flex justify-between text-zinc-300"><span>Total customer discount</span><strong>{discountPercent}% / ₹{totalDiscount.toLocaleString('en-IN')}</strong></div>
-              <div className="mt-2 flex justify-between text-zinc-300"><span>Profit after cost</span><strong className={profit >= 0 ? 'text-green-400' : 'text-red-400'}>₹{profit.toLocaleString('en-IN')} ({marginPercent}%)</strong></div>
+            <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm">
+              <div className="flex justify-between text-zinc-600"><span>Final selling price</span><strong className="text-zinc-950">₹{finalSellingPrice.toLocaleString('en-IN')}</strong></div>
+              <div className="mt-2 flex justify-between text-zinc-600"><span>Total customer discount</span><strong>{discountPercent}% / ₹{totalDiscount.toLocaleString('en-IN')}</strong></div>
+              <div className="mt-2 flex justify-between text-zinc-600"><span>Profit after cost</span><strong className={profit >= 0 ? 'text-green-600' : 'text-red-500'}>₹{profit.toLocaleString('en-IN')} ({marginPercent}%)</strong></div>
             </div>
           </Panel>
         </section>
@@ -360,15 +390,15 @@ export default function EditProductPage() {
   );
 }
 
-function Panel({ title, children }: { title: string; children: React.ReactNode }) {
-  return <div className="space-y-4 rounded-xl border border-white/10 bg-zinc-900 p-5"><h2 className="text-sm font-semibold text-white">{title}</h2>{children}</div>;
+function Panel({ title, children, className = '' }: { title: string; children: React.ReactNode; className?: string }) {
+  return <div className={`${className} space-y-3 rounded-xl border border-zinc-200 bg-white p-4 shadow-sm`}><h2 className="text-sm font-bold uppercase tracking-[0.08em] text-zinc-500">{title}</h2>{children}</div>;
 }
 
 function Input({ label, value, onChange, type = 'text' }: { label: string; value: string | number; onChange: (value: string) => void; type?: string }) {
   return (
     <label className="block">
-      <span className="mb-1 block text-sm text-zinc-300">{label}</span>
-      <input type={type} value={value} onChange={(event) => onChange(event.target.value)} className="h-10 w-full rounded-lg border border-white/10 bg-white/5 px-3 text-sm text-white outline-none focus:border-amber-500" />
+      <span className="mb-1 block text-sm font-medium text-zinc-700">{label}</span>
+      <input type={type} value={value} onChange={(event) => onChange(event.target.value)} className="h-10 w-full rounded-lg border border-zinc-200 bg-white px-3 text-sm text-zinc-900 outline-none focus:border-amber-500" />
     </label>
   );
 }
