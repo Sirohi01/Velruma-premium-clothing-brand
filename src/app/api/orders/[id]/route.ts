@@ -8,6 +8,7 @@ import BusinessDocument from '@/models/BusinessDocument';
 import User from '@/models/User';
 import { notifyOrderConfirmed, notifyOrderStatusChanged, notifyPaymentReceipt, notifyRefundProcessed } from '@/lib/order-email';
 import { syncCustomerFromOrder } from '@/lib/customer-sync';
+import { auditAdminAction, requireAdminAction } from '@/lib/admin-api';
 
 function findQuery(id: string) {
   return id.match(/^[0-9a-fA-F]{24}$/) ? { _id: id } : { orderId: id };
@@ -77,9 +78,11 @@ async function adjustLoyalty(order: any, previousPaymentStatus: string, previous
   }
 }
 
-export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     await dbConnect();
+    const adminCheck = await requireAdminAction(request, 'orders', 'view');
+    if (!adminCheck.ok) return adminCheck.response;
     const { id } = await params;
     const order = await Order.findOne(findQuery(id)).populate('user', 'name email');
     if (!order) return NextResponse.json({ success: false, error: 'Order not found' }, { status: 404 });
@@ -96,6 +99,8 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     await dbConnect();
+    const adminCheck = await requireAdminAction(request, 'orders', 'edit');
+    if (!adminCheck.ok) return adminCheck.response;
     const { id } = await params;
     const body = await request.json();
     const order = await Order.findOne(findQuery(id));
@@ -164,6 +169,23 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     } else if (statusEmail) {
       await notifyOrderStatusChanged(order, statusEmail);
     }
+
+    await auditAdminAction({
+      request,
+      context: adminCheck.context,
+      module: 'orders',
+      action: previousOrderStatus !== order.orderStatus ? 'status_change' : 'update',
+      entity: order,
+      description: `Updated order ${order.orderId}`,
+      metadata: {
+        previousOrderStatus,
+        orderStatus: order.orderStatus,
+        previousPaymentStatus,
+        paymentStatus: order.paymentStatus,
+        trackingNumber: order.trackingNumber,
+        courierName: order.courierName,
+      },
+    });
 
     return NextResponse.json({ success: true, data: order });
   } catch (error: any) {

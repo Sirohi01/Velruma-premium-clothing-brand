@@ -5,10 +5,13 @@ import Role from '@/models/Role';
 import Order from '@/models/Order';
 import { hashPassword } from '@/lib/auth';
 import { syncCustomersFromOrders } from '@/lib/customer-sync';
+import { auditAdminAction, requireAdminAction } from '@/lib/admin-api';
 
 export async function GET(request: NextRequest) {
   try {
     await dbConnect();
+    const admin = await requireAdminAction(request, 'customers', 'view');
+    if (!admin.ok) return admin.response;
     await syncCustomersFromOrders();
     const { searchParams } = new URL(request.url);
     const search = searchParams.get('search');
@@ -59,6 +62,8 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     await dbConnect();
+    const admin = await requireAdminAction(request, 'customers', 'create');
+    if (!admin.ok) return admin.response;
     const body = await request.json();
     const role = await Role.findOne({ slug: 'customer' });
     if (!role) return NextResponse.json({ success: false, error: 'Customer role not found. Run seed first.' }, { status: 400 });
@@ -72,6 +77,7 @@ export async function POST(request: NextRequest) {
       loyaltyPoints: Number(body.loyaltyPoints || 0),
       addresses: body.addresses || [],
     });
+    await auditAdminAction({ request, context: admin.context, module: 'customers', action: 'create', entity: customer });
     return NextResponse.json({ success: true, data: customer }, { status: 201 });
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message || 'Customer save failed' }, { status: 500 });

@@ -10,6 +10,7 @@ import User from '@/models/User';
 import { verifyToken } from '@/lib/auth';
 import { notifyOrderConfirmed, notifyPaymentReceipt, notifyPaymentVerification } from '@/lib/order-email';
 import { syncCustomerFromOrder } from '@/lib/customer-sync';
+import { auditAdminAction, requireAdminAction } from '@/lib/admin-api';
 
 function sequence(prefix: string) {
   const stamp = Date.now().toString().slice(-8);
@@ -37,11 +38,51 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const email = searchParams.get('email');
     const status = searchParams.get('status');
+    const token = request.cookies.get('velruma-token')?.value;
+    const payload = token ? await verifyToken(token) : null;
+
+    if (!payload?.userId) {
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const adminCheck = await requireAdminAction(request, 'orders', 'view');
+    const isAdmin = adminCheck.ok;
     const query: Record<string, unknown> = {};
-    if (email) query.email = email.toLowerCase();
+
+    if (isAdmin) {
+      if (email) query.email = email.toLowerCase();
+    } else {
+      const ownEmail = String(payload.email || '').toLowerCase();
+      if (!ownEmail || (email && email.toLowerCase() !== ownEmail)) {
+        return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
+      }
+      query.email = ownEmail;
+    }
+
     if (status) query.orderStatus = status;
     const orders = await Order.find(query).sort({ createdAt: -1 });
-    return NextResponse.json({ success: true, data: orders });
+    const data = isAdmin
+      ? orders
+      : orders.map((order: any) => ({
+          _id: order._id,
+          orderId: order.orderId,
+          items: order.items?.map((item: any) => ({
+            title: item.title,
+            slug: item.slug,
+            image: item.image,
+            price: item.price,
+            quantity: item.quantity,
+            variant: item.variant,
+          })) || [],
+          total: order.total,
+          paymentMethod: order.paymentMethod,
+          paymentStatus: order.paymentStatus,
+          orderStatus: order.orderStatus,
+          trackingNumber: order.trackingNumber,
+          courierName: order.courierName,
+          createdAt: order.createdAt,
+        }));
+    return NextResponse.json({ success: true, data });
   } catch (error) {
     console.error('Orders GET error:', error);
     return NextResponse.json({ success: false, error: 'Internal Server Error' }, { status: 500 });
@@ -63,6 +104,12 @@ export async function POST(request: NextRequest) {
     const discount = Number(body.discount || 0);
     const taxableSubtotal = Math.max(0, subtotal - discount);
     const isAdminOrder = Boolean(body.orderSource);
+    let adminContext = null;
+    if (isAdminOrder) {
+      const adminCheck = await requireAdminAction(request, 'orders', 'create');
+      if (!adminCheck.ok) return adminCheck.response;
+      adminContext = adminCheck.context;
+    }
     const freeShippingThreshold = await getNumberSetting('free_shipping_threshold', 999);
     const defaultShippingCharge = await getNumberSetting('shipping_charge', 79);
     const codCharge = await getNumberSetting('cod_charge', 49);
@@ -235,6 +282,18 @@ export async function POST(request: NextRequest) {
       await notifyOrderConfirmed(order);
     }
     if (receipt) await notifyPaymentReceipt(receipt);
+
+    if (adminContext) {
+      await auditAdminAction({
+        request,
+        context: adminContext,
+        module: 'orders',
+        action: 'create',
+        entity: order,
+        description: `Created manual order ${order.orderId}`,
+        metadata: { orderSource: order.orderSource, total: order.total },
+      });
+    }
 
     return NextResponse.json({ success: true, data: { order, invoice, payment, estimate, proforma, receipt } }, { status: 201 });
   } catch (error: any) {

@@ -7,6 +7,7 @@ import Supplier from '@/models/Supplier';
 import Lead from '@/models/Lead';
 import SupportTicket from '@/models/SupportTicket';
 import User from '@/models/User';
+import { requireAdminAction } from '@/lib/admin-api';
 
 function regex(value: string) {
   return { $regex: value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), $options: 'i' };
@@ -15,6 +16,8 @@ function regex(value: string) {
 export async function GET(request: NextRequest) {
   try {
     await dbConnect();
+    const admin = await requireAdminAction(request, 'search', 'view');
+    if (!admin.ok) return admin.response;
     const q = new URL(request.url).searchParams.get('q')?.trim() || '';
     if (q.length < 2) return NextResponse.json({ success: true, data: [] });
 

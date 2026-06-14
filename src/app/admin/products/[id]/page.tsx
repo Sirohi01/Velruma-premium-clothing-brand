@@ -28,6 +28,7 @@ export default function EditProductPage() {
   const router = useRouter();
   const params = useParams<{ id: string }>();
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [categories, setCategories] = useState<any[]>([]);
   const [collections, setCollections] = useState<any[]>([]);
   const [formData, setFormData] = useState<any>(null);
@@ -98,22 +99,30 @@ export default function EditProductPage() {
   };
 
   const save = async () => {
-    const res = await fetch(`/api/products/${params.id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        ...formData,
-        productDetails: (formData.productDetailsText || '').split('\n').filter(Boolean),
-        washCare: (formData.washCareText || '').split('\n').filter(Boolean),
-        deliveryReturns: (formData.deliveryReturnsText || '').split('\n').filter(Boolean),
-      }),
-    });
-    const data = await res.json();
-    if (data.success) {
-      toast.success('Product updated');
-      router.push('/admin/products');
-    } else {
-      toast.error(data.error || 'Failed to update product');
+    if (saving) return;
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/products/${params.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...formData,
+          productDetails: (formData.productDetailsText || '').split('\n').filter(Boolean),
+          washCare: (formData.washCareText || '').split('\n').filter(Boolean),
+          deliveryReturns: (formData.deliveryReturnsText || '').split('\n').filter(Boolean),
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success('Product updated');
+        router.push('/admin/products');
+      } else {
+        toast.error(data.error || 'Failed to update product');
+      }
+    } catch {
+      toast.error('Network error while updating product');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -141,9 +150,9 @@ export default function EditProductPage() {
             <p className="text-sm text-zinc-500">{formData.title}</p>
           </div>
         </div>
-        <button onClick={save} className="flex items-center gap-2 rounded-lg bg-amber-500 px-5 py-2 text-sm font-semibold text-black hover:bg-amber-400">
+        <button onClick={save} disabled={saving} className="flex items-center gap-2 rounded-lg bg-amber-500 px-5 py-2 text-sm font-semibold text-black hover:bg-amber-400 disabled:cursor-not-allowed disabled:opacity-60">
           <Save className="h-4 w-4" />
-          Save
+          {saving ? 'Saving...' : 'Save'}
         </button>
       </div>
 

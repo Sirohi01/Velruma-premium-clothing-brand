@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
 import Order from '@/models/Order';
 import Product from '@/models/Product';
@@ -6,6 +6,7 @@ import User from '@/models/User';
 import SupportTicket from '@/models/SupportTicket';
 import { DashboardWidget } from '@/models/Phase9';
 import '@/models/Role';
+import { requireAdminAction } from '@/lib/admin-api';
 
 function startOfDay(date = new Date()) {
   const copy = new Date(date);
@@ -13,9 +14,11 @@ function startOfDay(date = new Date()) {
   return copy;
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     await dbConnect();
+    const admin = await requireAdminAction(request, 'dashboard', 'view');
+    if (!admin.ok) return admin.response;
     const today = startOfDay();
     const weekAgo = new Date();
     weekAgo.setDate(weekAgo.getDate() - 6);

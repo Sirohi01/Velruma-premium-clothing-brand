@@ -6,6 +6,7 @@ import Expense from '@/models/Expense';
 import PurchaseOrder from '@/models/PurchaseOrder';
 import '@/models/Category';
 import '@/models/Supplier';
+import { requireAdminAction } from '@/lib/admin-api';
 
 function dateRange(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -39,6 +40,8 @@ function itemProductId(item: any) {
 export async function GET(request: NextRequest) {
   try {
     await dbConnect();
+    const admin = await requireAdminAction(request, 'reports', 'view');
+    if (!admin.ok) return admin.response;
     const { start, end } = dateRange(request);
 
     const [orders, expenses, purchases, products] = await Promise.all([

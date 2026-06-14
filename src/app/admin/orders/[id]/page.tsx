@@ -20,6 +20,7 @@ export default function AdminOrderDetailPage() {
   const params = useParams<{ id: string }>();
   const [data, setData] = useState<any>(null);
   const [saving, setSaving] = useState(false);
+  const [sendingKey, setSendingKey] = useState('');
   const [form, setForm] = useState({ orderStatus: '', paymentStatus: '', trackingNumber: '', courierName: '', adminNotes: '', orderSource: '', sourceReference: '' });
 
   const load = async () => {
@@ -66,22 +67,39 @@ export default function AdminOrderDetailPage() {
   };
 
   const sendBusinessDocument = async (document: any) => {
-    const res = await fetch(`/api/business-documents/${document._id}/send`, { method: 'POST' });
-    const json = await res.json();
-    if (json.success) {
-      toast.success('Document sent');
-      load();
-    } else {
-      toast.error(json.error || 'Email failed');
+    const key = `document:${document._id}`;
+    if (sendingKey) return;
+    setSendingKey(key);
+    try {
+      const res = await fetch(`/api/business-documents/${document._id}/send`, { method: 'POST' });
+      const json = await res.json();
+      if (json.success) {
+        toast.success('Document sent');
+        load();
+      } else {
+        toast.error(json.error || 'Email failed');
+      }
+    } catch {
+      toast.error('Network error while sending document');
+    } finally {
+      setSendingKey('');
     }
   };
 
   const sendInvoice = async () => {
     if (!data.invoice?._id) return toast.error('Invoice not found');
-    const res = await fetch(`/api/invoices/${data.invoice._id}/send`, { method: 'POST' });
-    const json = await res.json();
-    if (json.success) toast.success('Invoice sent');
-    else toast.error(json.error || 'Invoice email failed');
+    if (sendingKey) return;
+    setSendingKey('invoice');
+    try {
+      const res = await fetch(`/api/invoices/${data.invoice._id}/send`, { method: 'POST' });
+      const json = await res.json();
+      if (json.success) toast.success('Invoice sent');
+      else toast.error(json.error || 'Invoice email failed');
+    } catch {
+      toast.error('Network error while sending invoice');
+    } finally {
+      setSendingKey('');
+    }
   };
 
   const order = data.order;
@@ -112,9 +130,9 @@ export default function AdminOrderDetailPage() {
                 <FileText className="h-4 w-4" />
                 View Invoice
               </Link>
-              <button onClick={sendInvoice} className="inline-flex items-center gap-2 rounded-lg bg-emerald-500 px-3 py-2 text-xs font-semibold text-black hover:bg-emerald-400">
+              <button onClick={sendInvoice} disabled={Boolean(sendingKey)} className="inline-flex items-center gap-2 rounded-lg bg-emerald-500 px-3 py-2 text-xs font-semibold text-black hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-60">
                 <Send className="h-4 w-4" />
-                Send Invoice
+                {sendingKey === 'invoice' ? 'Sending...' : 'Send Invoice'}
               </button>
             </>
           )}
@@ -190,7 +208,7 @@ export default function AdminOrderDetailPage() {
                   <p className="mt-1 text-xs text-zinc-500">Invoice / {data.invoice.status}</p>
                   <div className="mt-3 flex gap-3 text-xs font-semibold">
                     <Link href={`/admin/invoices/${data.invoice._id}`} className="text-amber-400">View</Link>
-                    <button onClick={sendInvoice} className="text-emerald-400">Send email</button>
+                    <button onClick={sendInvoice} disabled={Boolean(sendingKey)} className="text-emerald-400 disabled:cursor-not-allowed disabled:opacity-50">{sendingKey === 'invoice' ? 'Sending...' : 'Send email'}</button>
                   </div>
                 </div>
               )}
@@ -198,9 +216,9 @@ export default function AdminOrderDetailPage() {
                 <div key={document._id} className="rounded-xl border border-white/10 bg-white/5 p-4">
                   <p className="font-semibold text-white">{document.documentNumber}</p>
                   <p className="mt-1 text-xs capitalize text-zinc-500">{document.documentType} / {document.status}</p>
-                  <button onClick={() => sendBusinessDocument(document)} className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-emerald-400">
+                  <button onClick={() => sendBusinessDocument(document)} disabled={Boolean(sendingKey)} className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-emerald-400 disabled:cursor-not-allowed disabled:opacity-50">
                     <Send className="h-3.5 w-3.5" />
-                    Send email
+                    {sendingKey === `document:${document._id}` ? 'Sending...' : 'Send email'}
                   </button>
                 </div>
               ))}

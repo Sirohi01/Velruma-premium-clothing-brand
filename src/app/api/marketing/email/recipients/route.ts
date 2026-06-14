@@ -1,9 +1,10 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
 import Lead from '@/models/Lead';
 import Newsletter from '@/models/Newsletter';
 import Role from '@/models/Role';
 import User from '@/models/User';
+import { requireAdminAction } from '@/lib/admin-api';
 
 export const dynamic = 'force-dynamic';
 
@@ -17,9 +18,11 @@ function uniqueEmails(items: { email?: string; name?: string; source: string }[]
   return Array.from(map.values());
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     await dbConnect();
+    const admin = await requireAdminAction(request, 'marketing', 'view');
+    if (!admin.ok) return admin.response;
     const customerRoles = await Role.find({ slug: { $in: ['customer', 'customers', 'client', 'user'] } }).select('_id').lean();
     const customerRoleIds = customerRoles.map((role) => role._id);
     const customerQuery = customerRoleIds.length > 0

@@ -2,10 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
 import Invoice from '@/models/Invoice';
 import Order from '@/models/Order';
+import { requireAdminAction } from '@/lib/admin-api';
 
-export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     await dbConnect();
+    const admin = await requireAdminAction(request, 'invoices', 'view');
+    if (!admin.ok) return admin.response;
     const { id } = await params;
     const query = id.match(/^[0-9a-fA-F]{24}$/) ? { _id: id } : { invoiceNumber: id };
     let invoice = await Invoice.findOne(query).populate('order');

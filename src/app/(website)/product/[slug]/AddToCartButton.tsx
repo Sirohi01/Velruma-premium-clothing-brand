@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { ShoppingBag, Tag, Copy, Ruler, Package, Truck, RefreshCcw, ShieldCheck, Check, Banknote } from 'lucide-react';
 import { toast } from 'sonner';
 import { useCart } from '@/contexts/CartContext';
@@ -31,11 +32,14 @@ export default function AddToCartButton({
   sizeChartImage?: string;
   sizeChart?: { columns: string[]; rows: { label: string; values: string[] }[] };
 }) {
+  const router = useRouter();
   const { addItem } = useCart();
   const [selectedSize, setSelectedSize] = useState<string>(sizes[0] || '');
   const [selectedColor, setSelectedColor] = useState<string>(colors[0] || '');
   const [quantity, setQuantity] = useState(1);
   const [copiedCode, setCopiedCode] = useState(false);
+  const [pincode, setPincode] = useState('');
+  const [deliveryEstimate, setDeliveryEstimate] = useState('');
 
   const currentVariant = product.variants.find(
     (v: any) => v.size === selectedSize && v.color === selectedColor
@@ -44,6 +48,7 @@ export default function AddToCartButton({
   const price = finalProductPrice(product) + (currentVariant?.extraPrice || 0);
   const mrp = Number(product.basePrice || 0) + (currentVariant?.extraPrice || 0);
   const isOutOfStock = !currentVariant || currentVariant.stock <= 0;
+  const isLowStock = !isOutOfStock && Number(currentVariant?.stock || 0) <= 5;
 
   const handleCopyCode = () => {
     navigator.clipboard.writeText('VELRUMA15');
@@ -74,7 +79,19 @@ export default function AddToCartButton({
 
   const handleBuyNow = () => {
     handleAddToCart();
-    toast.success('Proceeding to checkout...');
+    if (!isOutOfStock) router.push('/checkout');
+  };
+
+  const checkDelivery = () => {
+    const clean = pincode.trim();
+    if (!/^\d{6}$/.test(clean)) {
+      setDeliveryEstimate('');
+      toast.error('Enter a valid 6 digit pincode');
+      return;
+    }
+    const firstDigit = Number(clean[0]);
+    const days = firstDigit <= 3 ? '3-5 business days' : firstDigit <= 6 ? '4-6 business days' : '5-7 business days';
+    setDeliveryEstimate(`Estimated delivery in ${days}. Dispatch usually starts within 24-48 hours.`);
   };
 
   return (
@@ -209,6 +226,35 @@ export default function AddToCartButton({
           <RefreshCcw className="h-5 w-5 text-zinc-600" />
           <span className="text-xs font-medium text-zinc-900">7 Days Returns</span>
         </div>
+      </div>
+
+      {isLowStock && (
+        <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-800">
+          Only {currentVariant?.stock} left in this size/color.
+        </div>
+      )}
+
+      <div className="rounded-xl border border-zinc-200 bg-white p-4">
+        <div className="flex items-center gap-2">
+          <Truck className="h-4 w-4 text-zinc-700" />
+          <p className="text-sm font-bold text-zinc-900">Check delivery estimate</p>
+        </div>
+        <div className="mt-3 flex gap-2">
+          <input
+            value={pincode}
+            onChange={(event) => setPincode(event.target.value.replace(/\D/g, '').slice(0, 6))}
+            inputMode="numeric"
+            maxLength={6}
+            placeholder="Enter pincode"
+            className="h-10 min-w-0 flex-1 rounded-lg border border-zinc-200 bg-zinc-50 px-3 text-sm outline-none focus:border-amber-500"
+          />
+          <button type="button" onClick={checkDelivery} className="rounded-lg bg-zinc-900 px-4 text-sm font-bold text-white hover:bg-zinc-800">
+            Check
+          </button>
+        </div>
+        <p className="mt-2 text-xs leading-5 text-zinc-500">
+          {deliveryEstimate || 'COD, UPI and prepaid options are available at checkout.'}
+        </p>
       </div>
 
       {isOutOfStock ? (
