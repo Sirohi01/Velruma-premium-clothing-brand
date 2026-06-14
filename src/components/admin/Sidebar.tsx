@@ -172,8 +172,8 @@ function NavItem({
         <button
           onClick={() => setIsExpanded(!isExpanded)}
           className={cn(
-            'flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200',
-            'text-zinc-600 hover:bg-amber-50 hover:text-zinc-950',
+            'flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200',
+            'text-zinc-600 hover:bg-[#f6efe3] hover:text-zinc-950',
             isCollapsed && 'justify-center px-2'
           )}
         >
@@ -192,7 +192,7 @@ function NavItem({
         </button>
 
         {!isCollapsed && isExpanded && (
-          <div className="ml-4 mt-1 space-y-0.5 border-l border-zinc-200 pl-3">
+          <div className="ml-4 mt-1 space-y-0.5 border-l border-zinc-200 pl-2.5">
             {item.children.map((child) => {
               const ChildIcon = child.icon;
               const isActive = pathname.startsWith(child.href);
@@ -202,10 +202,10 @@ function NavItem({
                   href={child.href}
                   prefetch={false}
                   className={cn(
-                    'flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all duration-200',
+                    'flex items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-sm transition-all duration-200',
                     isActive
                       ? 'bg-gradient-to-r from-amber-100 to-transparent text-amber-700 font-medium'
-                      : 'text-zinc-500 hover:bg-amber-50 hover:text-zinc-900'
+                      : 'text-zinc-500 hover:bg-[#f6efe3] hover:text-zinc-900'
                   )}
                 >
                   <ChildIcon className="h-4 w-4 shrink-0" />
@@ -228,10 +228,10 @@ function NavItem({
       href={href}
       prefetch={false}
       className={cn(
-        'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200',
+        'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200',
         isActive
           ? 'bg-gradient-to-r from-amber-100 to-amber-50 text-amber-800 shadow-sm'
-          : 'text-zinc-600 hover:bg-amber-50 hover:text-zinc-950',
+          : 'text-zinc-600 hover:bg-[#f6efe3] hover:text-zinc-950',
         isCollapsed && 'justify-center px-2'
       )}
       title={isCollapsed ? (item.title as string) : undefined}
@@ -276,14 +276,14 @@ export default function AdminSidebar({ isOpen, onClose, isCollapsed, onToggleCol
       {/* Sidebar */}
       <aside
         className={cn(
-          'fixed left-0 top-0 z-50 flex h-screen flex-col border-r border-zinc-200 bg-white transition-all duration-300',
+          'fixed left-0 top-0 z-50 flex h-screen flex-col border-r border-zinc-200/90 bg-white/95 transition-all duration-300 backdrop-blur',
           'lg:relative lg:z-auto',
           isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0',
-          isCollapsed ? 'w-[68px]' : 'w-[260px]'
+          isCollapsed ? 'w-[68px]' : 'w-[252px]'
         )}
       >
         {/* Logo */}
-        <div className="flex h-14 items-center justify-between border-b border-zinc-200 px-4">
+        <div className="flex h-13 items-center justify-between border-b border-zinc-200/80 px-3">
           {!isCollapsed ? (
             <Link href="/admin/dashboard" prefetch={false} className="flex items-center gap-2.5">
               <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-lg border border-zinc-200 bg-white shadow-sm">
@@ -324,7 +324,7 @@ export default function AdminSidebar({ isOpen, onClose, isCollapsed, onToggleCol
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 space-y-0.5 overflow-y-auto px-2 py-3 scrollbar-thin scrollbar-track-transparent">
+        <nav className="flex-1 space-y-0.5 overflow-y-auto px-2 py-2.5 scrollbar-thin scrollbar-track-transparent">
           {navigation.map((item, index) => (
             <NavItem
               key={item.title + index}

@@ -201,6 +201,13 @@
 }
 
 /* Admin light premium override */
+.admin-light {
+  --admin-card: #ffffff;
+  --admin-page: #f3efe7;
+  --admin-soft: #faf8f4;
+  --admin-line: #e4e4e7;
+}
+
 .admin-light .bg-zinc-950,
 .admin-light .bg-zinc-900,
 .admin-light .bg-zinc-800,
@@ -231,11 +238,103 @@
 .admin-light .bg-white\/5,
 .admin-light .bg-white\/\[0\.03\],
 .admin-light .bg-white\/\[0\.02\] {
-  background-color: #f8fafc !important;
+  background-color: #faf8f4 !important;
 }
 
 .admin-light input,
 .admin-light select,
 .admin-light textarea {
   color: #18181b;
+}
+
+.admin-light input,
+.admin-light select,
+.admin-light textarea {
+  border-color: #e4e4e7 !important;
+  background-color: #ffffff !important;
+  min-height: 2.35rem;
+}
+
+.admin-light input:focus,
+.admin-light select:focus,
+.admin-light textarea:focus {
+  border-color: #d97706 !important;
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.12);
+}
+
+.admin-light section,
+.admin-light .rounded-xl.border,
+.admin-light .rounded-2xl.border {
+  box-shadow: 0 1px 2px rgba(24, 24, 27, 0.05);
+}
+
+.admin-light .rounded-xl,
+.admin-light .rounded-2xl {
+  border-radius: 0.75rem;
+}
+
+.admin-light table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.admin-light th {
+  color: #71717a !important;
+  font-weight: 700;
+}
+
+.admin-light td {
+  color: #3f3f46;
+}
+
+.admin-light .shadow-sm {
+  box-shadow: 0 1px 2px rgba(24, 24, 27, 0.06) !important;
+}
+
+.admin-light .space-y-6 > :not([hidden]) ~ :not([hidden]) {
+  margin-top: 1rem !important;
+}
+
+.admin-light .space-y-5 > :not([hidden]) ~ :not([hidden]) {
+  margin-top: 0.875rem !important;
+}
+
+.admin-light .gap-6 {
+  gap: 1rem !important;
+}
+
+.admin-light .gap-5 {
+  gap: 0.875rem !important;
+}
+
+.admin-light .p-6 {
+  padding: 1rem !important;
+}
+
+.admin-light .p-5 {
+  padding: 0.875rem !important;
+}
+
+.admin-light .px-5 {
+  padding-left: 1rem !important;
+  padding-right: 1rem !important;
+}
+
+.admin-light .py-5 {
+  padding-top: 0.875rem !important;
+  padding-bottom: 0.875rem !important;
+}
+
+.admin-light .px-6 {
+  padding-left: 1rem !important;
+  padding-right: 1rem !important;
+}
+
+.admin-light .py-6 {
+  padding-top: 1rem !important;
+  padding-bottom: 1rem !important;
+}
+
+.admin-light h1 {
+  letter-spacing: 0;
 }

@@ -26,7 +26,7 @@ export default function AdminTopbar({ onMenuClick }: TopbarProps) {
   const [isDark, setIsDark] = React.useState(false);
 
   return (
-    <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-zinc-200 bg-white/90 px-4 shadow-sm backdrop-blur-xl lg:px-5">
+    <header className="sticky top-0 z-30 flex h-13 items-center justify-between border-b border-zinc-200/80 bg-white/90 px-3 shadow-[0_1px_0_rgba(24,24,27,0.03)] backdrop-blur-xl lg:px-4">
       {/* Left */}
       <div className="flex items-center gap-3">
         <button
@@ -38,14 +38,14 @@ export default function AdminTopbar({ onMenuClick }: TopbarProps) {
 
         {/* Search */}
         <div className={cn(
-          'relative transition-all duration-300',
+          'relative hidden transition-all duration-300 sm:block',
           showSearch ? 'w-80' : 'w-64'
         )}>
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500" />
           <input
             type="text"
             placeholder="Search products, orders, customers..."
-            className="h-9 w-full rounded-lg border border-zinc-200 bg-zinc-50 pl-10 pr-4 text-sm text-zinc-900 placeholder-zinc-400 outline-none transition-all focus:border-amber-500 focus:bg-white"
+            className="h-9 w-full rounded-lg border border-zinc-200 bg-[#f8f6f1] pl-10 pr-4 text-sm text-zinc-900 placeholder-zinc-400 outline-none transition-all focus:border-amber-500 focus:bg-white"
             onFocus={() => setShowSearch(true)}
             onBlur={() => setShowSearch(false)}
           />
@@ -60,13 +60,13 @@ export default function AdminTopbar({ onMenuClick }: TopbarProps) {
         {/* Theme toggle */}
         <button
           onClick={() => setIsDark(!isDark)}
-          className="rounded-lg p-2 text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-900"
+          className="rounded-lg p-2 text-zinc-500 transition-colors hover:bg-[#f4efe6] hover:text-zinc-900"
         >
           {isDark ? <Sun className="h-[18px] w-[18px]" /> : <Moon className="h-[18px] w-[18px]" />}
         </button>
 
         {/* Notifications */}
-        <button className="relative rounded-lg p-2 text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-900">
+        <button className="relative rounded-lg p-2 text-zinc-500 transition-colors hover:bg-[#f4efe6] hover:text-zinc-900">
           <Bell className="h-[18px] w-[18px]" />
           <span className="absolute right-1.5 top-1.5 flex h-2 w-2">
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-400 opacity-75" />
@@ -81,7 +81,7 @@ export default function AdminTopbar({ onMenuClick }: TopbarProps) {
         <div className="relative">
           <button
             onClick={() => setShowUserMenu(!showUserMenu)}
-            className="flex items-center gap-2.5 rounded-xl px-2 py-1.5 transition-colors hover:bg-zinc-100"
+            className="flex items-center gap-2.5 rounded-xl px-2 py-1 transition-colors hover:bg-[#f4efe6]"
           >
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-100 text-xs font-semibold text-amber-700 ring-1 ring-amber-200">
               {user ? getInitials(user.name) : 'VL'}

@@ -16,7 +16,7 @@ export default function AdminLayout({
 
   return (
     <AuthProvider>
-      <div className="admin-light flex h-screen overflow-hidden bg-[#F4F1EA] text-zinc-950">
+      <div className="admin-light flex h-screen overflow-hidden bg-[#f3efe7] text-zinc-950">
         <AdminSidebar
           isOpen={sidebarOpen}
           onClose={() => setSidebarOpen(false)}
@@ -31,7 +31,7 @@ export default function AdminLayout({
               'scrollbar-thin scrollbar-track-transparent'
             )}
           >
-            <div className="mx-auto max-w-[1600px] p-3 lg:p-4">
+            <div className="mx-auto max-w-[1600px] px-3 py-3 lg:px-4 lg:py-3">
               {children}
             </div>
           </main>
