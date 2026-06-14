@@ -6,6 +6,7 @@ import Order from '@/models/Order';
 import { hashPassword } from '@/lib/auth';
 import { syncCustomersFromOrders } from '@/lib/customer-sync';
 import { auditAdminAction, requireAdminAction } from '@/lib/admin-api';
+import { paginationFromRequest, paginationMeta } from '@/lib/pagination';
 
 export async function GET(request: NextRequest) {
   try {
@@ -15,6 +16,7 @@ export async function GET(request: NextRequest) {
     await syncCustomersFromOrders();
     const { searchParams } = new URL(request.url);
     const search = searchParams.get('search');
+    const pagination = paginationFromRequest(request, { page: 1, limit: 8 });
     const customerRole = await Role.findOne({ slug: 'customer' }).select('_id').lean();
     const query: any = customerRole ? { role: customerRole._id } : {};
     if (search) {
@@ -24,11 +26,17 @@ export async function GET(request: NextRequest) {
         { phone: { $regex: search, $options: 'i' } },
       ];
     }
-    const customers = await User.find(query)
+    const customerQuery = User.find(query)
       .select('-password -passwordResetToken -passwordResetExpires')
       .populate('role', 'name slug')
-      .sort({ createdAt: -1 })
-      .lean();
+      .sort({ createdAt: -1 });
+
+    const [customers, total] = pagination.enabled
+      ? await Promise.all([
+          customerQuery.clone().skip(pagination.skip).limit(pagination.limit).lean(),
+          User.countDocuments(query),
+        ])
+      : [await customerQuery.lean(), 0];
     const emails = customers.map((customer: any) => customer.email).filter(Boolean);
     const orders = await Order.find({ email: { $in: emails } })
       .select('email total subtotal discount orderStatus paymentStatus createdAt')
@@ -53,6 +61,7 @@ export async function GET(request: NextRequest) {
         ...customer,
         orderStats: stats.get(String(customer.email || '').toLowerCase()) || { orders: 0, revenue: 0, delivered: 0, returned: 0 },
       })),
+      ...(pagination.enabled ? { pagination: paginationMeta(pagination.page, pagination.limit, total) } : {}),
     });
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message || 'Internal Server Error' }, { status: 500 });

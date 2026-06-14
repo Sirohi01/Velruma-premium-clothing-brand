@@ -2,13 +2,23 @@ import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
 import Payment from '@/models/Payment';
 import { requireAdminAction } from '@/lib/admin-api';
+import { paginationFromRequest, paginationMeta } from '@/lib/pagination';
 
 export async function GET(request: NextRequest) {
   try {
     await dbConnect();
     const admin = await requireAdminAction(request, 'payments', 'view');
     if (!admin.ok) return admin.response;
-    const payments = await Payment.find({}).populate('order', 'orderId customerName').populate('invoice', 'invoiceNumber').sort({ createdAt: -1 });
+    const pagination = paginationFromRequest(request, { page: 1, limit: 8 });
+    const query = Payment.find({}).populate('order', 'orderId customerName').populate('invoice', 'invoiceNumber').sort({ createdAt: -1 });
+    if (pagination.enabled) {
+      const [payments, total] = await Promise.all([
+        query.clone().skip(pagination.skip).limit(pagination.limit),
+        Payment.countDocuments({}),
+      ]);
+      return NextResponse.json({ success: true, data: payments, pagination: paginationMeta(pagination.page, pagination.limit, total) });
+    }
+    const payments = await query;
     return NextResponse.json({ success: true, data: payments });
   } catch (error) {
     console.error('Payments GET error:', error);

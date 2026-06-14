@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Edit2, Plus, Trash2, Users, X } from 'lucide-react';
+import { Edit2, Plus, Search, Trash2, Users, X } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
 import DataTable from '@/components/shared/DataTable';
@@ -21,15 +21,25 @@ export default function CustomersPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<any | null>(null);
   const [form, setForm] = useState(emptyForm);
+  const [search, setSearch] = useState('');
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState({ page: 1, totalPages: 1, total: 0 });
+  const pageSize = 8;
 
   useEffect(() => {
-    fetchCustomers();
-  }, []);
+    const timer = setTimeout(fetchCustomers, 250);
+    return () => clearTimeout(timer);
+  }, [page, search]);
 
   const fetchCustomers = async () => {
-    const res = await fetch('/api/customers');
+    const params = new URLSearchParams({ page: String(page), limit: String(pageSize) });
+    if (search.trim()) params.set('search', search.trim());
+    const res = await fetch(`/api/customers?${params.toString()}`, { cache: 'no-store' });
     const data = await res.json();
-    if (data.success) setCustomers(data.data);
+    if (data.success) {
+      setCustomers(data.data);
+      if (data.pagination) setPagination(data.pagination);
+    }
   };
 
   const openCreate = () => {
@@ -94,9 +104,28 @@ export default function CustomersPage() {
         </button>
       </div>
 
+      <div className="flex items-center gap-3 rounded-lg border border-zinc-200 bg-white px-3 py-2 shadow-sm">
+        <Search className="h-4 w-4 text-zinc-400" />
+        <input
+          value={search}
+          onChange={(event) => {
+            setSearch(event.target.value);
+            setPage(1);
+          }}
+          placeholder="Search customer name, email or phone..."
+          className="h-9 flex-1 border-none bg-transparent text-sm outline-none"
+        />
+      </div>
+
       <DataTable
         data={customers}
         empty="No customers found."
+        pagination={{
+          page: pagination.page,
+          totalPages: pagination.totalPages,
+          total: pagination.total,
+          onPageChange: setPage,
+        }}
         columns={[
           { key: 'name', header: 'Customer', cell: (row: any) => <Link href={`/admin/customers/${row._id}`} className="font-medium text-white hover:text-amber-300">{row.name}</Link> },
           { key: 'email', header: 'Email', cell: (row: any) => row.email },

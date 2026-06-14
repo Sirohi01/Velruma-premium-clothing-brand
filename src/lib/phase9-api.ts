@@ -5,6 +5,7 @@ import Setting from '@/models/Setting';
 import { auditAdminAction, requireAdminAction } from '@/lib/admin-api';
 import { notifyTaskAssigned, notifyTaskCompleted } from '@/lib/task-email';
 import type { ModuleName } from '@/lib/permissions';
+import { paginationFromRequest, paginationMeta } from '@/lib/pagination';
 
 type ModuleKey = keyof typeof phase9Models;
 
@@ -150,7 +151,16 @@ export async function listRecords(moduleKey: ModuleKey, request: NextRequest) {
       const value = searchParams.get(key);
       if (value) query[key] = value;
     }
-    const records = await phase9Models[moduleKey].find(query).sort({ createdAt: -1 }).limit(200).lean();
+    const pagination = paginationFromRequest(request, { page: 1, limit: 8 });
+    const recordQuery = phase9Models[moduleKey].find(query).sort({ createdAt: -1 });
+    if (pagination.enabled) {
+      const [records, total] = await Promise.all([
+        recordQuery.clone().skip(pagination.skip).limit(pagination.limit).lean(),
+        phase9Models[moduleKey].countDocuments(query),
+      ]);
+      return NextResponse.json({ success: true, data: records, pagination: paginationMeta(pagination.page, pagination.limit, total) });
+    }
+    const records = await recordQuery.limit(200).lean();
     return NextResponse.json({ success: true, data: records });
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message || 'Internal Server Error' }, { status: 500 });

@@ -3,23 +3,87 @@ import dbConnect from '@/lib/db';
 import Inventory from '@/models/Inventory';
 import Product from '@/models/Product';
 import { verifyToken } from '@/lib/auth';
+import { paginationFromRequest, paginationMeta } from '@/lib/pagination';
 
 export async function GET(request: NextRequest) {
   try {
     await dbConnect();
     const { searchParams } = new URL(request.url);
+    const view = searchParams.get('view');
     const productId = searchParams.get('productId');
     const warehouse = searchParams.get('warehouse');
+    const search = searchParams.get('search')?.trim();
+    const pagination = paginationFromRequest(request, { page: 1, limit: 8 });
+
+    if (view === 'items') {
+      const match: Record<string, unknown> = {};
+      if (search) {
+        match.$or = [
+          { title: { $regex: search, $options: 'i' } },
+          { 'variants.sku': { $regex: search, $options: 'i' } },
+          { 'variants.barcode': { $regex: search, $options: 'i' } },
+          { 'variants.size': { $regex: search, $options: 'i' } },
+          { 'variants.color': { $regex: search, $options: 'i' } },
+        ];
+      }
+
+      const pipeline: any[] = [
+        { $unwind: '$variants' },
+        ...(Object.keys(match).length ? [{ $match: match }] : []),
+      ];
+
+      const [rows, totalResult] = await Promise.all([
+        Product.aggregate([
+          ...pipeline,
+          { $sort: { createdAt: -1, title: 1 } },
+          { $skip: pagination.skip },
+          { $limit: pagination.limit },
+          {
+            $project: {
+              _id: 0,
+              productId: '$_id',
+              variantId: '$variants._id',
+              title: '$title',
+              size: '$variants.size',
+              color: '$variants.color',
+              sku: '$variants.sku',
+              barcode: '$variants.barcode',
+              stock: '$variants.stock',
+            },
+          },
+        ]),
+        Product.aggregate([...pipeline, { $count: 'total' }]),
+      ]);
+
+      return NextResponse.json({
+        success: true,
+        data: rows.map((row) => ({
+          ...row,
+          productId: String(row.productId),
+          variantId: String(row.variantId),
+        })),
+        pagination: paginationMeta(pagination.page, pagination.limit, totalResult[0]?.total || 0),
+      });
+    }
 
     const query: any = {};
     if (productId) query.productId = productId;
     if (warehouse) query.warehouse = warehouse;
 
-    const history = await Inventory.find(query)
+    const historyQuery = Inventory.find(query)
       .populate('productId', 'title slug')
       .populate('createdBy', 'name email')
       .sort({ createdAt: -1 });
 
+    if (pagination.enabled) {
+      const [history, total] = await Promise.all([
+        historyQuery.clone().skip(pagination.skip).limit(pagination.limit),
+        Inventory.countDocuments(query),
+      ]);
+      return NextResponse.json({ success: true, data: history, pagination: paginationMeta(pagination.page, pagination.limit, total) });
+    }
+
+    const history = await historyQuery;
     return NextResponse.json({ success: true, data: history });
   } catch (error) {
     console.error('Inventory GET error:', error);

@@ -6,14 +6,12 @@ import '@/models/Collection';
 import '@/models/Phase9';
 import { generateSKU } from '@/lib/utils';
 import { auditAdminAction, requireAdminAction } from '@/lib/admin-api';
+import { paginationFromRequest, paginationMeta } from '@/lib/pagination';
 
 function normalizeVariantExtraPrice(value: unknown, body: any) {
   const extraPrice = Number(value || 0);
   const basePrice = Number(body.basePrice || 0);
   const salePrice = Number(body.salePrice || body.basePrice || 0);
-
-  // Admin variant price is only an add-on over the product price. If the product
-  // selling/MRP price was accidentally repeated here, prevent double charging.
   if (extraPrice > 0 && (extraPrice === salePrice || extraPrice === basePrice)) {
     return 0;
   }
@@ -81,6 +79,7 @@ export async function GET(request: NextRequest) {
     const category = searchParams.get('category');
     const status = searchParams.get('status');
     const search = searchParams.get('search');
+    const pagination = paginationFromRequest(request, { page: 1, limit: 8 });
 
     const query: any = {};
     if (category) query.category = category;
@@ -92,11 +91,20 @@ export async function GET(request: NextRequest) {
       ];
     }
 
-    const products = await Product.find(query)
+    const productQuery = Product.find(query)
       .populate('category', 'name slug')
       .populate('collections', 'name slug')
       .sort({ createdAt: -1 });
 
+    if (pagination.enabled) {
+      const [products, total] = await Promise.all([
+        productQuery.clone().skip(pagination.skip).limit(pagination.limit),
+        Product.countDocuments(query),
+      ]);
+      return NextResponse.json({ success: true, data: products, pagination: paginationMeta(pagination.page, pagination.limit, total) });
+    }
+
+    const products = await productQuery;
     return NextResponse.json({ success: true, data: products });
   } catch (error) {
     console.error('Products GET error:', error);
@@ -111,7 +119,7 @@ export async function POST(request: NextRequest) {
     if (!admin.ok) return admin.response;
     const body = await request.json();
     const payload = normalizeProductPayload(body);
-    
+
     // Auto-generate SKUs for variants if not provided
     if (payload.variants && Array.isArray(payload.variants)) {
       payload.variants = payload.variants.map((variant: any) => {

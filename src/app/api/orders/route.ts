@@ -11,6 +11,7 @@ import { verifyToken } from '@/lib/auth';
 import { notifyOrderConfirmed, notifyPaymentReceipt, notifyPaymentVerification } from '@/lib/order-email';
 import { syncCustomerFromOrder } from '@/lib/customer-sync';
 import { auditAdminAction, requireAdminAction } from '@/lib/admin-api';
+import { paginationFromRequest, paginationMeta } from '@/lib/pagination';
 
 function sequence(prefix: string) {
   const stamp = Date.now().toString().slice(-8);
@@ -38,6 +39,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const email = searchParams.get('email');
     const status = searchParams.get('status');
+    const pagination = paginationFromRequest(request, { page: 1, limit: 8 });
     const token = request.cookies.get('velruma-token')?.value;
     const payload = token ? await verifyToken(token) : null;
 
@@ -60,7 +62,13 @@ export async function GET(request: NextRequest) {
     }
 
     if (status) query.orderStatus = status;
-    const orders = await Order.find(query).sort({ createdAt: -1 });
+    const orderQuery = Order.find(query).sort({ createdAt: -1 });
+    const [orders, total] = pagination.enabled
+      ? await Promise.all([
+          orderQuery.clone().skip(pagination.skip).limit(pagination.limit),
+          Order.countDocuments(query),
+        ])
+      : [await orderQuery, 0];
     const data = isAdmin
       ? orders
       : orders.map((order: any) => ({
@@ -82,7 +90,11 @@ export async function GET(request: NextRequest) {
           courierName: order.courierName,
           createdAt: order.createdAt,
         }));
-    return NextResponse.json({ success: true, data });
+    return NextResponse.json({
+      success: true,
+      data,
+      ...(pagination.enabled ? { pagination: paginationMeta(pagination.page, pagination.limit, total) } : {}),
+    });
   } catch (error) {
     console.error('Orders GET error:', error);
     return NextResponse.json({ success: false, error: 'Internal Server Error' }, { status: 500 });

@@ -48,6 +48,9 @@ export default function Phase9ModulePage({
   const [deleting, setDeleting] = useState(false);
   const [form, setForm] = useState<Record<string, any>>(defaults);
   const [remoteOptions, setRemoteOptions] = useState<Record<string, { value: string; label: string }[]>>({});
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState({ page: 1, totalPages: 1, total: 0 });
+  const pageSize = 8;
 
   const emptyForm = useMemo(() => {
     const next: Record<string, any> = { ...defaults };
@@ -61,7 +64,7 @@ export default function Phase9ModulePage({
   useEffect(() => {
     fetchRecords();
     fetchRemoteOptions();
-  }, []);
+  }, [page]);
 
   const fetchRemoteOptions = async () => {
     const endpointFields = fields.filter((field) => field.optionsEndpoint);
@@ -86,9 +89,14 @@ export default function Phase9ModulePage({
 
   const fetchRecords = async () => {
     try {
-      const res = await fetch(endpoint);
+      setLoading(true);
+      const separator = endpoint.includes('?') ? '&' : '?';
+      const res = await fetch(`${endpoint}${separator}page=${page}&limit=${pageSize}`, { cache: 'no-store' });
       const data = await res.json();
-      if (data.success) setRecords(data.data);
+      if (data.success) {
+        setRecords(data.data);
+        if (data.pagination) setPagination(data.pagination);
+      }
       else toast.error(data.error || `Failed to load ${title}`);
     } catch {
       toast.error(`Failed to load ${title}`);
@@ -192,6 +200,12 @@ export default function Phase9ModulePage({
       <DataTable
         data={records}
         empty={loading ? 'Loading records...' : 'No records found.'}
+        pagination={{
+          page: pagination.page,
+          totalPages: pagination.totalPages,
+          total: pagination.total,
+          onPageChange: setPage,
+        }}
         columns={[
           ...columns.map((column) => ({
             key: column.key,

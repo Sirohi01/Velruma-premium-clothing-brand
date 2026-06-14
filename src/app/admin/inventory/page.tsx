@@ -10,6 +10,9 @@ export default function InventoryPage() {
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState({ page: 1, totalPages: 1, total: 0 });
+  const pageSize = 8;
 
   // Adjustment Modal
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -17,15 +20,20 @@ export default function InventoryPage() {
   const [adjForm, setAdjForm] = useState({ quantity: 1, movementType: 'in', reason: '' });
 
   useEffect(() => {
-    fetchProducts();
-  }, []);
+    const timer = setTimeout(fetchProducts, 250);
+    return () => clearTimeout(timer);
+  }, [page, search]);
 
   const fetchProducts = async () => {
+    setLoading(true);
     try {
-      const res = await fetch('/api/products');
+      const params = new URLSearchParams({ view: 'items', page: String(page), limit: String(pageSize) });
+      if (search.trim()) params.set('search', search.trim());
+      const res = await fetch(`/api/inventory?${params.toString()}`, { cache: 'no-store' });
       const data = await res.json();
       if (data.success) {
         setProducts(data.data);
+        if (data.pagination) setPagination(data.pagination);
       }
     } catch (error) {
       toast.error('Failed to fetch inventory');
@@ -65,13 +73,17 @@ export default function InventoryPage() {
     }
   };
 
-  const filteredProducts = products.filter(p =>
-    p.title.toLowerCase().includes(search.toLowerCase()) ||
-    p.variants?.some((v: any) => v.sku?.toLowerCase().includes(search.toLowerCase()))
-  );
-
-  const inventoryRows = filteredProducts.flatMap((product) =>
-    (product.variants || []).map((variant: any) => ({
+  const inventoryRows = products.flatMap((product) =>
+    product.productId && product.variantId ? [{
+      productId: product.productId,
+      variantId: product.variantId,
+      title: product.title,
+      size: product.size || '-',
+      color: product.color || '-',
+      sku: product.sku || product.barcode || '',
+      barcode: product.barcode || product.sku || '',
+      stock: Number(product.stock || 0),
+    }] : (product.variants || []).map((variant: any) => ({
       productId: product._id,
       variantId: variant._id,
       title: product.title,
@@ -217,7 +229,10 @@ export default function InventoryPage() {
             type="text"
             placeholder="Search by product title or SKU..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPage(1);
+            }}
             className="w-full rounded-lg border-none bg-transparent py-2 pl-10 pr-4 text-sm text-zinc-900 focus:outline-none dark:text-white"
           />
         </div>
@@ -254,7 +269,7 @@ export default function InventoryPage() {
               <tr>
                 <td colSpan={4} className="px-6 py-8 text-center text-zinc-500">Loading inventory...</td>
               </tr>
-            ) : filteredProducts.length === 0 ? (
+            ) : inventoryRows.length === 0 ? (
               <tr>
                 <td colSpan={4} className="px-6 py-12 text-center text-zinc-500">
                   <Package className="mx-auto mb-3 h-8 w-8 opacity-20" />
@@ -263,68 +278,90 @@ export default function InventoryPage() {
               </tr>
             ) : (
               inventoryRows.map((row) => (
-                  <tr key={`${row.productId}-${row.variantId}`} className="hover:bg-zinc-50 dark:hover:bg-white/[0.02] transition-colors">
-                    <td className="px-6 py-4">
-                      <div className="flex flex-col">
-                        <span className="font-medium text-zinc-900 dark:text-white">{row.title}</span>
-                        <span className="text-xs text-zinc-500">Size: {row.size} | Color: {row.color}</span>
+                <tr key={`${row.productId}-${row.variantId}`} className="hover:bg-zinc-50 dark:hover:bg-white/[0.02] transition-colors">
+                  <td className="px-6 py-4">
+                    <div className="flex flex-col">
+                      <span className="font-medium text-zinc-900 dark:text-white">{row.title}</span>
+                      <span className="text-xs text-zinc-500">Size: {row.size} | Color: {row.color}</span>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4">
+                    {row.barcode ? (
+                      <div className="scale-75 origin-left">
+                        <Barcode value={row.barcode} height={30} displayValue={true} fontSize={12} margin={0} background="transparent" />
                       </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      {row.barcode ? (
-                        <div className="scale-75 origin-left">
-                          <Barcode value={row.barcode} height={30} displayValue={true} fontSize={12} margin={0} background="transparent" />
-                        </div>
-                      ) : (
-                        <span className="font-mono text-xs">-</span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${row.stock > 10 ? 'bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-400' :
-                          row.stock > 0 ? 'bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400' :
-                            'bg-red-100 text-red-700 dark:bg-red-500/10 dark:text-red-400'
-                        }`}>
-                        {row.stock} is left
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <div className="flex justify-end gap-1.5">
-                        <button
-                          onClick={() => printLabels([row])}
-                          className="inline-flex items-center gap-1 rounded-lg border border-zinc-200 px-2.5 py-1.5 text-xs font-medium text-zinc-700 hover:bg-zinc-50 dark:border-white/10 dark:text-zinc-300 dark:hover:bg-white/10"
-                        >
-                          <Printer className="h-3 w-3" />
-                          Print
-                        </button>
-                        <button
-                          onClick={() => downloadBarcodeSvg(row)}
-                          className="inline-flex items-center gap-1 rounded-lg border border-zinc-200 px-2.5 py-1.5 text-xs font-medium text-zinc-700 hover:bg-zinc-50 dark:border-white/10 dark:text-zinc-300 dark:hover:bg-white/10"
-                        >
-                          <Download className="h-3 w-3" />
-                          SVG
-                        </button>
-                        <button
-                          onClick={() => {
-                            setSelectedVariant({
-                              productId: row.productId,
-                              variantId: row.variantId,
-                              currentStock: row.stock,
-                              name: `${row.title} (${row.size} / ${row.color})`
-                            });
-                            setIsModalOpen(true);
-                          }}
-                          className="inline-flex items-center gap-1 rounded-lg bg-zinc-100 px-2.5 py-1.5 text-xs font-medium text-zinc-700 hover:bg-zinc-200 dark:bg-white/10 dark:text-zinc-300 dark:hover:bg-white/20"
-                        >
-                          <Plus className="h-3 w-3" />
-                          Adjust
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
+                    ) : (
+                      <span className="font-mono text-xs">-</span>
+                    )}
+                  </td>
+                  <td className="px-6 py-4">
+                    <span className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${row.stock > 10 ? 'bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-400' :
+                      row.stock > 0 ? 'bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400' :
+                        'bg-red-100 text-red-700 dark:bg-red-500/10 dark:text-red-400'
+                      }`}>
+                      {row.stock} is left
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 text-right">
+                    <div className="flex justify-end gap-1.5">
+                      <button
+                        onClick={() => printLabels([row])}
+                        className="inline-flex items-center gap-1 rounded-lg border border-zinc-200 px-2.5 py-1.5 text-xs font-medium text-zinc-700 hover:bg-zinc-50 dark:border-white/10 dark:text-zinc-300 dark:hover:bg-white/10"
+                      >
+                        <Printer className="h-3 w-3" />
+                        Print
+                      </button>
+                      <button
+                        onClick={() => downloadBarcodeSvg(row)}
+                        className="inline-flex items-center gap-1 rounded-lg border border-zinc-200 px-2.5 py-1.5 text-xs font-medium text-zinc-700 hover:bg-zinc-50 dark:border-white/10 dark:text-zinc-300 dark:hover:bg-white/10"
+                      >
+                        <Download className="h-3 w-3" />
+                        SVG
+                      </button>
+                      <button
+                        onClick={() => {
+                          setSelectedVariant({
+                            productId: row.productId,
+                            variantId: row.variantId,
+                            currentStock: row.stock,
+                            name: `${row.title} (${row.size} / ${row.color})`
+                          });
+                          setIsModalOpen(true);
+                        }}
+                        className="inline-flex items-center gap-1 rounded-lg bg-zinc-100 px-2.5 py-1.5 text-xs font-medium text-zinc-700 hover:bg-zinc-200 dark:bg-white/10 dark:text-zinc-300 dark:hover:bg-white/20"
+                      >
+                        <Plus className="h-3 w-3" />
+                        Adjust
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))
             )}
           </tbody>
         </table>
+      </div>
+
+      <div className="flex flex-col gap-2 rounded-lg border border-zinc-200 bg-white px-4 py-2.5 text-sm text-zinc-600 shadow-sm dark:border-white/10 dark:bg-zinc-900 dark:text-zinc-300 sm:flex-row sm:items-center sm:justify-between">
+        <span>Page {pagination.page} of {pagination.totalPages} - {pagination.total.toLocaleString('en-IN')} inventory rows</span>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setPage((value) => Math.max(1, value - 1))}
+            disabled={pagination.page <= 1}
+            className="rounded-md border border-zinc-200 px-3 py-1.5 text-xs font-semibold disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/10"
+          >
+            Previous
+          </button>
+          <button
+            type="button"
+            onClick={() => setPage((value) => Math.min(pagination.totalPages, value + 1))}
+            disabled={pagination.page >= pagination.totalPages}
+            className="rounded-md border border-zinc-200 px-3 py-1.5 text-xs font-semibold disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/10"
+          >
+            Next
+          </button>
+        </div>
       </div>
 
       {isModalOpen && selectedVariant && (

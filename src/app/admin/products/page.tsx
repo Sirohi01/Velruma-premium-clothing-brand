@@ -12,19 +12,27 @@ export default function ProductsPage() {
   const [archiveTarget, setArchiveTarget] = useState<any | null>(null);
   const [variantTarget, setVariantTarget] = useState<any | null>(null);
   const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState({ page: 1, totalPages: 1, total: 0 });
   const [archiving, setArchiving] = useState(false);
-  const pageSize = 10;
+  const pageSize = 8;
 
   useEffect(() => {
-    fetchProducts();
-  }, []);
+    const timer = setTimeout(() => {
+      fetchProducts();
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [page, search]);
 
   const fetchProducts = async () => {
+    setLoading(true);
     try {
-      const res = await fetch('/api/products');
+      const params = new URLSearchParams({ page: String(page), limit: String(pageSize) });
+      if (search.trim()) params.set('search', search.trim());
+      const res = await fetch(`/api/products?${params.toString()}`, { cache: 'no-store' });
       const data = await res.json();
       if (data.success) {
         setProducts(data.data);
+        if (data.pagination) setPagination(data.pagination);
       }
     } catch (error) {
       toast.error('Failed to fetch products');
@@ -52,11 +60,6 @@ export default function ProductsPage() {
       setArchiving(false);
     }
   };
-
-  const filteredProducts = products.filter(p => 
-    p.title.toLowerCase().includes(search.toLowerCase()) || 
-    p.variants?.some((v: any) => v.sku?.toLowerCase().includes(search.toLowerCase()))
-  );
 
   const calculateFinalPrice = (product: any) => {
     const sellingBeforeDiscount = Number(product.salePrice || product.basePrice || 0);
@@ -106,14 +109,7 @@ export default function ProductsPage() {
         </div>
       </div>
 
-      {(() => {
-        const totalPages = Math.max(1, Math.ceil(filteredProducts.length / pageSize));
-        const currentPage = Math.min(page, totalPages);
-        const start = (currentPage - 1) * pageSize;
-        const visibleProducts = filteredProducts.slice(start, start + pageSize);
-
       {/* Table */}
-      return (
       <>
       <div className="overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm dark:border-white/10 dark:bg-zinc-900">
         <table className="w-full text-left text-sm text-zinc-600 dark:text-zinc-400">
@@ -131,7 +127,7 @@ export default function ProductsPage() {
               <tr>
                 <td colSpan={5} className="px-6 py-8 text-center text-zinc-500">Loading products...</td>
               </tr>
-            ) : filteredProducts.length === 0 ? (
+            ) : products.length === 0 ? (
               <tr>
                 <td colSpan={5} className="px-6 py-12 text-center text-zinc-500">
                   <Package className="mx-auto mb-3 h-8 w-8 opacity-20" />
@@ -139,7 +135,7 @@ export default function ProductsPage() {
                 </td>
               </tr>
             ) : (
-              visibleProducts.map((product) => (
+              products.map((product) => (
                 <tr
                   key={product._id}
                   onClick={() => setVariantTarget(product)}
@@ -213,22 +209,22 @@ export default function ProductsPage() {
 
       <div className="flex flex-col gap-3 rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm text-zinc-600 shadow-sm dark:border-white/10 dark:bg-zinc-900 dark:text-zinc-300 sm:flex-row sm:items-center sm:justify-between">
         <p>
-          Showing {filteredProducts.length === 0 ? 0 : start + 1}-{Math.min(start + pageSize, filteredProducts.length)} of {filteredProducts.length}
+          Page {pagination.page} of {pagination.totalPages} - {pagination.total.toLocaleString('en-IN')} products
         </p>
         <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={() => setPage((value) => Math.max(1, value - 1))}
-            disabled={currentPage === 1}
+            disabled={pagination.page === 1}
             className="rounded-lg border border-zinc-200 px-3 py-1.5 font-medium disabled:opacity-50 dark:border-white/10"
           >
             Previous
           </button>
-          <span className="px-2 font-semibold text-zinc-900 dark:text-white">{currentPage} / {totalPages}</span>
+          <span className="px-2 font-semibold text-zinc-900 dark:text-white">{pagination.page} / {pagination.totalPages}</span>
           <button
             type="button"
-            onClick={() => setPage((value) => Math.min(totalPages, value + 1))}
-            disabled={currentPage === totalPages}
+            onClick={() => setPage((value) => Math.min(pagination.totalPages, value + 1))}
+            disabled={pagination.page === pagination.totalPages}
             className="rounded-lg border border-zinc-200 px-3 py-1.5 font-medium disabled:opacity-50 dark:border-white/10"
           >
             Next
@@ -236,8 +232,6 @@ export default function ProductsPage() {
         </div>
       </div>
       </>
-      );
-      })()}
 
       {variantTarget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 backdrop-blur-sm">
