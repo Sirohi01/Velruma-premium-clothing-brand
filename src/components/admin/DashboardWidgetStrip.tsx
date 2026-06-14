@@ -18,15 +18,20 @@ export default function DashboardWidgetStrip() {
   if (widgets.length === 0) return null;
 
   return (
-    <section className="rounded-2xl border border-white/[0.06] bg-[#12121A] p-5">
-      <div className="mb-4 flex items-center gap-2">
-        <Puzzle className="h-4 w-4 text-amber-400" />
-        <h2 className="text-[15px] font-semibold text-white">Configured Dashboard Widgets</h2>
+    <section className="rounded-xl border border-zinc-200 bg-white p-3 shadow-sm">
+      <div className="mb-3 flex items-center gap-2">
+        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-50 text-amber-600">
+          <Puzzle className="h-4 w-4" />
+        </span>
+        <div>
+          <h2 className="text-sm font-bold text-zinc-950">Configured Dashboard Widgets</h2>
+          <p className="text-xs text-zinc-500">Live widgets selected from admin widget builder.</p>
+        </div>
       </div>
       <div className="grid gap-3 md:grid-cols-3">
         {widgets.slice(0, 6).map((widget) => (
-          <div key={widget._id} className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
-            <p className="text-sm font-semibold text-white">{widget.title}</p>
+          <div key={widget._id} className="rounded-lg border border-zinc-200 bg-[#faf8f4] p-3">
+            <p className="text-sm font-bold text-zinc-950">{widget.title}</p>
             <p className="mt-1 text-xs capitalize text-zinc-500">{widget.widgetType} / {widget.size}</p>
           </div>
         ))}
